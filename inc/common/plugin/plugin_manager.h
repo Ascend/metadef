@@ -167,17 +167,17 @@ class PluginManager {
     return SUCCESS;
   }
 
-  template <typename T1, typename T2>
-  void OptionalInvokeAll(const std::string &func_name, const T1 arg1, const T2 arg2) const {
+  template <typename... Args>
+  void OptionalInvokeAll(const std::string &func_name, const Args... args) const {
     for (const auto &handle : handles_) {
       // If the funcName is existed, signature of realFn can be casted to any type
-      const auto real_fn = reinterpret_cast<void (*)(T1, T2)>(mmDlsym(handle.second, func_name.c_str()));
+      const auto real_fn = reinterpret_cast<void (*)(Args...)>(mmDlsym(handle.second, func_name.c_str()));
       if (real_fn == nullptr) {
         GELOGI("func %s not exist in so %s", handle.first.c_str(), func_name.c_str());
         continue;
       } else {
         GELOGI("func %s exists in so %s", handle.first.c_str(), func_name.c_str());
-        real_fn(arg1, arg2);
+        real_fn(args...);
       }
     }
   }
