@@ -79,7 +79,7 @@ public:
       data_ptr_ = nullptr;
     }
   }
-  void SaveToBuffer(void *pdata, size_t capacity) const;
+  void SaveToBuffer(void *pdata, size_t capacity);
   std::vector<FieldInfo> GetFieldInfo() const;
   const char *GetTilingClassName() const;
   size_t GetDataSize() const;
@@ -93,7 +93,7 @@ protected:
   uint8_t *data_ptr_ = nullptr;
   size_t data_size_ = 0;
   const char *class_name_;
-  std::vector<void *> saveBufferPtr;
+  std::map<const char *, void *, CharPtrCmp> saveBufferPtr;
   size_t struct_size_ = 0;
 };
 
@@ -139,7 +139,7 @@ REGISTER_TILING_DATA_CLASS(MaxPool, MaxPoolTilingData)
       }                                                                                                                \
       FieldHandler(class_name *pinstance, const char *dtype, const char *name, size_t len,                             \
                    size_t arrSize) {                                                                                   \
-        pinstance->field_info_.push_back(FieldInfo(dtype, name, arrSize));                     \
+        pinstance->field_info_.push_back(FieldInfo(dtype, name, arrSize));                                             \
         pinstance->field_offset_map_[name] = pinstance->data_size_;                                                    \
         pinstance->data_size_ += len * arrSize;                                                                        \
         pinstance->InitData();                                                                                         \
@@ -147,12 +147,12 @@ REGISTER_TILING_DATA_CLASS(MaxPool, MaxPoolTilingData)
       }                                                                                                                \
       FieldHandler(class_name *pinstance, const char *dtype, const char *name,                                         \
                    const char *structType, size_t structSize, void *ptr) {                                             \
-        pinstance->field_info_.push_back(FieldInfo(dtype, name, structType, structSize));      \
+        pinstance->field_info_.push_back(FieldInfo(dtype, name, structType, structSize));                              \
         pinstance->field_offset_map_[name] = pinstance->data_size_;                                                    \
         pinstance->data_size_ += structSize;                                                                           \
         pinstance->InitData();                                                                                         \
         StructSizeInfoBase::GetInstance().SetStructSize(#class_name, pinstance->data_size_);                           \
-        pinstance->saveBufferPtr.push_back(ptr);                                                                       \
+        pinstance->saveBufferPtr[name] = ptr;                                                                          \
         pinstance->struct_size_ += structSize;                                                                         \
       }                                                                                                                \
     };                                                                                                                 \
@@ -184,7 +184,10 @@ REGISTER_TILING_DATA_CLASS(MaxPool, MaxPoolTilingData)
         GeLogError("tilingdata_base.h TILING_DATA_FIELD_DEF_ARR memcpy is failed !");                                  \
     }                                                                                                                  \
   }                                                                                                                    \
-  arr_type *get_##field_name() { return field_name##_; }                                                               \
+  arr_type *get_##field_name() {                                                                                       \
+    auto offset = field_offset_map_[#field_name];                                                                      \
+    return (arr_type *)(data_ptr_ + offset);                                                                           \
+  }                                                                                                                    \
                                                                                                                        \
  private:                                                                                                              \
   arr_type *field_name##_ = nullptr;                                                                                   \

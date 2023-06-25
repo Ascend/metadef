@@ -1900,7 +1900,7 @@
       "Arglist": "channel,reason",
       "suggestion": {
         "Possible Cause": "N/A",
-        "Solution": "Check the input channel ID."
+        "Solution": "Check the input channel ID or the number of created channels."
       }
     },
     {
