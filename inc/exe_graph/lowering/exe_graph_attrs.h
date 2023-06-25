@@ -64,5 +64,8 @@ constexpr const ge::char_t *kPassChangedInfo = "_pass_changed_info";
 
 // 打在exe graph上，保存space_registry的智能指针
 constexpr const ge::char_t *kSpaceRegistry = "SpaceRegistry";
+
+// 打在exe graph上，保存om_path的string
+constexpr const ge::char_t *kOmPath = "OmPath";
 }  // namespace gert
 #endif  // AIR_CXX_RUNTIME_V2_METADEF_EXE_GRAPH_EXE_GRAPH_ATTRS_H_
