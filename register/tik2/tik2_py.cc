@@ -361,10 +361,14 @@ extern "C" int32_t Tik2PyInterfaceCheckOp(const char *check_type, const char *op
 
   ge::AscendString result;
   try {
-    const int32_t rc = (check_func)(operator_param, result);
-    GELOGI("check_func return rc = %d, check_type = %s, optype = %s.", rc, check_type, optype);
+    const ge::graphStatus rc = (check_func)(operator_param, result);
+    GELOGI("check cap return rc = %u, check_type = %s, optype = %s.", rc, check_type, optype);
+    if (rc != ge::GRAPH_SUCCESS) {
+      GELOGE(ge::GRAPH_FAILED, "check cap return failed. check_type = %s, optype = %s", check_type, optype);
+      return 0;
+    }
   } catch (...) {
-    GELOGE(ge::GRAPH_FAILED, "check_func failed. check_type = %s, optype = %s", check_type, optype);
+    GELOGE(ge::GRAPH_FAILED, "check cap abnormal failed. check_type = %s, optype = %s", check_type, optype);
     return 0;
   }
   std::string std_str = result.GetString();
@@ -406,8 +410,13 @@ extern "C" int32_t Tik2PyInterfaceGeneralized(const char *optype, const char *in
   ge::AscendString generalize_config_str(generalize_config);
   ge::AscendString result;
   try {
-    const int32_t rc = (generalize_func)(operator_params, generalize_config_str, result);
+    const ge::graphStatus rc = (generalize_func)(operator_params, generalize_config_str, result);
     GELOGI("generalize_func return rc = %d, optype = %s, generalize_config = %s", rc, optype, generalize_config);
+    if (rc != ge::GRAPH_SUCCESS) {
+      GELOGE(ge::GRAPH_FAILED,  "call generalize_func failed. optype = %s, generalize_config = %s", optype,
+             generalize_config);
+      return 0;
+    }
   } catch (...) {
     GELOGE(ge::GRAPH_FAILED, "call generalize_func failed. optype = %s, generalize_config = %s", optype,
            generalize_config);

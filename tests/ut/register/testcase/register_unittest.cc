@@ -1335,38 +1335,42 @@ extern "C" int Tik2PyInterfaceGeneralized(const char *optype, const char *inputs
 
 extern "C" int Tik2PyInterfaceGetTilingDefInfo(const char *optype, char *result_info, size_t result_info_len);
 
-int check_supported_stub(const ge::Operator &op, ge::AscendString &result) {
+ge::graphStatus check_supported_stub(const ge::Operator &op, ge::AscendString &result) {
   const nlohmann::json res_json = R"(
 {"ret_code": "1","reason": "check_supported_stub"})"_json;
   std::string res_json_str = res_json.dump();
   result = AscendString(res_json_str.c_str());
-  return 1;
+  return ge::GRAPH_SUCCESS;
 }
 
-int op_select_format_stub(const ge::Operator &op, ge::AscendString &result) {
+ge::graphStatus op_select_format_stub(const ge::Operator &op, ge::AscendString &result) {
   const nlohmann::json res_json = R"({"op_info": "op_select_format_stub"})"_json;
   std::string res_json_str = res_json.dump();
   result = AscendString(res_json_str.c_str());
-  return 1;
+  return ge::GRAPH_SUCCESS;
 }
 
-int get_op_support_info_stub(const ge::Operator &op, ge::AscendString &result) {
+ge::graphStatus get_op_support_info_stub(const ge::Operator &op, ge::AscendString &result) {
   const nlohmann::json res_json = R"({"op_info": "get_op_support_info_stub"})"_json;
   std::string res_json_str = res_json.dump();
   result = AscendString(res_json_str.c_str());
-  return 1;
+  return ge::GRAPH_SUCCESS;
 }
 
-int get_op_specific_info_stub(const ge::Operator &op, ge::AscendString &result) {
+ge::graphStatus get_op_specific_info_stub(const ge::Operator &op, ge::AscendString &result) {
   const nlohmann::json res_json = R"({"op_info": "get_op_specific_info_stub"})"_json;
   std::string res_json_str = res_json.dump();
   result = AscendString(res_json_str.c_str());
-  return 1;
+  return ge::GRAPH_SUCCESS;
 }
 
-int check_supported_stub_throw(const ge::Operator &op, ge::AscendString &result) {
+ge::graphStatus check_supported_stub_throw(const ge::Operator &op, ge::AscendString &result) {
   throw "bad callback";
-  return 1;
+  return ge::GRAPH_SUCCESS;
+}
+
+ge::graphStatus check_supported_stub_fail(const ge::Operator &op, ge::AscendString &result) {
+  return ge::GRAPH_FAILED;
 }
 
 TEST_F(UtestRegister, tik2_py_interface_check_cap_ok) {
@@ -1493,25 +1497,57 @@ TEST_F(UtestRegister, tik2_py_interface_check_cap_fail_throw) {
   unsetenv("ENABLE_RUNTIME_V2");
 }
 
+TEST_F(UtestRegister, tik2_py_interface_check_cap_fail_by_callback) {
+  setenv("ENABLE_RUNTIME_V2", "1", 0);
+  const nlohmann::json input = R"([
+{"name": "test_0","dtype": "int8", "const_value": [1,2,3,4],"shape": [4,4,4,4],"format": "ND"},
+{"name": "test_1","dtype": "int32","shape": [5,5,5,5],"ori_shape": [5,5,5,5],"format": "ND","ori_format": "ND"},
+{"name": "test_2","dtype": "int32","shape": [6,6,6,6],"ori_shape": [6,6,6,6],"format": "ND","ori_format": "ND"}])"_json;
+  std::string input_str = input.dump();
+  const nlohmann::json output = R"([ 
+{"name": "y_0","dtype": "int8","shape": [9,9,9,9],"ori_shape" :[9,9,9,9],"format": "ND","ori_format":"ND"}])"_json;
+
+  std::string output_str = output.dump();
+  const nlohmann::json attrs = R"([
+{ "name": "attr_0","dtype": "list_int64","value": [1,2, 3, 4]},
+{ "name": "attr_1","dtype": "int","value": 99},
+{ "name": "attr_2","dtype": "list_int32","value": [1, 2, 3, 4]},
+{ "name": "op_para_size", "dtype": "int", "value": 50}])"_json;
+  std::string attrs_str = attrs.dump();
+  std::string op_type = "tik2_py_interface_check_cap_fail_throw";
+  std::string res_info(100, 'a');
+  size_t size = 100;
+  // check_supported
+  REG_CHECK_SUPPORT(tik2_py_interface_check_cap_fail_throw, check_supported_stub_fail);
+  EXPECT_EQ(Tik2PyInterfaceCheckOp(FUNC_CHECK_SUPPORTED, op_type.c_str(), input_str.c_str(), output_str.c_str(),
+                                   attrs_str.c_str(), const_cast<char *>(res_info.c_str()), size),
+            0);
+  unsetenv("ENABLE_RUNTIME_V2");
+}
+
 TEST_F(UtestRegister, tik2_py_interface_check_cap_fail_without_params) {
   setenv("ENABLE_RUNTIME_V2", "1", 0);
   EXPECT_EQ(Tik2PyInterfaceCheckOp(nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, 0), 0);
   unsetenv("ENABLE_RUNTIME_V2");
 }
 
-int generalize_stub(const ge::Operator &op, const ge::AscendString &generalize_config, ge::AscendString &result) {
+ge::graphStatus generalize_stub(const ge::Operator &op, const ge::AscendString &generalize_config, ge::AscendString &result) {
   const nlohmann::json res_json = R"({"op_info": "generalize_stub"})"_json;
   std::string res_json_str = res_json.dump();
   result = AscendString(res_json_str.c_str());
-  return 1;
+  return ge::GRAPH_SUCCESS;
 }
 
-int generalize_stub_throw(const ge::Operator &op, const ge::AscendString &generalize_config, ge::AscendString &result) {
+ge::graphStatus generalize_stub_fail(const ge::Operator &op, const ge::AscendString &generalize_config, ge::AscendString &result) {
+  return ge::GRAPH_FAILED;
+}
+
+ge::graphStatus generalize_stub_throw(const ge::Operator &op, const ge::AscendString &generalize_config, ge::AscendString &result) {
   const nlohmann::json res_json = R"({"op_info": "generalize_stub"})"_json;
   std::string res_json_str = res_json.dump();
   result = AscendString(res_json_str.c_str());
   throw "bad callback";
-  return 1;
+  return ge::GRAPH_SUCCESS;
 }
 
 TEST_F(UtestRegister, tik2_py_interface_generalize_ok) {
@@ -1545,6 +1581,37 @@ TEST_F(UtestRegister, tik2_py_interface_generalize_ok) {
 
   unsetenv("ENABLE_RUNTIME_V2");
 }
+
+TEST_F(UtestRegister, tik2_py_interface_generalize_fail_by_callback) {
+  setenv("ENABLE_RUNTIME_V2", "1", 0);
+  const nlohmann::json input = R"([
+{"name": "test_0","dtype": "float16", "const_value": [1,2,3,4],"shape": [4,4,4,4],"format": "ND"},
+{"name": "test_1","dtype": "float32","shape": [5,5,5,5],"ori_shape": [5,5,5,5],"format": "ND","ori_format": "ND"},
+{"name": "test_2","dtype": "int64","shape": [6,6,6,6],"ori_shape": [6,6,6,6],"format": "ND","ori_format": "ND"}])"_json;
+  std::string input_str = input.dump();
+  const nlohmann::json output = R"([ 
+{"name": "y_0","dtype": "uint32","shape": [9,9,9,9],"ori_shape" :[9,9,9,9],"format": "ND","ori_format":"ND"}])"_json;
+
+  std::string output_str = output.dump();
+  const nlohmann::json attrs = R"([
+{ "name": "attr_0","dtype": "list_list_int64","value": [[1, 2], [3, 4]]},
+{ "name": "attr_1","dtype": "uint32","value": 99},
+{ "name": "attr_2","dtype": "list_list_int32","value": [[1, 2], [3, 4]]},
+{ "name": "op_para_size", "dtype": "uint16", "value": 50}])"_json;
+  std::string attrs_str = attrs.dump();
+  std::string op_type = "tik2_py_interface_generalize_ok";
+  std::string generalize_config = "keep_rank";
+  std::string res_info(100, 'a');
+  size_t size = 100;
+  // shape generalize
+  REG_OP_PARAM_GENERALIZE(tik2_py_interface_generalize_ok, generalize_stub_fail);
+  EXPECT_EQ(Tik2PyInterfaceGeneralized(op_type.c_str(), input_str.c_str(), output_str.c_str(), attrs_str.c_str(),
+                                       generalize_config.c_str(), const_cast<char *>(res_info.c_str()), size),
+            0);
+
+  unsetenv("ENABLE_RUNTIME_V2");
+}
+
 
 TEST_F(UtestRegister, tik2_py_interface_generalize_fail_without_callback) {
   setenv("ENABLE_RUNTIME_V2", "1", 0);

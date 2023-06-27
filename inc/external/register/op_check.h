@@ -28,9 +28,9 @@ namespace optiling {
 #define FUNC_GET_OP_SUPPORT_INFO "get_op_support_info"
 #define FUNC_GET_SPECIFIC_INFO "get_op_specific_info"
 
-using OP_CHECK_FUNC = int32_t (*)(const ge::Operator &op, ge::AscendString &result);
+using OP_CHECK_FUNC = ge::graphStatus (*)(const ge::Operator &op, ge::AscendString &result);
 
-using PARAM_GENERALIZE_FUNC = int32_t (*)(const ge::Operator &op, const ge::AscendString &generalize_config,
+using PARAM_GENERALIZE_FUNC = ge::graphStatus (*)(const ge::Operator &op, const ge::AscendString &generalize_config,
                                       ge::AscendString &generalized_op_params);
 
 struct ReplayFuncParam {

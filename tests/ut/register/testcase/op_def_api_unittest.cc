@@ -30,25 +30,25 @@ static ge::graphStatus TilingPrepareTik2Add(gert::TilingParseContext *context) {
   return ge::GRAPH_SUCCESS;
 }
 
-static int check_op_support(const ge::Operator &op, ge::AscendString &result) {
-  return 1;
+static ge::graphStatus check_op_support(const ge::Operator &op, ge::AscendString &result) {
+  return ge::GRAPH_SUCCESS;
 }
 
-static int get_op_support(const ge::Operator &op, ge::AscendString &result) {
-  return 1;
+static ge::graphStatus get_op_support(const ge::Operator &op, ge::AscendString &result) {
+  return ge::GRAPH_SUCCESS;
 }
 
-static int op_select_format(const ge::Operator &op, ge::AscendString &result) {
-  return 1;
+static ge::graphStatus op_select_format(const ge::Operator &op, ge::AscendString &result) {
+  return ge::GRAPH_SUCCESS;
 }
 
-static int get_op_specific_info(const ge::Operator &op, ge::AscendString &result) {
-  return 1;
+static ge::graphStatus get_op_specific_info(const ge::Operator &op, ge::AscendString &result) {
+  return ge::GRAPH_SUCCESS;
 }
 
-static int generalize_config(const ge::Operator &op, const ge::AscendString &generalize_config,
+static ge::graphStatus generalize_config(const ge::Operator &op, const ge::AscendString &generalize_config,
                              ge::AscendString &generalize_para) {
-  return 1;
+  return ge::GRAPH_SUCCESS;
 }
 
 }  // namespace optiling
