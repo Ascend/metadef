@@ -1849,6 +1849,116 @@
       }
     },
     {
+      "errClass": "AutoDeploy Errors",
+      "errTitle": "Invalid Hierarchical Machine Configuration",
+      "ErrCode": "EF1001",
+      "ErrMessage": "Configuration format %s is incorrect.",
+      "Arglist": "hierarchical_machine_cfg_str",
+      "suggestion": {
+        "Possible Cause": "N/A",
+        "Solution": "Set the environment variable or resource file correctly."
+      }
+    },
+    {
+      "errClass": "AutoDeploy Errors",
+      "errTitle": "Repository File Not Exist",
+      "ErrCode": "EF1002",
+      "ErrMessage": "Repository file %s does not exist.",
+      "Arglist": "repo_file_path",
+      "suggestion": {
+        "Possible Cause": "N/A",
+        "Solution": "N/A"
+      }
+    },
+    {
+      "errClass": "AutoDeploy Errors",
+      "errTitle": "Repository File Format Incorrect",
+      "ErrCode": "EF1003",
+      "ErrMessage": "The repository file format is incorrect.",
+      "Arglist": "",
+      "suggestion": {
+        "Possible Cause": "The original repository file has been replaced by a file with a different format.",
+        "Solution": "Make sure the format of the repository file is the same as that of the original repository file in the installed CANN compiler package."
+      }
+    },
+    {
+      "errClass": "AutoDeploy Errors",
+      "errTitle": "Fused Optimizer Operator Partition Failure",
+      "ErrCode": "EF1004",
+      "ErrMessage": "Failed when processing node %s (%s), which should be connected with Variable or VariableV2.",
+      "Arglist": "node_name,node_type",
+      "suggestion": {
+        "Possible Cause": "The input graph is incorrect.",
+        "Solution": "Pass a correct graph."
+      }
+    },
+    {
+      "errClass": "AutoDeploy Errors",
+      "errTitle": "pulp Module Import Failure",
+      "ErrCode": "EF1005",
+      "ErrMessage": "Failed to import the pulp module.",
+      "Arglist": "",
+      "suggestion": {
+        "Possible Cause": "N/A",
+        "Solution": "Install the pulp module before running AutoDeploy."
+      }
+    },
+    {
+      "errClass": "AutoDeploy Errors",
+      "errTitle": "coin-or-cbc Not Installed or Correctly Configured",
+      "ErrCode": "EF1006",
+      "ErrMessage": "coin-or-cbc is not installed or correctly configured.",
+      "Arglist": "",
+      "suggestion": {
+        "Possible Cause": "N/A",
+        "Solution": "Perform operations by referring to the AutoDeploy user guide."
+      }
+    },
+    {
+      "errClass": "AutoDeploy Errors",
+      "errTitle": "Python Environment Failure",
+      "ErrCode": "EF1007",
+      "ErrMessage": "Failed to call Python.",
+      "Arglist": "",
+      "suggestion": {
+        "Possible Cause": "Python is incorrectly installed or its path is incorrectly configured.",
+        "Solution": "Recompile and install Python."
+      }
+    },
+    {
+      "errClass": "AutoDeploy Errors",
+      "errTitle": "Dynamic Shape Not Supported",
+      "ErrCode": "EF1008",
+      "ErrMessage": "Dynamic shape is not allowed in computation graphs.",
+      "Arglist": "",
+      "suggestion": {
+        "Possible Cause": "N/A",
+        "Solution": "N/A"
+      }
+    },
+    {
+      "errClass": "AutoDeploy Errors",
+      "errTitle": "Invalid Slice Number for a Node",
+      "ErrCode": "EF1009",
+      "ErrMessage": "The slice number %s that you set for node %s (%s) is invalid.",
+      "Arglist": "slice_num,node_name,node_type",
+      "suggestion": {
+        "Possible Cause": "An invalid character string is set as the slice number for the node.",
+        "Solution": "Set the slice number to a positive integer, or do not set the slice number at all, in which case the default slice number will be used."
+      }
+    },
+    {
+      "errClass": "AutoDeploy Errors",
+      "errTitle": "Multiple Slice Numbers Set for a Node Scope",
+      "ErrCode": "EF1010",
+      "ErrMessage": "Inconsistent custom slice numbers have been found in scope %s, for example %s and %s.",
+      "Arglist": "scope_name, slice_num1, slice_num2",
+      "suggestion": {
+        "Possible Cause": "Multiple slice numbers are set for a node scope to be sliced.",
+        "Solution": "Set the expected slice number for only one node in the scope, or do not set the slice number at all, in which case the default slice number will be used."
+      }
+    },
+    {
       "errClass": "DVPP Errors",
       "errTitle": "Invalid Argument",
       "ErrCode": "EN0001",
