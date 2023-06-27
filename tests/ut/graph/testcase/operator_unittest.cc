@@ -201,6 +201,84 @@ TEST_F(UtestOperater, GetInputConstData_subgraph) {
   ASSERT_EQ(op.GetInputConstData("sub_data", tensor), GRAPH_SUCCESS);
 }
 
+
+/*                                  -------------------------
+*                                  |  partitioncall_0_const1* |
+*     partitioncall_0--------------|             |           |
+*           |                      |          netoutput      |
+*           |                      --------------------------
+*           |                       ------------------          -------------
+*           |                      |        data      |        |     Pld     |
+*           |                      |          |       |        |      |      |
+*     partitioncall_1--------------|        FftsSub   |------->|   squeeze*  |
+*                                  |          |       |        |      |      |
+*                                  |      netoutput   |        |  netoutput  |
+*                                   ------------------          -------------
+*/
+TEST_F(UtestOperater, GetInputConstData_cross_subgraph) {
+    auto root_builder = ut::GraphBuilder("root");
+    const auto &partitioncall_0 = root_builder.AddNode("partitioncall_0", "PartitionedCall", 0, 1);
+    const auto &partitioncall_1 = root_builder.AddNode("partitioncall_1", "PartitionedCall", 1, 1);
+    root_builder.AddDataEdge(partitioncall_0, 0, partitioncall_1, 0);
+    const auto &root_graph = root_builder.GetGraph();
+
+    // 1.build partitioncall_0 sub graph
+    auto p1_sub_builder = ut::GraphBuilder("partitioncall_0_sub");
+    const auto &partitioncall_0_const1 = p1_sub_builder.AddNode("partitioncall_0_const1", "Const", 0, 1);
+    auto ge_tensor = std::make_shared<GeTensor>();
+    ASSERT_TRUE(AttrUtils::SetTensor(partitioncall_0_const1->GetOpDesc(), "value", ge_tensor));
+
+    const auto &partitioncall_0_netoutput = p1_sub_builder.AddNode("partitioncall_0_netoutput", "NetOutput", 1, 1);
+    AttrUtils::SetInt(partitioncall_0_netoutput->GetOpDesc()->MutableInputDesc(0), "_parent_node_index", 0);
+    p1_sub_builder.AddDataEdge(partitioncall_0_const1, 0, partitioncall_0_netoutput, 0);
+    const auto &sub_graph = p1_sub_builder.GetGraph();
+    sub_graph->SetParentNode(partitioncall_0);
+    sub_graph->SetParentGraph(root_graph);
+    partitioncall_0->GetOpDesc()->AddSubgraphName("f");
+    partitioncall_0->GetOpDesc()->SetSubgraphInstanceName(0, "partitioncall_0_sub");
+
+    // 2.build partitioncall_1 sub graph
+    auto p2_sub_builder = ut::GraphBuilder("partitioncall_1_sub");
+    const auto &partitioncall_1_data = p2_sub_builder.AddNode("partitioncall_1_data", "Data", 0, 1);
+    AttrUtils::SetInt(partitioncall_1_data->GetOpDesc(), "_parent_node_index", 0);
+    const auto &partitioncall_1_ffts_sub = p2_sub_builder.AddNode("FftsSub", "PartitionedCall", 1, 1);
+    const auto &partitioncall_1_netoutput = p2_sub_builder.AddNode("partitioncall_1_netoutput", "NetOutput", 1, 1);
+    p2_sub_builder.AddDataEdge(partitioncall_1_data, 0, partitioncall_1_ffts_sub, 0);
+    p2_sub_builder.AddDataEdge(partitioncall_1_ffts_sub, 0, partitioncall_1_netoutput, 0);
+    const auto &sub_graph2 = p2_sub_builder.GetGraph();
+    sub_graph2->SetParentNode(partitioncall_1);
+    sub_graph2->SetParentGraph(root_graph);
+    partitioncall_1->GetOpDesc()->AddSubgraphName("f");
+    partitioncall_1->GetOpDesc()->SetSubgraphInstanceName(0, "partitioncall_1_sub");
+
+
+    // 2.1 build sgt sub graph
+    auto sgt_sub_builder = ut::GraphBuilder("sgt_sub");
+    const auto &sgt_pld = sgt_sub_builder.AddNode("sgt_plt", "PlaceHolder", 0, 1);
+    const auto &sgt_squeeze = sgt_sub_builder.AddNode("sgt_squeeze", "Squeeze", 1, 1);
+    sgt_squeeze->GetOpDesc()->impl_->input_name_idx_["sub_data"] = 0;
+    const auto &sgt_netoutput = sgt_sub_builder.AddNode("sgt_netoutput", "NetOutput", 1, 1);
+    sgt_sub_builder.AddDataEdge(sgt_pld, 0, sgt_squeeze, 0);
+    sgt_sub_builder.AddDataEdge(sgt_squeeze, 0, sgt_netoutput, 0);
+    const auto &sgt_sub_graph = sgt_sub_builder.GetGraph();
+    sgt_sub_graph->SetParentNode(partitioncall_1_ffts_sub);
+    sgt_sub_graph->SetParentGraph(sub_graph2);
+    partitioncall_1_ffts_sub->GetOpDesc()->AddSubgraphName("sgt_sub");
+    partitioncall_1_ffts_sub->GetOpDesc()->SetSubgraphInstanceName(0, "sgt_sub");
+
+
+    sgt_pld->GetOpDesc()->SetExtAttr<NodePtr>("parentNode", partitioncall_1_data);
+
+
+    root_graph->AddSubgraph(sgt_sub_graph->GetName(), sgt_sub_graph);
+    root_graph->AddSubgraph(sub_graph->GetName(), sub_graph);
+    root_graph->AddSubgraph(sub_graph2->GetName(), sub_graph2);
+
+    auto op = OpDescUtils::CreateOperatorFromNode(sgt_squeeze);
+    Tensor res;
+    ASSERT_EQ(op.GetInputConstData("sub_data", res), GRAPH_SUCCESS);
+}
+
 TEST_F(UtestOperater, TestOperatorSetInputs) {
   ge::Operator dst_op = ge::Operator("Mul");
   ge::Operator src_op = ge::Operator("Add");
