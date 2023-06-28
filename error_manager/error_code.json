@@ -563,6 +563,17 @@
     },
     {
       "errClass": "GE Errors",
+      "errTitle": "Invalid Argument",
+      "ErrCode": "E10056",
+      "ErrMessage": "Cannot config both parameters [%s] and [%s] simultaneously.",
+      "Arglist": "parameter1, parameter2",
+      "suggestion": {
+        "Possible Cause": "N/A",
+        "Solution": "N/A"
+      }
+    },
+    {
+      "errClass": "GE Errors",
       "errTitle": "Invalid Operator Input Count",
       "ErrCode": "E10401",
       "ErrMessage": "The number of operator inputs ([%s]) exceeds the allowed maximum ([%s]).",
