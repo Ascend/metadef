@@ -136,6 +136,15 @@ private:
   // Deletes new data and output nodes added by call `MakeExeGraph()` func in part 1
   static graphStatus RemoveDataNetoutputEdge(ComputeGraphPtr &graph);
   static graphStatus HandleContinuousInputNodeNextData(const NodePtr &node);
+  static graphStatus HandleContinuousOutputNodeNextNetOutput(const NodePtr &node);
+  /**
+  * node是模型的输入或者输出节点，为了让引擎切分的子图在输入输出节点直连需要输入输出内存连续的节点时可以正常上板，这个接口内部做了特殊处理
+  * @param node 与图的输入输出节点直连的节点
+  * @param is_need_consider_continue_input 跟netoutput相连的节点不需要判断连续输入属性
+  * @return
+  */
+  static graphStatus MakeContinueMemNotaskNode2TaskNode(const NodePtr &node,
+                                                        bool is_need_consider_continue_input = true);
   static NodePtr FindNode(const std::string &name, int64_t &in_index);
   static graphStatus LoadGraphFromFile(const std::map<int64_t, std::string> &options,
                                        std::vector<ComputeGraphPtr> &root_graphs,

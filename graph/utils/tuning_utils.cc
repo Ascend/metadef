@@ -18,9 +18,9 @@
 
 #include "graph/debug/ge_util.h"
 #include "graph/debug/ge_op_types.h"
-#include "framework/common/scope_guard.h"
 #include "graph/node_impl.h"
 #include "graph/utils/graph_utils_ex.h"
+#include "inc/common/checker.h"
 
 namespace ge {
 namespace {
@@ -620,6 +620,9 @@ graphStatus TuningUtils::ChangeEnd2NetOutput(NodePtr &end_node, NodePtr &out_nod
 
 graphStatus TuningUtils::HandleEnd(NodePtr &node) {
   GE_CHECK_NOTNULL(node);
+  GE_ASSERT_GRAPH_SUCCESS(HandleContinuousOutputNodeNextNetOutput(node),
+                          "[Handle][Node] TUU:Failed to handle continuous node next to data node:%s",
+                          node->GetName().c_str());
   const auto graph = node->GetOwnerComputeGraph();
   GE_CHECK_NOTNULL(graph);
   NodePtr out_node = nullptr;
@@ -831,6 +834,7 @@ graphStatus TuningUtils::MergeAllSubGraph(const std::vector<ComputeGraphPtr> &su
                  attr_name.c_str(), node->GetName().c_str());
           return GRAPH_FAILED;
         }
+        GELOGI("recover attr:%s value to be true for node:%s", attr_name.c_str(), node->GetName().c_str());
       }
     }
   }
@@ -1016,7 +1020,7 @@ bool TuningUtils::RemoveContinueAndNoTaskAttr(const NodePtr &node, const std::ve
              remove_attr_name.c_str(), node->GetName().c_str());
       return false;
     }
-    GELOGD("remove attr:%s success for node:%s", remove_attr_name.c_str(), node->GetName().c_str());
+    GELOGI("set attr:%s value false for node:%s", remove_attr_name.c_str(), node->GetName().c_str());
   }
     return true;
 }
@@ -1055,30 +1059,35 @@ bool TuningUtils::HasContinueOutput(const NodePtr &node, std::vector<std::string
   return (is_continuous_output || is_no_padding_continuous_output);
 }
 
-graphStatus TuningUtils::HandleContinuousInputNodeNextData(const NodePtr &node) {
+graphStatus TuningUtils::MakeContinueMemNotaskNode2TaskNode(const NodePtr &node, bool is_need_consider_continue_input) {
   GE_CHECK_NOTNULL(node);
-  for (const auto &next_node : node->GetOutAllNodes()) {
-    GE_CHECK_NOTNULL(next_node);
-    GE_CHECK_NOTNULL(next_node->GetOpDesc());
-    std::vector<std::string> remove_attr_names;
-    bool is_no_task = false;
-    (void) ge::AttrUtils::GetBool(next_node->GetOpDesc(), ATTR_NAME_NOTASK, is_no_task);
-    if ((HasContinueInput(next_node, remove_attr_names) || HasContinueOutput(next_node, remove_attr_names)) &&
-        is_no_task) {
-      remove_attr_names.emplace_back(ATTR_NAME_NOTASK);
-
-      if ((!RemoveContinueAndNoTaskAttr(next_node, remove_attr_names)) ||
-          (!ge::AttrUtils::SetListStr(next_node->GetOpDesc(),
-                                      ATTR_NAME_NEED_RECOVER_ATTR,
-                                      remove_attr_names))) {
-        REPORT_CALL_ERROR("E18888", "Remove attrs or set attr ATTR_NAME_NEED_RECOVER_ATTR failed for node:%s failed.",
-                          next_node->GetName().c_str());
-        GELOGE(GRAPH_FAILED, "[Handle][Attr]Remove attrs or set attr ATTR_NAME_NEED_RECOVER_ATTR for node:%s failed.",
-               next_node->GetName().c_str());
-        return GRAPH_FAILED;
-      }
-    }
+  GE_CHECK_NOTNULL(node->GetOpDesc());
+  std::vector<std::string> remove_attr_names;
+  bool is_no_task = false;
+  (void) ge::AttrUtils::GetBool(node->GetOpDesc(), ATTR_NAME_NOTASK, is_no_task);
+  if (((is_need_consider_continue_input && HasContinueInput(node, remove_attr_names)) ||
+       HasContinueOutput(node, remove_attr_names)) &&
+      is_no_task) {
+    remove_attr_names.emplace_back(ATTR_NAME_NOTASK);
+    GE_ASSERT_TRUE(RemoveContinueAndNoTaskAttr(node, remove_attr_names));
+    GE_ASSERT_TRUE(ge::AttrUtils::SetListStr(node->GetOpDesc(), ATTR_NAME_NEED_RECOVER_ATTR, remove_attr_names));
   }
   return GRAPH_SUCCESS;
 }
+
+graphStatus TuningUtils::HandleContinuousOutputNodeNextNetOutput(const NodePtr &node) {
+  GE_CHECK_NOTNULL(node);
+  for (const auto &next_node : node->GetInDataNodes()) {
+    GE_ASSERT_GRAPH_SUCCESS(MakeContinueMemNotaskNode2TaskNode(next_node, false));
+  }
+  return GRAPH_SUCCESS;
 }
+
+graphStatus TuningUtils::HandleContinuousInputNodeNextData(const NodePtr &node) {
+  GE_CHECK_NOTNULL(node);
+  for (const auto &next_node : node->GetOutDataNodes()) {
+    GE_ASSERT_GRAPH_SUCCESS(MakeContinueMemNotaskNode2TaskNode(next_node));
+  }
+  return GRAPH_SUCCESS;
+}
+}  // namespace ge

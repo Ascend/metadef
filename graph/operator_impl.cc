@@ -199,8 +199,21 @@ graphStatus OperatorImpl::GetFromPeerNode(NodePtr &peer_node,
       if (ConstantUtils::IsConstant(parent_op_desc)) {
         return ConstantUtils::GetWeight(parent_op_desc, 0U, ge_tensor) ? GRAPH_SUCCESS : GRAPH_FAILED;
       }
+      if (parent_op_desc->GetType() == DATA) {
+        NodePtr real_parent_node = nullptr;
+        (void)NodeUtils::GetInNodeCrossPartionedCallNode(parent_node, 0U, real_parent_node);
+        if ((real_parent_node != nullptr) && (NodeUtils::IsConst(*real_parent_node))) {
+          GELOGD("Get in really parent node:%s:%s and parent node:%s:%s for node:%s:%s",
+                 real_parent_node->GetName().c_str(), real_parent_node->GetType().c_str(),
+                 parent_node->GetName().c_str(), parent_node->GetType().c_str(),
+                 peer_op_desc->GetName().c_str(), peer_op_desc->GetType().c_str());
+          return ConstantUtils::GetWeight(real_parent_node->GetOpDesc(), 0U,
+                                          ge_tensor) ? GRAPH_SUCCESS : GRAPH_FAILED;
+        }
+      }
     }
   }
+
   if (peer_op_type == DATA) {
     auto parent_node_2_out_anchor = NodeUtils::GetParentInputAndAnchor(peer_node);
     while ((parent_node_2_out_anchor.first != nullptr) && (parent_node_2_out_anchor.first->GetType() == DATA)) {
@@ -233,7 +246,6 @@ graphStatus OperatorImpl::GetInputConstData(const uint32_t idx, ConstGeTensorPtr
   if (node == nullptr) {
     return GetInputConstDataOut(idx, ge_tensor);
   }
- 
   // from runtime context
   if (get_const_input_runtime_ != nullptr) {
     GeTensorPtr tensor_value = nullptr;
@@ -260,14 +272,12 @@ graphStatus OperatorImpl::GetInputConstData(const uint32_t idx, ConstGeTensorPtr
       return GRAPH_SUCCESS;
     }
   }
-
   // For inner compute graph
   const auto op_desc = node->GetOpDesc();
   GE_CHECK_NOTNULL(op_desc);
   if (GetFromInputDesc(op_desc, static_cast<int32_t>(idx), ge_tensor) == GRAPH_SUCCESS) {
     return GRAPH_SUCCESS;
   }
-
   return GetFromPeerNode(peer_node, out_data_anchor, ge_tensor);
 }
 
