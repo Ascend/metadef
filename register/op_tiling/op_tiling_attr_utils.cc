@@ -101,11 +101,11 @@ static const std::vector<AttrDataType> kValidDstDTypeList {
 static const uint32_t kBitsOfByte = 8;
 
 inline uint32_t GenerateAttrFuncKey(const AttrDataType attr_dtype) {
-  return ((static_cast<uint32_t>(attr_dtype) & 0xFF) << kBitsOfByte) | (static_cast<uint32_t>(attr_dtype) & 0xFF);
+  return ((static_cast<uint32_t>(attr_dtype) & 0xFFU) << kBitsOfByte) | (static_cast<uint32_t>(attr_dtype) & 0xFFU);
 }
 
 inline uint32_t GenerateAttrFuncKey(const AttrDataType src_dtype, const AttrDataType dest_dtype) {
-  return ((static_cast<uint32_t>(src_dtype) & 0xFF) << kBitsOfByte) | (static_cast<uint32_t>(dest_dtype) & 0xFF);
+  return ((static_cast<uint32_t>(src_dtype) & 0xFFU) << kBitsOfByte) | (static_cast<uint32_t>(dest_dtype) & 0xFFU);
 }
 
 class AttrDataManager;

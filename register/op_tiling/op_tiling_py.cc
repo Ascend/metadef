@@ -101,7 +101,7 @@ bool FindImplFuncs(const ge::char_t *op_type, const gert::OpImplKernelRegistry::
       GELOGW("failed to find implfuncs in 2.0 way, registery is null. op type is %s.", op_type);
       return FindImplFuncsOld(op_type, funcs);
     }
-    std::string op_type_str(op_type);
+    const std::string op_type_str(op_type);
     funcs = registry->GetOpImpl(op_type_str);
     if (funcs == nullptr || funcs->tiling == nullptr || funcs->tiling_parse == nullptr) {
       std::string default_impl_str("DefaultImpl");
@@ -134,7 +134,7 @@ void ParseAndSetListAttr(ge::OpDescPtr &op_desc, const nlohmann::json &attr, con
 void ParseAndSetListInt64Attr(ge::OpDescPtr &op_desc, const nlohmann::json &attr, const std::string &attr_name) {
   std::vector<int32_t> attr_value = attr["value"].get<std::vector<int32_t>>();
   std::vector<int64_t> attr_int64_value;
-  for (const auto item : attr_value) {
+  for (const int32_t &item : attr_value) {
     attr_int64_value.emplace_back(static_cast<int64_t>(item));
   }
   op_desc->AppendIrAttrName(attr_name);
@@ -241,7 +241,7 @@ void ParseStorageShape(const nlohmann::json &json, gert::StorageShape &storage_s
   if (json.contains("shape")) {
     gert::Shape shape;
     const auto dims = json["shape"].get<std::vector<int64_t>>();
-    for (const auto dim : dims) {
+    for (const int64_t &dim : dims) {
       (void)shape.AppendDim(dim);
     }
     storage_shape.MutableStorageShape() = shape;
@@ -249,7 +249,7 @@ void ParseStorageShape(const nlohmann::json &json, gert::StorageShape &storage_s
   if (json.contains("ori_shape")) {
     gert::Shape shape;
     const auto dims = json["ori_shape"].get<std::vector<int64_t>>();
-    for (const auto dim : dims) {
+    for (const int64_t dim : dims) {
       (void)shape.AppendDim(dim);
     }
     storage_shape.MutableOriginShape() = shape;
