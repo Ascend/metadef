@@ -509,6 +509,32 @@ TEST_F(UtestTuningUtils, HandleContinuousInputNodeNextData_output) {
     EXPECT_EQ(TuningUtils::HandleContinuousInputNodeNextData(data_node), SUCCESS);
 }
 
+TEST_F(UtestTuningUtils, HandleContinuousOutputNodeNextNetOutput) {
+  ut::GraphBuilder builder = ut::GraphBuilder("graph");
+  auto data_node = builder.AddNode("Data", "Data", 1, 1);
+  auto attr_node = builder.AddNode("Attr", "Attr", 1, 2);
+  auto out_node = builder.AddNode("Netoutput", "Netoutput", 2, 2);
+  auto graph = builder.GetGraph();
+  builder.AddDataEdge(data_node, 0, attr_node, 0);
+  builder.AddDataEdge(attr_node, 0, out_node, 0);
+  builder.AddDataEdge(attr_node, 1, out_node, 1);
+  // continue output
+  std::vector<std::string> to_be_remove_attr_names{ATTR_NAME_CONTINUOUS_OUTPUT, ATTR_NAME_NOPADDING_CONTINUOUS_OUTPUT,
+                                                   ATTR_NAME_NOTASK};
+  for (const auto &attr_name : to_be_remove_attr_names) {
+    AttrUtils::SetBool(attr_node->GetOpDesc(), attr_name, true);
+  }
+  EXPECT_EQ(TuningUtils::HandleContinuousOutputNodeNextNetOutput(out_node), SUCCESS);
+  std::vector<std::string> attr_names_value_removed;
+  EXPECT_TRUE(AttrUtils::GetListStr(attr_node->GetOpDesc(), ATTR_NAME_NEED_RECOVER_ATTR, attr_names_value_removed));
+  EXPECT_EQ(attr_names_value_removed, to_be_remove_attr_names);
+  for (const auto &attr_name : attr_names_value_removed) {
+    bool value = true;
+    EXPECT_TRUE(AttrUtils::GetBool(attr_node->GetOpDesc(), attr_name, value));
+    EXPECT_FALSE(value); // 值被设置为了false
+  }
+}
+
 TEST_F(UtestTuningUtils, RemoveDataNetoutputEdge) {
     auto builder = ut::GraphBuilder("root");
     const auto &placeholder_0 = builder.AddNode("placeholder_0", PLACEHOLDER, 0, 1);
