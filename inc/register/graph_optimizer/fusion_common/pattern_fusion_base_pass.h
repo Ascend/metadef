@@ -103,8 +103,12 @@ class PatternFusionBasePass : public GraphPass {
   void GetConnectionMatrix(std::unique_ptr<ConnectionMatrix> &connection_matrix);
 
   void SetConnectionMatrix(std::unique_ptr<ConnectionMatrix> &connection_matrix);
+
+  const std::vector<FusionPattern *> &GetPatterns();
+
  protected:
   virtual std::vector<FusionPattern *> DefinePatterns() = 0;
+
   virtual Status Fusion(ge::ComputeGraph &graph, Mapping &mapping, std::vector<ge::NodePtr> &new_nodes) = 0;
 
   std::vector<ge::NodePtr> GetNodesFromMapping(const Mapping &mapping) const;

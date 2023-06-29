@@ -24,14 +24,18 @@ const PassAttr NEED_SORT = 0x02UL;  // need topological sorting before executing
 const PassAttr SINGLE_SCENE_OPEN = 0x04UL;  // open for single op scene, can be close by fusion switch
 const PassAttr FE_PASS = 0x08UL;  // graph passes and ub passes in air project
 const PassAttr ENABLE_AUTO_FUSION = 0x10UL;  // whether using auto match fusion frame
+const PassAttr ALWAYS_GENERALIZE = 0x20UL;
 const PassAttr PASS_BIT_MASK = 0x1UL;  // check if the loweset bit of pass is 1
 
 enum class PassAttrType {
   FRBDN_CLOSE = 0, // Mark those passes that cannot be turned off in graph mode
   NEED_TOPO_SORT = 1, // Mark those graph fusion passes that need topological sorting before executing
   SINGLE_OP_SCENE_MUST_ON = 2, // Mark those passes that must be turned on in single-op mode or jit_compile=false
-  FE_PASS_FLAG = 3,  // Mark those passes that belong to FE
-  AUTO_FUSION_FLAG = 4  // Using auto match fusion frame
+  FE_PASS_FLAG = 3, // Mark those passes that belong to FE
+  AUTO_FUSION_FLAG = 4, // Using auto match fusion frame
+  /* The OpDescs in the patterns of this kind fusion pass are able to be generalized in all scenarios.
+   * For example, they can ignore the value dependency restrict. */
+  ALWAYS_GENERALIZE_FLAG = 5
 };
 
 bool IsPassAttrTypeOn(PassAttr pass_attr, PassAttrType attr_type);

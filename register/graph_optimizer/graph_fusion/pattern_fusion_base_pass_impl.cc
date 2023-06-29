@@ -29,6 +29,8 @@ PatternFusionBasePassImpl::~PatternFusionBasePassImpl() {
   }
 }
 
+const std::vector<FusionPattern *> &PatternFusionBasePassImpl::GetPatterns() { return patterns_; }
+
 void PatternFusionBasePassImpl::GetPatterns(std::vector<FusionPattern *> &patterns) { patterns = patterns_; }
 
 void PatternFusionBasePassImpl::SetPatterns(const std::vector<FusionPattern *> &patterns) { patterns_ = patterns; }

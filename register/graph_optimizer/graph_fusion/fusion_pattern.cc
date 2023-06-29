@@ -283,6 +283,7 @@ std::shared_ptr<FusionPattern::OpDesc> FusionPattern::GetOpDesc(const std::strin
   return nullptr;
 }
 
+const std::vector<std::shared_ptr<FusionPattern::OpDesc>> &FusionPattern::GetOpDescs() const { return ops_; }
 /**
  * @ingroup fe
  * @brief record error

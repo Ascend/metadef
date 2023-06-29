@@ -396,6 +396,28 @@ bool PatternFusionBasePass::CycleDetection(const ge::ComputeGraph &graph,
   return false;
 }
 
+const std::vector<FusionPattern *> &PatternFusionBasePass::GetPatterns() {
+  const auto &patterns = pattern_fusion_base_pass_impl_ptr_->GetPatterns();
+  if (!patterns.empty()) {
+    return patterns;
+  }
+
+  auto new_defined_patterns = DefinePatterns();
+  for (FusionPattern *pattern : new_defined_patterns) {
+    if (pattern != nullptr) {
+      bool build_result = pattern->Build();
+      if (!build_result) {
+        GELOGW("[GetPatterns][Check] pattern %s build failed", pattern->GetName().c_str());
+        return patterns;
+      }
+      pattern->Dump();
+    }
+  }
+
+  pattern_fusion_base_pass_impl_ptr_->SetPatterns(new_defined_patterns);
+  return pattern_fusion_base_pass_impl_ptr_->GetPatterns();
+}
+
 bool PatternFusionBasePass::CycleDetection(const ge::ComputeGraph &graph,
                                            const std::vector<ge::NodePtr> &fusion_nodes) {
   if (connectivity_ == nullptr) {

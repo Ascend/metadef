@@ -49,6 +49,8 @@ class PatternFusionBasePassImpl {
 
   virtual ~PatternFusionBasePassImpl();
 
+  const std::vector<FusionPattern *> &GetPatterns();
+
   void GetPatterns(std::vector<FusionPattern *> &patterns);
 
   void SetPatterns(const std::vector<FusionPattern *> &patterns);
