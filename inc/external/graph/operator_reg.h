@@ -281,7 +281,7 @@ class OpReg {
  public:                                                                    \
   ATTRIBUTED_DEPRECATED(static const void name_attr_##x(AscendString &))    \
   static const std::string name_attr_##x() { return #x; }                   \
-  static const void name_attr_##x(AscendString &attr) {                     \
+  static void name_attr_##x(AscendString &attr) {                           \
     attr = AscendString(#x);                                                \
   }                                                                         \
   ATTR_##Type(x, __VA_ARGS__)                                               \
@@ -316,7 +316,7 @@ class OpReg {
  public:                                                                    \
   ATTRIBUTED_DEPRECATED(static const void name_attr_##x(AscendString &))    \
   static const std::string name_attr_##x() { return #x; }                   \
-  static const void name_attr_##x(AscendString &attr_name) {                \
+  static void name_attr_##x(AscendString &attr_name) {                      \
     attr_name = AscendString(#x);                                           \
   }                                                                         \
   REQUIRED_ATTR_##Type(x)                                                   \
@@ -361,7 +361,7 @@ class OpReg {
  public:                                                                       \
   ATTRIBUTED_DEPRECATED(static const void name_in_##x(AscendString &))         \
   static const std::string name_in_##x() { return #x; }                        \
-  static const void name_in_##x(AscendString &name) {                          \
+  static void name_in_##x(AscendString &name) {                                \
     name = AscendString(#x);                                                   \
   }                                                                            \
   ATTRIBUTED_DEPRECATED(_THIS_TYPE &set_input_##x##_by_name(Operator &, const char *)) \
@@ -399,7 +399,7 @@ class OpReg {
  public:                                                                       \
  ATTRIBUTED_DEPRECATED(static const void name_in_##x(AscendString &))          \
   static const std::string name_in_##x() { return #x; }                        \
-  static const void name_in_##x(AscendString &name) {                          \
+  static void name_in_##x(AscendString &name) {                                \
     name = AscendString(#x);                                                   \
   }                                                                            \
   _THIS_TYPE &set_input_##x(Operator &v) {                                     \
@@ -437,7 +437,7 @@ class OpReg {
  public:                                                                         \
   ATTRIBUTED_DEPRECATED(static const void name_out_##x(AscendString &))          \
   static const std::string name_out_##x() { return #x; }                         \
-  static const void name_out_##x(AscendString &name) {                           \
+  static void name_out_##x(AscendString &name) {                                 \
     name = AscendString(#x);                                                     \
   }                                                                              \
   TensorDesc get_output_desc_##x() const { return Operator::GetOutputDescByName(#x); } \
@@ -519,7 +519,7 @@ class OpReg {
  public:                                                                                      \
   ATTRIBUTED_DEPRECATED(static const void name_graph_##x(AscendString &))                     \
   static const std::string name_graph_##x() { return #x; }                                    \
-  static const void name_graph_##x(AscendString &name) {                                      \
+  static void name_graph_##x(AscendString &name) {                                            \
     name = AscendString(#x);                                                                  \
   }                                                                                           \
   SubgraphBuilder get_subgraph_builder_##x() const {                                          \
@@ -547,7 +547,7 @@ class OpReg {
  public:                                                                                      \
   ATTRIBUTED_DEPRECATED(static const void name_graph_##x(AscendString &))                     \
   static const std::string name_graph_##x() { return #x; }                                    \
-  static const void name_graph_##x(AscendString &name) {                                      \
+  static void name_graph_##x(AscendString &name) {                                            \
     name = AscendString(#x);                                                                  \
   }                                                                                           \
   _THIS_TYPE &create_dynamic_subgraph_##x(uint32_t num) {                                     \
