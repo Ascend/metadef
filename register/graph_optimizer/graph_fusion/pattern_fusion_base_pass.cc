@@ -402,10 +402,10 @@ const std::vector<FusionPattern *> &PatternFusionBasePass::GetPatterns() {
     return patterns;
   }
 
-  auto new_defined_patterns = DefinePatterns();
+  const auto new_defined_patterns = DefinePatterns();
   for (FusionPattern *pattern : new_defined_patterns) {
     if (pattern != nullptr) {
-      bool build_result = pattern->Build();
+      const bool build_result = pattern->Build();
       if (!build_result) {
         GELOGW("[GetPatterns][Check] pattern %s build failed", pattern->GetName().c_str());
         return patterns;

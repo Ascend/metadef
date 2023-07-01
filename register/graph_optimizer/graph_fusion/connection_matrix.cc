@@ -65,7 +65,7 @@ void ConnectionMatrix::Update(const ge::ComputeGraph &graph, const std::vector<g
   new_bit_vector.SetValues(0U);
   std::vector<uint64_t> fusion_indexs(fusion_nodes.size(), 0);
   for (size_t i = 0U; i < fusion_nodes.size(); ++i) {
-    uint64_t index = static_cast<uint64_t>(GetIndex(fusion_nodes[i]));
+    const uint64_t index = static_cast<uint64_t>(GetIndex(fusion_nodes[i]));
     new_bit_vector.Or(GetBitMap(index));
     fusion_indexs[i] = index;
   }
@@ -82,7 +82,7 @@ void ConnectionMatrix::Update(const ge::ComputeGraph &graph, const std::vector<g
   if (enable_data_flow_) {
     new_bit_vector.SetValues(0U);
     for (size_t i = 0U; i < fusion_nodes.size(); ++i) {
-      uint64_t index = static_cast<uint64_t>(GetIndex(fusion_nodes[i]));
+      const uint64_t index = static_cast<uint64_t>(GetIndex(fusion_nodes[i]));
       new_bit_vector.Or(GetDataBitMap(index));
     }
     for (ge::LargeBitmap &node_map: data_bit_maps_) {
