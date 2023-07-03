@@ -61,6 +61,77 @@ REG_OP(DFoo22)
     .OUTPUT(x, TensorType::NumberType())
     .OUTPUT(y, TensorType::NumberType())
     .OP_END_FACTORY_REG(DFoo22);
+
+/*
+ *                  ┌──────────────────────┐
+ *                  │ cond                 │
+ *  data   const    │      const           │
+ *    │     │       │        |             │
+ *    └──┬──┘   ┌───┤ data──add──netoutput │
+ *       │      │   │                      │
+ *      while  ─┤   ├──────────────────────┤
+ *       │      │   ├──────────────────────┴─┐
+ *       │      └───┤ body                   │
+ *    netoutput     │ data──reshape──netoutpu│
+ *                  │        |               │
+ *                  │       const            │
+ *                  └────────────────────────┘
+ */
+ComputeGraphPtr BuildWhileGraphWithConstInput() {
+  ut::GraphBuilder builder("main_graph");
+  auto data_1 = builder.AddNode("data_1", "Data", 1, 1);
+  auto const_1 = builder.AddNode("const_1", "Const", 1, 1);
+  auto while_1 = builder.AddNode("while_1", "While", 2, 2);
+  auto netoutput_1 = builder.AddNode("netoutput_1", "NetOutput", 1, 1);
+  builder.AddDataEdge(data_1, 0, while_1, 0);
+  builder.AddDataEdge(const_1, 0, while_1, 1);
+  builder.AddDataEdge(const_1, 0, netoutput_1, 0);
+  auto main_graph = builder.GetGraph();
+
+  ut::GraphBuilder cond_builder("cond_graph");
+  auto cond_data_1 = cond_builder.AddNode("cond_data_1", "Data", 1, 1);
+  auto cond_const_1 = cond_builder.AddNode("cond_const_1", "Const", 1, 1);
+  auto cond_add_1 = cond_builder.AddNode("cond_add_1", "Add", 2, 1);
+  auto cond_netoutput_1 = cond_builder.AddNode("cond_netoutput_1", "NetOutput", 1, 1);
+  cond_builder.AddDataEdge(cond_data_1, 0, cond_add_1, 0);
+  cond_builder.AddDataEdge(cond_const_1, 0, cond_add_1, 1);
+  cond_builder.AddDataEdge(cond_add_1, 0, cond_netoutput_1, 0);
+  auto cond_graph = cond_builder.GetGraph();
+  AttrUtils::SetInt(cond_data_1->GetOpDesc(), "_parent_node_index", static_cast<int>(0));
+  cond_graph->SetParentGraph(main_graph);
+  cond_graph->SetParentNode(main_graph->FindNode("while_1"));
+  main_graph->FindNode("while_1")->GetOpDesc()->AddSubgraphName("cond_graph");
+  main_graph->FindNode("while_1")->GetOpDesc()->SetSubgraphInstanceName(0, "cond_graph");
+  main_graph->AddSubgraph("cond_graph", cond_graph);
+
+  ut::GraphBuilder body_builder("body_graph");
+  auto body_data_1 = body_builder.AddNode("body_data_1", "Data", 1, 1);
+  auto body_const_1 = body_builder.AddNode("body_const_1", "Const", 1, 1);
+  auto body_reshape_1 = body_builder.AddNode("body_reshape_1", "Reshape", 2, 1);
+  auto body_netoutput_1 = body_builder.AddNode("body_netoutput_1", "NetOutput", 1, 1);
+  body_builder.AddDataEdge(body_data_1, 0, body_reshape_1, 0);
+  body_builder.AddDataEdge(body_const_1, 0, body_reshape_1, 1);
+  body_builder.AddDataEdge(body_reshape_1, 0, body_netoutput_1, 0);
+  auto body_graph = body_builder.GetGraph();
+  AttrUtils::SetInt(cond_data_1->GetOpDesc(), "_parent_node_index", static_cast<int>(1));
+  body_graph->SetParentGraph(main_graph);
+  body_graph->SetParentNode(main_graph->FindNode("while_1"));
+  main_graph->FindNode("while_1")->GetOpDesc()->AddSubgraphName("body_graph");
+  main_graph->FindNode("while_1")->GetOpDesc()->SetSubgraphInstanceName(1, "body_graph");
+  main_graph->AddSubgraph("body_graph", body_graph);
+  ge::GeTensorPtr tensor = std::make_shared<GeTensor>();
+  std::vector<uint8_t> value{1, 2, 3};
+  std::vector<int64_t> shape{3};
+  tensor->MutableTensorDesc().SetShape(GeShape(shape));
+  tensor->SetData(value);
+  tensor->MutableTensorDesc().SetDataType(DT_UINT8);
+  AttrUtils::SetTensor(body_const_1->GetOpDesc(), "value", tensor);
+  auto op_desc = body_reshape_1->GetOpDesc();
+  op_desc->impl_->input_name_idx_["x"] = 0;
+  op_desc->impl_->input_name_idx_["shape"] = 1;
+
+  return main_graph;
+}
 }  // namespace
 class UtestOperater : public testing::Test {
  public:
@@ -2175,5 +2246,23 @@ TEST_F(UtestOperater, SetInput_Success_DoNotPassTensorAttrs) {
   EXPECT_EQ(value, 0);
   EXPECT_EQ(foo11.GetInputAttr(0, "foo11_input_attr", value), GRAPH_SUCCESS);
   EXPECT_EQ(value, 1);
+}
+
+TEST_F(UtestOperater, GetInputConstData_While_fail) {
+  auto graph = BuildWhileGraphWithConstInput();
+  auto nodes = graph->GetAllNodes();
+  NodePtr reshape = nullptr;
+  for (const auto &n : nodes) {
+    if (n->GetType() == "Reshape") {
+      reshape = n;
+      break;
+    }
+  }
+  ASSERT_NE(reshape, nullptr);
+  Tensor tensor;
+  auto op = OpDescUtils::CreateOperatorFromNode(reshape);
+  ASSERT_EQ(op.GetInputConstData("x", tensor), GRAPH_FAILED);
+  ASSERT_EQ(op.GetInputConstData("shape", tensor), GRAPH_SUCCESS);
+  ASSERT_EQ(tensor.GetSize(), 3);
 }
 }  // namespace ge
