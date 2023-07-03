@@ -179,6 +179,9 @@ REGISTER_TILING_DATA_CLASS(MaxPool, MaxPoolTilingData)
   void set_##field_name(arr_type *field_name) {                                                                        \
     field_name##_ = field_name;                                                                                        \
     auto offset = field_offset_map_[#field_name];                                                                      \
+    if (data_ptr_ + offset == (uint8_t *)field_name) {                                                                 \
+      return;                                                                                                          \
+    }                                                                                                                  \
     const auto err_t = memcpy_s(data_ptr_ + offset, data_size_ - offset, field_name, arr_size * sizeof(arr_type));     \
     if (err_t != EOK) {                                                                                                \
         GeLogError("tilingdata_base.h TILING_DATA_FIELD_DEF_ARR memcpy is failed !");                                  \
