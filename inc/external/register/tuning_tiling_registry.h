@@ -29,14 +29,14 @@ struct TilingItem {
 
 class TuningTilingDef {
 public:
-  TuningTilingDef() = default;
-  virtual ~TuningTilingDef() = default;
   virtual void FromJson(const nlohmann::json &j) = 0;
   virtual void ToJson(nlohmann::json &j) = 0;
   ge::AscendString GetClassName() const;
   virtual std::vector<TilingItem> GetItemInfo() const = 0;
 
 protected:
+  TuningTilingDef() = default;
+  virtual ~TuningTilingDef() = default;
   // dtype , name
   std::vector<TilingItem> field_info_;
   ge::AscendString class_name_;
