@@ -89,7 +89,7 @@ ge::InDataAnchorPtr EnsureHasDataEdge(const ge::NodePtr &src, int32_t src_index,
 
   return dst_anchor;
 }
-ge::NodePtr EnsureHasData(const ConnectionPathPoint &point, int32_t index) {
+ge::NodePtr EnsureHasData(const ConnectionPathPoint &point, int32_t index, bool &new_created) {
   ge::NodePtr data;
   GE_ASSERT_NOTNULL(point.frame);
   if (!FindValFromMapExtAttr<int32_t, ge::NodePtr>(point.frame->GetExeGraph(), kInnerDataNodes, index, data)) {
@@ -97,9 +97,50 @@ ge::NodePtr EnsureHasData(const ConnectionPathPoint &point, int32_t index) {
     GE_ASSERT_NOTNULL(data);
     GE_ASSERT_TRUE(ge::AttrUtils::SetInt(data->GetOpDesc(), ge::ATTR_NAME_INDEX, index));
     AddKVToMapExtAttr<int32_t, ge::NodePtr>(point.frame->GetExeGraph(), kInnerDataNodes, index, data);
+    new_created = true;
   }
   return data;
 }
+
+inline bool IsFreeNode(const std::string &node_type) {
+  static std::set<std::string> kFreeKernels = {"FreeMemory", "FreeMemHbm", "FreeBatchHbm", "FreeTensorMemory",
+                                               "FreeFftsMem", "FreeBatchFftsMems"};
+  return kFreeKernels.count(node_type) > 0UL;
+}
+
+bool IsNodeWithGuarder(const ge::NodePtr node) {
+  for (const auto &out_data_anchor : node->GetAllOutDataAnchors()) {
+    GE_ASSERT_NOTNULL(out_data_anchor);
+    for (const auto &in_data_anchor : out_data_anchor->GetPeerInDataAnchors()) {
+      GE_ASSERT_NOTNULL(in_data_anchor);
+      const auto &peer_node = in_data_anchor->GetOwnerNode();
+      GE_ASSERT_NOTNULL(peer_node);
+      if (IsFreeNode(peer_node->GetType())) {
+        return true;
+      }
+    }
+  }
+  return false;
+}
+
+bool IsGuarderOutside(const ge::NodePtr &node, const ge::NodePtr &src_node_from_parent_graph) {
+  bool has_guarder_inside = IsNodeWithGuarder(node);
+  // 因为透传祖先图的valueholer而产生的InnerData都是ValueHolder类自行产生的，此时产生InnerData的时候不会追加guarder，
+  // 所以理论上InnerData是不会带有guarder的, 此处只校验只有outside guarder场景，子图内部Innerdata有guarder属于异常场景
+  GE_ASSERT_TRUE(!has_guarder_inside);
+
+  bool is_guarder_outside = false;
+  (void) ge::AttrUtils::GetBool(src_node_from_parent_graph->GetOpDesc(), kNodeWithGuarderOutside, is_guarder_outside);
+  if (is_guarder_outside) {
+    return true;
+  }
+  bool has_guarder_outside = IsNodeWithGuarder(src_node_from_parent_graph);
+  if (has_guarder_outside) {
+    return true;
+  }
+  return false;
+}
+
 ge::OutDataAnchorPtr ConnectFromParents(ge::NodePtr src, int32_t src_index, const ge::NodePtr &dst) {
   if (src->GetOwnerComputeGraph() != dst->GetOwnerComputeGraph()) {
     std::stack<ConnectionPathPoint> connect_path;
@@ -145,8 +186,13 @@ ge::OutDataAnchorPtr ConnectFromParents(ge::NodePtr src, int32_t src_index, cons
       auto dst_anchor = EnsureHasDataEdge(src, src_index, point);
       GE_ASSERT_NOTNULL(dst_anchor);
 
-      auto data_node = EnsureHasData(point, dst_anchor->GetIdx());
+      bool new_created = false;
+      auto data_node = EnsureHasData(point, dst_anchor->GetIdx(), new_created);
       GE_ASSERT_NOTNULL(data_node);
+
+      if (new_created && IsGuarderOutside(data_node, src)) {
+        (void) ge::AttrUtils::SetBool(data_node->GetOpDesc(), kNodeWithGuarderOutside, true);
+      }
 
       src = data_node;
       src_index = 0;

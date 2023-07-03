@@ -1156,6 +1156,46 @@ TEST_F(ValueHolderUt, ConnectFromAncestor_CreateInnerData_ParentGraph) {
   EXPECT_EQ(NodeTopoChecker(sub_foo_node).StrictConnectTo(0, {{"InnerNetOutput"}}), "success");
 }
 
+TEST_F(ValueHolderUt, ConnectFromAncestor_InnerDataWithGuarderOutside) {
+  auto data0 = ValueHolder::CreateFeed(0);
+  auto data1 = ValueHolder::CreateFeed(1);
+  auto data2 = ValueHolder::CreateFeed(2);
+  auto foo = ValueHolder::CreateSingleDataOutput("Foo", {data0});
+  auto data1_guarder = ValueHolder::CreateVoidGuarder("FreeMemory", data1, {});
+  ValueHolder::PushGraphFrame(foo, "Foo");
+  auto sub_foo = ValueHolder::CreateSingleDataOutput("SubFoo", {data1, data2});
+
+  auto sub_frame = ValueHolder::PopGraphFrame({sub_foo}, {});
+  auto subgraph = sub_frame->GetExeGraph();
+  ASSERT_NE(subgraph, nullptr);
+  auto innerdata_node = subgraph->FindFirstNodeMatchType("InnerData");
+  bool is_guarder_outside = false;
+  (void) ge::AttrUtils::GetBool(innerdata_node->GetOpDesc(), kNodeWithGuarderOutside, is_guarder_outside);
+  EXPECT_EQ(is_guarder_outside, true);
+}
+
+TEST_F(ValueHolderUt, ConnectFromAncestor_InnerDataWithGuarderOutside_In_Subgraph_Nesting) {
+  auto data0 = ValueHolder::CreateFeed(0);
+  auto data1 = ValueHolder::CreateFeed(1);
+  auto data2 = ValueHolder::CreateFeed(2);
+  auto foo = ValueHolder::CreateSingleDataOutput("Foo", {data0});
+  auto data2_guarder = ValueHolder::CreateVoidGuarder("FreeMemory", data2, {});
+
+  ValueHolder::PushGraphFrame(foo, "Foo");
+  auto sub_foo = ValueHolder::CreateSingleDataOutput("SubFoo", {data1});
+
+  ValueHolder::PushGraphFrame(sub_foo, "SubFoo");
+  auto sub_sub_foo = ValueHolder::CreateSingleDataOutput("SubFoo", {data2});
+
+  auto sub_sub_frame = ValueHolder::PopGraphFrame({sub_sub_foo}, {});
+  auto sub_sub_graph = sub_sub_frame->GetExeGraph();
+
+  auto innerdata_node = sub_sub_graph->FindFirstNodeMatchType("InnerData");
+  bool is_guarder_outside = false;
+  (void) ge::AttrUtils::GetBool(innerdata_node->GetOpDesc(), kNodeWithGuarderOutside, is_guarder_outside);
+  EXPECT_EQ(is_guarder_outside, true);
+}
+
 /*
  * +-----------------------------+
  * |Foo                          |
