@@ -215,6 +215,16 @@ graphStatus OperatorImpl::GetFromPeerNode(NodePtr &peer_node,
   }
 
   if (peer_op_type == DATA) {
+    // the input const data should not be obtained,
+    // as the input will change during multiple rounds of infershape for while
+    if ((peer_node->GetOwnerComputeGraphBarePtr() != nullptr) &&
+        (peer_node->GetOwnerComputeGraphBarePtr()->GetParentNodeBarePtr() != nullptr) &&
+        (kWhileOpTypes.count(peer_node->GetOwnerComputeGraphBarePtr()->GetParentNodeBarePtr()->GetType()) > 0U)) {
+      GELOGI("The value of a const node should not be obtained, when the const node is outside a while node, "
+             "while node name: %s",
+             peer_node->GetOwnerComputeGraphBarePtr()->GetParentNodeBarePtr()->GetName().c_str());
+      return GRAPH_FAILED;
+    }
     auto parent_node_2_out_anchor = NodeUtils::GetParentInputAndAnchor(peer_node);
     while ((parent_node_2_out_anchor.first != nullptr) && (parent_node_2_out_anchor.first->GetType() == DATA)) {
       parent_node_2_out_anchor = NodeUtils::GetParentInputAndAnchor(parent_node_2_out_anchor.first);
