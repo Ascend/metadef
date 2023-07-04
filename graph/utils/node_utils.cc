@@ -1175,7 +1175,7 @@ bool NodeUtils::IsIdentityUsefulForRWControl(const NodePtr &node_ptr) {
   for (const auto out_control_node_in_control_anchor : node.GetOutControlAnchor()->GetPeerInControlAnchorsPtr()) {
     const auto out_control_node =
         out_control_node_in_control_anchor->GetOwnerNodeBarePtr();  // out_control node must not be null
-    for (const auto out_control_node_in_data_anchor : out_control_node->GetAllInDataAnchorsPtr())
+    for (const auto out_control_node_in_data_anchor : out_control_node->GetAllInDataAnchorsPtr()) {
       // out_control_node_in_data_anchor must not be null
       // out_control_node_in_data_anchor->GetOwnerNodeBarePtr() must not be null
       if (in_node_out_data_anchor->IsLinkedWith(out_control_node_in_data_anchor->shared_from_this())) {
@@ -1189,6 +1189,7 @@ bool NodeUtils::IsIdentityUsefulForRWControl(const NodePtr &node_ptr) {
           return true;
         }
       }
+    }
   }
   return false;
 }
