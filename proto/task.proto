@@ -706,9 +706,12 @@ message FftsPlusAtEndCtxDef {
 // label context
 message FftsPlusLabelCtxDef {
     uint32 successor_num = 1;
-    uint32 pred_cnt_init = 2;
-    uint32 pred_cnt = 3;
-    repeated uint32 successor_list = 4; // len = 26
+    uint32 aten = 2;
+    uint32 pred_cnt_init = 3;
+    uint32 pred_cnt = 4;
+    repeated uint32 successor_list = 5; // len = 26
+    uint32 thread_id = 6;
+    uint32 thread_dim = 7;
 }
 
 // switch context
