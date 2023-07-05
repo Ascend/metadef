@@ -137,6 +137,7 @@ TEST_F(UtestTypes, GetSizeByDataType) {
   EXPECT_EQ(GetSizeByDataType(DT_UINT2), kDataTypeSizeBitOffset + 2);
   EXPECT_EQ(GetSizeByDataType(DT_UINT1), kDataTypeSizeBitOffset + 1);
   EXPECT_EQ(GetSizeByDataType(DT_MAX), -1);
+  EXPECT_EQ(GetSizeByDataType(static_cast<DataType>(-1)), -1);
   EXPECT_EQ(DT_MAX, 33);
 }
 

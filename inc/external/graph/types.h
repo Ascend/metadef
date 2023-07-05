@@ -121,6 +121,9 @@ inline int GetSizeByDataType(DataType data_type) {
       kDataTypeSizeBitOffset + 2,    // DT_UINT2 = 32,            uint2 type
            // DT_MAX
   };
+  if (data_type < 0) {
+    return -1;
+  }
   if (data_type >= DT_MAX) {
     return -1;
   }
