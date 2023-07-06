@@ -474,7 +474,7 @@ int32_t ErrorManager::OutputMessage(int32_t handle) {
 /// @return int 0(success) -1(fail)
 ///
 int32_t ErrorManager::ParseJsonFile(const std::string path) {
-  GELOGI("Begin to parser json file");
+  GELOGD("Begin to parser json file");
   nlohmann::json json_file;
   const int32_t status = ReadJsonFile(path, &json_file);
   if (status != 0) {
@@ -509,7 +509,7 @@ int32_t ErrorManager::ParseJsonFile(const std::string path) {
                error_info.error_id.c_str(), path.c_str());
         continue;
       }
-      GELOGI("add error_code %s success", error_info.error_id.c_str());
+      GELOGD("add error_code %s success", error_info.error_id.c_str());
       (void)error_map_.emplace(error_info.error_id, error_info);
     }
   } catch (const nlohmann::json::exception &e) {
@@ -528,7 +528,7 @@ int32_t ErrorManager::ParseJsonFile(const std::string path) {
 /// @return int 0(success) -1(fail)
 ///
 int32_t ErrorManager::ReadJsonFile(const std::string &file_path, void *const handle) {
-  GELOGI("Begin to read json file");
+  GELOGD("Begin to read json file");
   if (file_path.empty()) {
     GELOGW("[Read][JsonFile]path %s is not valid", file_path.c_str());
     return -1;
@@ -559,7 +559,7 @@ int32_t ErrorManager::ReadJsonFile(const std::string &file_path, void *const han
   }
 
   ifs.close();
-  GELOGI("Read json file success");
+  GELOGD("Read json file success");
   return 0;
 }
 
