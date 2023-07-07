@@ -26,7 +26,7 @@ TEST_F(OpDefParamUT, ParamTest) {
       .ParamType(OPTIONAL)
       .DataType({ge::DT_FLOAT16})
       .Format({ge::FORMAT_ND})
-      .UnknownShapeFormat({ge::FORMAT_ND})
+      .UnknownShapeFormat({ge::FORMAT_NCHW})
       .NeedCompile(false)
       .ValueDepend(REQUIRED)
       .ReshapeType("NC");
@@ -59,6 +59,7 @@ TEST_F(OpDefParamUT, ParamTest) {
   EXPECT_EQ(desc.Input("x1").GetDataTypes().size(), 1);
   EXPECT_EQ(desc.Input("x1").GetFormats().size(), 1);
   EXPECT_EQ(desc.Input("x1").GetUnknownShapeFormats().size(), 1);
+  EXPECT_EQ(desc.Input("x1").GetUnknownShapeFormats()[0], ge::FORMAT_NCHW);
   EXPECT_EQ(desc.Input("x1").GetValueDepend(), "required");
   EXPECT_EQ(desc.Input("x2").GetValueDepend(), "optional");
   EXPECT_EQ(desc.Input("x1").GetReshapeType(), "NC");

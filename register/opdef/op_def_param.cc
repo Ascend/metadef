@@ -126,7 +126,7 @@ std::vector<ge::Format> &OpParamDef::GetFormats(void) {
   return this->impl_->formats;
 }
 std::vector<ge::Format> &OpParamDef::GetUnknownShapeFormats(void) {
-  return this->impl_->formats;
+  return this->impl_->unknown_shape_formats;
 }
 ge::AscendString &OpParamDef::GetNeedCompile(void) {
   return this->impl_->need_compile;

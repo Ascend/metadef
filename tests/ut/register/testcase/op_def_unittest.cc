@@ -69,6 +69,14 @@ TEST_F(OpDefUT, Construct) {
   EXPECT_EQ(paramOut.GetDataTypes()[0], ge::DT_FLOAT16);
   EXPECT_EQ(paramOut.GetFormats()[0], ge::FORMAT_ND);
   EXPECT_EQ(opDef.GetWorkspaceFlag(), true);
+  aicConfig.Input("x1")
+      .DataType({ge::DT_FLOAT})
+      .Format({ge::FORMAT_ND, ge::FORMAT_NCHW});
+  inputs = opDef.GetMergeInputs(aicConfig);
+  EXPECT_EQ(inputs.size(), 1);
+  param = inputs[0];
+  EXPECT_EQ(param.GetDataTypes().size(), 1);
+  EXPECT_EQ(param.GetFormats().size(), 2);
 }
 
 }  // namespace

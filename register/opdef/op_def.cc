@@ -153,7 +153,9 @@ void OpDef::CheckParam(std::vector<OpParamDef> &params) {
         continue;
       }
       if (param.GetDataTypes().size() != param.GetFormats().size()) {
-        GELOGW("dtype is not align with format, %ld != %ld", param.GetDataTypes().size(), param.GetFormats().size());
+        GELOGE(ge::PARAM_INVALID, "dtype is not align with format, %ld != %ld", param.GetDataTypes().size(),
+               param.GetFormats().size());
+        return;
       }
     } else {
       std::vector<ge::Format> formats(param.GetDataTypes().size(), ge::FORMAT_ND);
