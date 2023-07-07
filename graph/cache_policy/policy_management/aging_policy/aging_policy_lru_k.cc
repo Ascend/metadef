@@ -19,7 +19,7 @@ namespace ge {
 std::vector<CacheItemId> AgingPolicyLruK::DoAging(const CacheState &cache_state) const {
   size_t cur_depth = cache_state.GetCacheInfoNum();
   const auto &cc_state = cache_state.GetState();
-  GELOGD("[CAHCE][AGING] current depth[%zu] cache queue capacity[%zu].", cur_depth, depth_);
+  GELOGD("[CACHE][AGING] current depth[%zu] cache queue capacity[%zu].", cur_depth, depth_);
   if (cur_depth <= depth_) {
     return {};
   }

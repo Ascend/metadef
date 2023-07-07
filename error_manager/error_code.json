@@ -761,24 +761,24 @@
     },
     {
       "errClass": "GE Errors",
-      "errTitle": "Invalid --out_node Argument",
+      "errTitle": "Invalid --out_nodes Argument",
       "ErrCode": "E11016",
       "ErrMessage": "Failed to add Op [%s] to NetOutput. Op output index [%s] is not less than [%s]. NetOutput input_index [%s] is not less than [%s].",
       "Arglist": "opname,outputindex,totlaloutputindex,inputindex,totlalinputindex",
       "suggestion": {
         "Possible Cause": "N/A",
-        "Solution": "Try again with a valid [--out_node] argument."
+        "Solution": "Try again with a valid [--out_nodes] argument."
       }
     },
     {
       "errClass": "GE Errors",
-      "errTitle": "Invalid --out_node Argument",
+      "errTitle": "Invalid --out_nodes Argument",
       "ErrCode": "E11017",
-      "ErrMessage": "Failed to find node [%s] specified by [--out_node].",
+      "ErrMessage": "Failed to find node [%s] specified by [--out_nodes].",
       "Arglist": "opname",
       "suggestion": {
         "Possible Cause": "N/A",
-        "Solution": "Try again with a valid [--out_node] argument."
+        "Solution": "Try again with a valid [--out_nodes] argument."
       }
     },
     {
