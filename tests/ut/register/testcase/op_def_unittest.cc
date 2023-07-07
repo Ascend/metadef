@@ -6,15 +6,15 @@
 
 namespace ge {
 
-static ge::graphStatus InferShape4AddTik2(gert::InferShapeContext *context) {
+static ge::graphStatus InferShape4AddAscendC(gert::InferShapeContext *context) {
   return GRAPH_SUCCESS;
 }
 
-static ge::graphStatus InferShapeRange4AddTik2(gert::InferShapeRangeContext *context) {
+static ge::graphStatus InferShapeRange4AddAscendC(gert::InferShapeRangeContext *context) {
   return GRAPH_SUCCESS;
 }
 
-static ge::graphStatus InferDataType4AddTik2(gert::InferDataTypeContext *context) {
+static ge::graphStatus InferDataType4AddAscendC(gert::InferDataTypeContext *context) {
   return GRAPH_SUCCESS;
 }
 
@@ -34,9 +34,9 @@ TEST_F(OpDefUT, Construct) {
   OpDef opDef("Test");
   opDef.Input("x1").DataType({ge::DT_FLOAT16});
   opDef.Output("y").DataType({ge::DT_FLOAT16});
-  opDef.SetInferShape(ge::InferShape4AddTik2);
-  opDef.SetInferShapeRange(ge::InferShapeRange4AddTik2);
-  opDef.SetInferDataType(ge::InferDataType4AddTik2);
+  opDef.SetInferShape(ge::InferShape4AddAscendC);
+  opDef.SetInferShapeRange(ge::InferShapeRange4AddAscendC);
+  opDef.SetInferDataType(ge::InferDataType4AddAscendC);
   opDef.SetWorkspaceFlag(true);
   OpAICoreConfig aicConfig;
   aicConfig.Input("x1")

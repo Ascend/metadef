@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-#ifndef __INC_REGISTER_TIK2_TILINGDATA_BASE_HEADER__
-#define __INC_REGISTER_TIK2_TILINGDATA_BASE_HEADER__
+#ifndef __INC_REGISTER_ASCENDC_TILINGDATA_BASE_HEADER__
+#define __INC_REGISTER_ASCENDC_TILINGDATA_BASE_HEADER__
 
 #include <vector>
 #include <map>
@@ -220,4 +220,4 @@ REGISTER_TILING_DATA_CLASS(MaxPool, MaxPoolTilingData)
   };                                                                                                                   \
   static op_type##class_name##Helper g_tilingdata_##op_type##class_name##helper;
 
-#endif  // __INC_REGISTER_TIK2_TILINGDATA_BASE_HEADER__
+#endif  // __INC_REGISTER_ASCENDC_TILINGDATA_BASE_HEADER__

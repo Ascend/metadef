@@ -330,9 +330,9 @@ void ParseInputsAndOutputs(const char *inputs, const char *outputs, ge::OpDescPt
 
 using namespace optiling;
 
-extern "C" int32_t Tik2PyInterfaceCheckOp(const char *check_type, const char *optype, const char *inputs,
-                                          const char *outputs, const char *attrs, char *result_info,
-                                          const size_t result_info_len) {
+extern "C" int32_t AscendCPyInterfaceCheckOp(const char *check_type, const char *optype, const char *inputs,
+                                             const char *outputs, const char *attrs, char *result_info,
+                                             const size_t result_info_len) {
   if ((check_type == nullptr) || (optype == nullptr) || (inputs == nullptr) || (outputs == nullptr) ||
       (attrs == nullptr) || (result_info == nullptr)) {
     GELOGE(ge::GRAPH_FAILED, "check_type/optype/inputs/outputs/attrs/result_info is null, %s, %s, %s, %s, %s, %s",
@@ -354,7 +354,8 @@ extern "C" int32_t Tik2PyInterfaceCheckOp(const char *check_type, const char *op
     ParseInputsAndOutputs(inputs, outputs, op_desc_ptr, operator_param, const_values);
     CheckAndSetAttr(attrs, operator_param);
   } catch (...) {
-    REPORT_CALL_ERROR("E19999", "Failed to parse json in Tik2PyInterfaceCheckOp. inputs = %s, outputs = %s, attrs = %s",
+    REPORT_CALL_ERROR("E19999",
+                      "Failed to parse json in AscendCPyInterfaceCheckOp. inputs = %s, outputs = %s, attrs = %s",
                       inputs, outputs, attrs);
     return 0;
   }
@@ -380,9 +381,9 @@ extern "C" int32_t Tik2PyInterfaceCheckOp(const char *check_type, const char *op
   return 1;
 }
 
-extern "C" int32_t Tik2PyInterfaceGeneralized(const char *optype, const char *inputs, const char *outputs,
-                                              const char *attrs, const char *generalize_config, char *result_info,
-                                              const size_t result_info_len) {
+extern "C" int32_t AscendCPyInterfaceGeneralized(const char *optype, const char *inputs, const char *outputs,
+                                                 const char *attrs, const char *generalize_config, char *result_info,
+                                                 const size_t result_info_len) {
   if ((optype == nullptr) || (inputs == nullptr) || (outputs == nullptr) || (attrs == nullptr) ||
       (generalize_config == nullptr) || (result_info == nullptr)) {
     GELOGE(ge::GRAPH_FAILED,
@@ -404,7 +405,8 @@ extern "C" int32_t Tik2PyInterfaceGeneralized(const char *optype, const char *in
     ParseInputsAndOutputs(inputs, outputs, op_desc_ptr, operator_params, const_values);
     CheckAndSetAttr(attrs, operator_params);
   } catch (...) {
-    GELOGE(ge::GRAPH_FAILED, "Failed to parse json in Tik2PyInterfaceGeneralized. %s, %s, %s", inputs, outputs, attrs);
+    GELOGE(ge::GRAPH_FAILED, "Failed to parse json in AscendCPyInterfaceGeneralized. %s, %s, %s",
+           inputs, outputs, attrs);
     return 0;
   }
   ge::AscendString generalize_config_str(generalize_config);
@@ -431,7 +433,7 @@ extern "C" int32_t Tik2PyInterfaceGeneralized(const char *optype, const char *in
   return 1;
 }
 
-extern "C" int32_t Tik2PyInterfaceGetTilingDefInfo(const char *optype, char *result_info, size_t result_info_len) {
+extern "C" int32_t AscendCPyInterfaceGetTilingDefInfo(const char *optype, char *result_info, size_t result_info_len) {
   if ((optype == nullptr) || (result_info == nullptr)) {
     GELOGE(ge::GRAPH_FAILED, "optype/result_info is null, %s, %s", optype, result_info);
     return 0;
@@ -465,16 +467,16 @@ extern "C" int32_t Tik2PyInterfaceGetTilingDefInfo(const char *optype, char *res
   const std::string json_str = json_obj.dump();
   bool dump_res = DumpResultInfo(json_str, result_info, result_info_len);
   if (!dump_res) {
-    GELOGE(ge::GRAPH_FAILED, "Tik2PyInterfaceGetTilingDefInfo DumpResultInfo failed. result = %s", json_str.c_str());
+    GELOGE(ge::GRAPH_FAILED, "AscendCPyInterfaceGetTilingDefInfo DumpResultInfo failed. result = %s", json_str.c_str());
     return 0;
   }
   return 1;
 }
 
-extern "C" int32_t Tik2PyInterfaceOpReplay(const char *optype, const char *soc_version, const int32_t block_dim,
-                                           const char *tiling_data, const char *kernel_name, const char *entry_file,
-                                           const char *output_kernel_file, const int32_t core_type,
-                                           const int32_t task_ration, const int32_t tiling_key) {
+extern "C" int32_t AscendCPyInterfaceOpReplay(const char *optype, const char *soc_version, const int32_t block_dim,
+                                              const char *tiling_data, const char *kernel_name, const char *entry_file,
+                                              const char *output_kernel_file, const int32_t core_type,
+                                              const int32_t task_ration, const int32_t tiling_key) {
   if ((optype == nullptr) || (soc_version == nullptr) || (tiling_data == nullptr) || (kernel_name == nullptr) ||
       (entry_file == nullptr) || (output_kernel_file == nullptr)) {
     GELOGE(ge::GRAPH_FAILED,

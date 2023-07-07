@@ -12,18 +12,18 @@ class OpDefFactoryUT : public testing::Test {
   void TearDown() {}
 };
 
-class AddTik2 : public OpDef {
+class AddAscendC : public OpDef {
  public:
-  AddTik2(const char *name) : OpDef(name) {}
+  AddAscendC(const char *name) : OpDef(name) {}
 };
 
-OP_ADD(AddTik2, None);
+OP_ADD(AddAscendC, None);
 
 TEST_F(OpDefFactoryUT, OpDefFactoryTest) {
   auto &ops = OpDefFactory::GetAllOp();
   for (auto &op : ops) {
     OpDef opDef = OpDefFactory::OpDefCreate(op.GetString());
-    EXPECT_EQ(opDef.GetOpType(), "AddTik2");
+    EXPECT_EQ(opDef.GetOpType(), "AddAscendC");
     EXPECT_EQ(opDef.GetWorkspaceFlag(), true);
     opDef.SetWorkspaceFlag(false);
     EXPECT_EQ(opDef.GetWorkspaceFlag(), false);

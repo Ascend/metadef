@@ -1325,15 +1325,15 @@ TEST_F(UtestRegister, NewOptilingInterface_Ok_WithDynamicInput) {
             1);
 }
 
-extern "C" int Tik2PyInterfaceCheckOp(const char *check_type, const char *optype, const char *inputs,
+extern "C" int AscendCPyInterfaceCheckOp(const char *check_type, const char *optype, const char *inputs,
                                       const char *outputs, const char *attrs, char *result_info,
                                       size_t result_info_len);
 
-extern "C" int Tik2PyInterfaceGeneralized(const char *optype, const char *inputs, const char *outputs,
+extern "C" int AscendCPyInterfaceGeneralized(const char *optype, const char *inputs, const char *outputs,
                                           const char *attrs, const char *generalize_config, char *result_info,
                                           size_t result_info_len);
 
-extern "C" int Tik2PyInterfaceGetTilingDefInfo(const char *optype, char *result_info, size_t result_info_len);
+extern "C" int AscendCPyInterfaceGetTilingDefInfo(const char *optype, char *result_info, size_t result_info_len);
 
 ge::graphStatus check_supported_stub(const ge::Operator &op, ge::AscendString &result) {
   const nlohmann::json res_json = R"(
@@ -1373,7 +1373,7 @@ ge::graphStatus check_supported_stub_fail(const ge::Operator &op, ge::AscendStri
   return ge::GRAPH_FAILED;
 }
 
-TEST_F(UtestRegister, tik2_py_interface_check_cap_ok) {
+TEST_F(UtestRegister, ascendC_py_interface_check_cap_ok) {
   setenv("ENABLE_RUNTIME_V2", "1", 0);
   const nlohmann::json input = R"([
 {"name": "test_0","dtype": "int8", "const_value": [1,2,3,4],"shape": [4,4,4,4],"format": "ND"},
@@ -1390,36 +1390,36 @@ TEST_F(UtestRegister, tik2_py_interface_check_cap_ok) {
 { "name": "attr_2","dtype": "list_int32","value": [1, 2, 3, 4]},
 { "name": "op_para_size", "dtype": "int", "value": 50}])"_json;
   std::string attrs_str = attrs.dump();
-  std::string op_type = "tik2_py_interface_check_cap_ok";
+  std::string op_type = "ascendC_py_interface_check_cap_ok";
   std::string res_info(100, 'a');
   size_t size = 100;
   // check_supported
-  REG_CHECK_SUPPORT(tik2_py_interface_check_cap_ok, check_supported_stub);
-  EXPECT_EQ(Tik2PyInterfaceCheckOp(FUNC_CHECK_SUPPORTED, op_type.c_str(), input_str.c_str(), output_str.c_str(),
+  REG_CHECK_SUPPORT(ascendC_py_interface_check_cap_ok, check_supported_stub);
+  EXPECT_EQ(AscendCPyInterfaceCheckOp(FUNC_CHECK_SUPPORTED, op_type.c_str(), input_str.c_str(), output_str.c_str(),
                                    attrs_str.c_str(), const_cast<char *>(res_info.c_str()), size),
             1);
   std::string check_supported_result = "{\"reason\":\"check_supported_stub\",\"ret_code\":\"1\"}";
   EXPECT_EQ(check_supported_result, res_info.substr(0, check_supported_result.size()));
 
   // op_select_format
-  REG_OP_SELECT_FORMAT(tik2_py_interface_check_cap_ok, op_select_format_stub);
-  EXPECT_EQ(Tik2PyInterfaceCheckOp(FUNC_OP_SELECT_FORMAT, op_type.c_str(), input_str.c_str(), output_str.c_str(),
+  REG_OP_SELECT_FORMAT(ascendC_py_interface_check_cap_ok, op_select_format_stub);
+  EXPECT_EQ(AscendCPyInterfaceCheckOp(FUNC_OP_SELECT_FORMAT, op_type.c_str(), input_str.c_str(), output_str.c_str(),
                                    attrs_str.c_str(), const_cast<char *>(res_info.c_str()), size),
             1);
   std::string op_select_format_result = "{\"op_info\":\"op_select_format_stub\"}";
   EXPECT_EQ(op_select_format_result, res_info.substr(0, op_select_format_result.size()));
 
   // get_op_support_info
-  REG_OP_SUPPORT_INFO(tik2_py_interface_check_cap_ok, get_op_support_info_stub);
-  EXPECT_EQ(Tik2PyInterfaceCheckOp(FUNC_GET_OP_SUPPORT_INFO, op_type.c_str(), input_str.c_str(), output_str.c_str(),
+  REG_OP_SUPPORT_INFO(ascendC_py_interface_check_cap_ok, get_op_support_info_stub);
+  EXPECT_EQ(AscendCPyInterfaceCheckOp(FUNC_GET_OP_SUPPORT_INFO, op_type.c_str(), input_str.c_str(), output_str.c_str(),
                                    attrs_str.c_str(), const_cast<char *>(res_info.c_str()), size),
             1);
   std::string get_op_support_info_result = "{\"op_info\":\"get_op_support_info_stub\"}";
   EXPECT_EQ(get_op_support_info_result, res_info.substr(0, get_op_support_info_result.size()));
 
   // get_op_specific_info
-  REG_OP_SPEC_INFO(tik2_py_interface_check_cap_ok, get_op_specific_info_stub);
-  EXPECT_EQ(Tik2PyInterfaceCheckOp(FUNC_GET_SPECIFIC_INFO, op_type.c_str(), input_str.c_str(), output_str.c_str(),
+  REG_OP_SPEC_INFO(ascendC_py_interface_check_cap_ok, get_op_specific_info_stub);
+  EXPECT_EQ(AscendCPyInterfaceCheckOp(FUNC_GET_SPECIFIC_INFO, op_type.c_str(), input_str.c_str(), output_str.c_str(),
                                    attrs_str.c_str(), const_cast<char *>(res_info.c_str()), size),
             1);
   std::string get_op_specific_info_result = "{\"op_info\":\"get_op_specific_info_stub\"}";
@@ -1427,7 +1427,7 @@ TEST_F(UtestRegister, tik2_py_interface_check_cap_ok) {
   unsetenv("ENABLE_RUNTIME_V2");
 }
 
-TEST_F(UtestRegister, tik2_py_interface_check_cap_fail_without_callback) {
+TEST_F(UtestRegister, ascendC_py_interface_check_cap_fail_without_callback) {
   setenv("ENABLE_RUNTIME_V2", "1", 0);
   const nlohmann::json input = R"([
 {"name": "test_0","dtype": "int8", "const_value": [1,2,3,4],"shape": [4,4,4,4],"format": "ND"},
@@ -1444,32 +1444,32 @@ TEST_F(UtestRegister, tik2_py_interface_check_cap_fail_without_callback) {
 { "name": "attr_2","dtype": "list_int32","value": [1, 2, 3, 4]},
 { "name": "op_para_size", "dtype": "int", "value": 50}])"_json;
   std::string attrs_str = attrs.dump();
-  std::string op_type = "tik2_py_interface_check_cap_fail_without_callback";
+  std::string op_type = "ascendC_py_interface_check_cap_fail_without_callback";
   std::string res_info(100, 'a');
   size_t size = 100;
   // check_supported
-  EXPECT_EQ(Tik2PyInterfaceCheckOp(FUNC_CHECK_SUPPORTED, op_type.c_str(), input_str.c_str(), output_str.c_str(),
+  EXPECT_EQ(AscendCPyInterfaceCheckOp(FUNC_CHECK_SUPPORTED, op_type.c_str(), input_str.c_str(), output_str.c_str(),
                                    attrs_str.c_str(), const_cast<char *>(res_info.c_str()), size),
             0);
 
   // op_select_format
-  EXPECT_EQ(Tik2PyInterfaceCheckOp(FUNC_OP_SELECT_FORMAT, op_type.c_str(), input_str.c_str(), output_str.c_str(),
+  EXPECT_EQ(AscendCPyInterfaceCheckOp(FUNC_OP_SELECT_FORMAT, op_type.c_str(), input_str.c_str(), output_str.c_str(),
                                    attrs_str.c_str(), const_cast<char *>(res_info.c_str()), size),
             0);
 
   // get_op_support_info
-  EXPECT_EQ(Tik2PyInterfaceCheckOp(FUNC_GET_OP_SUPPORT_INFO, op_type.c_str(), input_str.c_str(), output_str.c_str(),
+  EXPECT_EQ(AscendCPyInterfaceCheckOp(FUNC_GET_OP_SUPPORT_INFO, op_type.c_str(), input_str.c_str(), output_str.c_str(),
                                    attrs_str.c_str(), const_cast<char *>(res_info.c_str()), size),
             0);
 
   // get_op_specific_info
-  EXPECT_EQ(Tik2PyInterfaceCheckOp(FUNC_GET_SPECIFIC_INFO, op_type.c_str(), input_str.c_str(), output_str.c_str(),
+  EXPECT_EQ(AscendCPyInterfaceCheckOp(FUNC_GET_SPECIFIC_INFO, op_type.c_str(), input_str.c_str(), output_str.c_str(),
                                    attrs_str.c_str(), const_cast<char *>(res_info.c_str()), size),
             0);
   unsetenv("ENABLE_RUNTIME_V2");
 }
 
-TEST_F(UtestRegister, tik2_py_interface_check_cap_fail_throw) {
+TEST_F(UtestRegister, ascendC_py_interface_check_cap_fail_throw) {
   setenv("ENABLE_RUNTIME_V2", "1", 0);
   const nlohmann::json input = R"([
 {"name": "test_0","dtype": "int8", "const_value": [1,2,3,4],"shape": [4,4,4,4],"format": "ND"},
@@ -1486,18 +1486,18 @@ TEST_F(UtestRegister, tik2_py_interface_check_cap_fail_throw) {
 { "name": "attr_2","dtype": "list_int32","value": [1, 2, 3, 4]},
 { "name": "op_para_size", "dtype": "int", "value": 50}])"_json;
   std::string attrs_str = attrs.dump();
-  std::string op_type = "tik2_py_interface_check_cap_fail_throw";
+  std::string op_type = "ascendC_py_interface_check_cap_fail_throw";
   std::string res_info(100, 'a');
   size_t size = 100;
   // check_supported
-  REG_CHECK_SUPPORT(tik2_py_interface_check_cap_fail_throw, check_supported_stub_throw);
-  EXPECT_EQ(Tik2PyInterfaceCheckOp(FUNC_CHECK_SUPPORTED, op_type.c_str(), input_str.c_str(), output_str.c_str(),
+  REG_CHECK_SUPPORT(ascendC_py_interface_check_cap_fail_throw, check_supported_stub_throw);
+  EXPECT_EQ(AscendCPyInterfaceCheckOp(FUNC_CHECK_SUPPORTED, op_type.c_str(), input_str.c_str(), output_str.c_str(),
                                    attrs_str.c_str(), const_cast<char *>(res_info.c_str()), size),
             0);
   unsetenv("ENABLE_RUNTIME_V2");
 }
 
-TEST_F(UtestRegister, tik2_py_interface_check_cap_fail_by_callback) {
+TEST_F(UtestRegister, ascendC_py_interface_check_cap_fail_by_callback) {
   setenv("ENABLE_RUNTIME_V2", "1", 0);
   const nlohmann::json input = R"([
 {"name": "test_0","dtype": "int8", "const_value": [1,2,3,4],"shape": [4,4,4,4],"format": "ND"},
@@ -1514,20 +1514,20 @@ TEST_F(UtestRegister, tik2_py_interface_check_cap_fail_by_callback) {
 { "name": "attr_2","dtype": "list_int32","value": [1, 2, 3, 4]},
 { "name": "op_para_size", "dtype": "int", "value": 50}])"_json;
   std::string attrs_str = attrs.dump();
-  std::string op_type = "tik2_py_interface_check_cap_fail_throw";
+  std::string op_type = "ascendC_py_interface_check_cap_fail_throw";
   std::string res_info(100, 'a');
   size_t size = 100;
   // check_supported
-  REG_CHECK_SUPPORT(tik2_py_interface_check_cap_fail_throw, check_supported_stub_fail);
-  EXPECT_EQ(Tik2PyInterfaceCheckOp(FUNC_CHECK_SUPPORTED, op_type.c_str(), input_str.c_str(), output_str.c_str(),
+  REG_CHECK_SUPPORT(ascendC_py_interface_check_cap_fail_throw, check_supported_stub_fail);
+  EXPECT_EQ(AscendCPyInterfaceCheckOp(FUNC_CHECK_SUPPORTED, op_type.c_str(), input_str.c_str(), output_str.c_str(),
                                    attrs_str.c_str(), const_cast<char *>(res_info.c_str()), size),
             0);
   unsetenv("ENABLE_RUNTIME_V2");
 }
 
-TEST_F(UtestRegister, tik2_py_interface_check_cap_fail_without_params) {
+TEST_F(UtestRegister, ascendC_py_interface_check_cap_fail_without_params) {
   setenv("ENABLE_RUNTIME_V2", "1", 0);
-  EXPECT_EQ(Tik2PyInterfaceCheckOp(nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, 0), 0);
+  EXPECT_EQ(AscendCPyInterfaceCheckOp(nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, 0), 0);
   unsetenv("ENABLE_RUNTIME_V2");
 }
 
@@ -1550,7 +1550,7 @@ ge::graphStatus generalize_stub_throw(const ge::Operator &op, const ge::AscendSt
   return ge::GRAPH_SUCCESS;
 }
 
-TEST_F(UtestRegister, tik2_py_interface_generalize_ok) {
+TEST_F(UtestRegister, ascendC_py_interface_generalize_ok) {
   setenv("ENABLE_RUNTIME_V2", "1", 0);
   const nlohmann::json input = R"([
 {"name": "test_0","dtype": "float16", "const_value": [1,2,3,4],"shape": [4,4,4,4],"format": "ND"},
@@ -1567,13 +1567,13 @@ TEST_F(UtestRegister, tik2_py_interface_generalize_ok) {
 { "name": "attr_2","dtype": "list_list_int32","value": [[1, 2], [3, 4]]},
 { "name": "op_para_size", "dtype": "uint16", "value": 50}])"_json;
   std::string attrs_str = attrs.dump();
-  std::string op_type = "tik2_py_interface_generalize_ok";
+  std::string op_type = "ascendC_py_interface_generalize_ok";
   std::string generalize_config = "keep_rank";
   std::string res_info(100, 'a');
   size_t size = 100;
   // shape generalize
-  REG_OP_PARAM_GENERALIZE(tik2_py_interface_generalize_ok, generalize_stub);
-  EXPECT_EQ(Tik2PyInterfaceGeneralized(op_type.c_str(), input_str.c_str(), output_str.c_str(), attrs_str.c_str(),
+  REG_OP_PARAM_GENERALIZE(ascendC_py_interface_generalize_ok, generalize_stub);
+  EXPECT_EQ(AscendCPyInterfaceGeneralized(op_type.c_str(), input_str.c_str(), output_str.c_str(), attrs_str.c_str(),
                                        generalize_config.c_str(), const_cast<char *>(res_info.c_str()), size),
             1);
   std::string result = "{\"op_info\":\"generalize_stub\"}";
@@ -1582,7 +1582,7 @@ TEST_F(UtestRegister, tik2_py_interface_generalize_ok) {
   unsetenv("ENABLE_RUNTIME_V2");
 }
 
-TEST_F(UtestRegister, tik2_py_interface_generalize_fail_by_callback) {
+TEST_F(UtestRegister, ascendC_py_interface_generalize_fail_by_callback) {
   setenv("ENABLE_RUNTIME_V2", "1", 0);
   const nlohmann::json input = R"([
 {"name": "test_0","dtype": "float16", "const_value": [1,2,3,4],"shape": [4,4,4,4],"format": "ND"},
@@ -1599,13 +1599,13 @@ TEST_F(UtestRegister, tik2_py_interface_generalize_fail_by_callback) {
 { "name": "attr_2","dtype": "list_list_int32","value": [[1, 2], [3, 4]]},
 { "name": "op_para_size", "dtype": "uint16", "value": 50}])"_json;
   std::string attrs_str = attrs.dump();
-  std::string op_type = "tik2_py_interface_generalize_ok";
+  std::string op_type = "ascendC_py_interface_generalize_ok";
   std::string generalize_config = "keep_rank";
   std::string res_info(100, 'a');
   size_t size = 100;
   // shape generalize
-  REG_OP_PARAM_GENERALIZE(tik2_py_interface_generalize_ok, generalize_stub_fail);
-  EXPECT_EQ(Tik2PyInterfaceGeneralized(op_type.c_str(), input_str.c_str(), output_str.c_str(), attrs_str.c_str(),
+  REG_OP_PARAM_GENERALIZE(ascendC_py_interface_generalize_ok, generalize_stub_fail);
+  EXPECT_EQ(AscendCPyInterfaceGeneralized(op_type.c_str(), input_str.c_str(), output_str.c_str(), attrs_str.c_str(),
                                        generalize_config.c_str(), const_cast<char *>(res_info.c_str()), size),
             0);
 
@@ -1613,7 +1613,7 @@ TEST_F(UtestRegister, tik2_py_interface_generalize_fail_by_callback) {
 }
 
 
-TEST_F(UtestRegister, tik2_py_interface_generalize_fail_without_callback) {
+TEST_F(UtestRegister, ascendC_py_interface_generalize_fail_without_callback) {
   setenv("ENABLE_RUNTIME_V2", "1", 0);
   const nlohmann::json input = R"([
 {"name": "test_0","dtype": "int8", "const_value": [1,2,3,4],"shape": [4,4,4,4],"format": "ND"},
@@ -1635,14 +1635,14 @@ TEST_F(UtestRegister, tik2_py_interface_generalize_fail_without_callback) {
   std::string res_info(100, 'a');
   size_t size = 100;
   // shape generalize
-  EXPECT_EQ(Tik2PyInterfaceGeneralized(op_type.c_str(), input_str.c_str(), output_str.c_str(), attrs_str.c_str(),
+  EXPECT_EQ(AscendCPyInterfaceGeneralized(op_type.c_str(), input_str.c_str(), output_str.c_str(), attrs_str.c_str(),
                                        generalize_config.c_str(), const_cast<char *>(res_info.c_str()), size),
             0);
 
   unsetenv("ENABLE_RUNTIME_V2");
 }
 
-TEST_F(UtestRegister, tik2_py_interface_generalize_fail_throw) {
+TEST_F(UtestRegister, ascendC_py_interface_generalize_fail_throw) {
   setenv("ENABLE_RUNTIME_V2", "1", 0);
   const nlohmann::json input = R"([
 {"name": "test_0","dtype": "float16", "const_value": [1,2,3,4],"shape": [4,4,4,4],"format": "ND"},
@@ -1659,22 +1659,22 @@ TEST_F(UtestRegister, tik2_py_interface_generalize_fail_throw) {
 { "name": "attr_2","dtype": "list_list_int32","value": [[1, 2], [3, 4]]},
 { "name": "op_para_size", "dtype": "uint16", "value": 50}])"_json;
   std::string attrs_str = attrs.dump();
-  std::string op_type = "tik2_py_interface_generalize_fail_throw";
+  std::string op_type = "ascendC_py_interface_generalize_fail_throw";
   std::string generalize_config = "keep_rank";
   std::string res_info(100, 'a');
   size_t size = 100;
   // shape generalize
-  REG_OP_PARAM_GENERALIZE(tik2_py_interface_generalize_fail_throw, generalize_stub_throw);
-  EXPECT_EQ(Tik2PyInterfaceGeneralized(op_type.c_str(), input_str.c_str(), output_str.c_str(), attrs_str.c_str(),
+  REG_OP_PARAM_GENERALIZE(ascendC_py_interface_generalize_fail_throw, generalize_stub_throw);
+  EXPECT_EQ(AscendCPyInterfaceGeneralized(op_type.c_str(), input_str.c_str(), output_str.c_str(), attrs_str.c_str(),
                                        generalize_config.c_str(), const_cast<char *>(res_info.c_str()), size),
             0);
 
   unsetenv("ENABLE_RUNTIME_V2");
 }
 
-TEST_F(UtestRegister, tik2_py_interface_generalize_fail_without_params) {
+TEST_F(UtestRegister, ascendC_py_interface_generalize_fail_without_params) {
   setenv("ENABLE_RUNTIME_V2", "1", 0);
-  EXPECT_EQ(Tik2PyInterfaceGeneralized(nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, 0), 0);
+  EXPECT_EQ(AscendCPyInterfaceGeneralized(nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, 0), 0);
   unsetenv("ENABLE_RUNTIME_V2");
 }
 
@@ -1703,38 +1703,38 @@ END_TILING_DATA_DEF
 // register class
 REGISTER_TILING_DATA_CLASS(TestMaxPoolStruct, TestMaxPoolTilingDataStruct)
 
-TEST_F(UtestRegister, tik2_py_interface_get_tiling_def_ok) {
+TEST_F(UtestRegister, ascendC_py_interface_get_tiling_def_ok) {
   setenv("ENABLE_RUNTIME_V2", "1", 0);
   std::string op_type = "TestMaxPool";
   std::string res_info(1024, 'a');
   size_t size = 1024;
-  EXPECT_EQ(Tik2PyInterfaceGetTilingDefInfo(op_type.c_str(), const_cast<char *>(res_info.c_str()), size), 1);
+  EXPECT_EQ(AscendCPyInterfaceGetTilingDefInfo(op_type.c_str(), const_cast<char *>(res_info.c_str()), size), 1);
   const nlohmann::json result =
       R"({"class_name":"TestMaxPoolTilingData","data_size":34,"fields":[{"classType":"0","dtype":"int8_t","name":"dim_0"},{"classType":"0","dtype":"int16_t","name":"dim_1"},{"classType":"0","dtype":"int32_t","name":"dim_2"},{"classType":"0","dtype":"int64_t","name":"dim_3"},{"classType":"0","dtype":"uint8_t","name":"dim_4"},{"classType":"0","dtype":"uint16_t","name":"dim_5"},{"classType":"0","dtype":"uint32_t","name":"dim_6"},{"classType":"0","dtype":"uint64_t","name":"dim_7"},{"classType":"0","dtype":"int32_t","name":"act_core_num"}]})"_json;
   std::string result_str = result.dump();
   EXPECT_EQ(result_str, res_info.substr(0, result_str.size()));
   op_type = "TestMaxPoolStruct";
-  EXPECT_EQ(Tik2PyInterfaceGetTilingDefInfo(op_type.c_str(), const_cast<char *>(res_info.c_str()), size), 1);
+  EXPECT_EQ(AscendCPyInterfaceGetTilingDefInfo(op_type.c_str(), const_cast<char *>(res_info.c_str()), size), 1);
   unsetenv("ENABLE_RUNTIME_V2");
 }
 
-TEST_F(UtestRegister, tik2_py_interface_get_tiling_def_without_callback) {
+TEST_F(UtestRegister, ascendC_py_interface_get_tiling_def_without_callback) {
   setenv("ENABLE_RUNTIME_V2", "1", 0);
   std::string op_type = "TestMaxPoolNotExist";
   std::string res_info(1024, 'a');
   size_t size = 1024;
   // check_supported
-  EXPECT_EQ(Tik2PyInterfaceGetTilingDefInfo(op_type.c_str(), const_cast<char *>(res_info.c_str()), size), 0);
+  EXPECT_EQ(AscendCPyInterfaceGetTilingDefInfo(op_type.c_str(), const_cast<char *>(res_info.c_str()), size), 0);
   unsetenv("ENABLE_RUNTIME_V2");
 }
 
-TEST_F(UtestRegister, tik2_py_interface_get_tiling_def_fail_without_params) {
+TEST_F(UtestRegister, ascendC_py_interface_get_tiling_def_fail_without_params) {
   setenv("ENABLE_RUNTIME_V2", "1", 0);
-  EXPECT_EQ(Tik2PyInterfaceGetTilingDefInfo(nullptr, nullptr, 0), 0);
+  EXPECT_EQ(AscendCPyInterfaceGetTilingDefInfo(nullptr, nullptr, 0), 0);
   unsetenv("ENABLE_RUNTIME_V2");
 }
 
-TEST_F(UtestRegister, tik2_register_tilingdata_base_ok) {
+TEST_F(UtestRegister, ascendC_register_tilingdata_base_ok) {
   setenv("ENABLE_RUNTIME_V2", "1", 0);
   auto params = TestMaxPoolTilingData();
   params.set_dim_0(0);
@@ -1770,7 +1770,7 @@ TEST_F(UtestRegister, tik2_register_tilingdata_base_ok) {
   unsetenv("ENABLE_RUNTIME_V2");
 }
 
-TEST_F(UtestRegister, tik2_register_tilingdata_base_failed) {
+TEST_F(UtestRegister, ascendC_register_tilingdata_base_failed) {
   setenv("ENABLE_RUNTIME_V2", "1", 0);
   auto paramStruct = TestMaxPoolTilingDataStruct();
   int8_t arr[] = {0, 1, 2, 3, 4, 5, 6, 7};
@@ -1805,7 +1805,7 @@ TEST_F(UtestRegister, tik2_register_tilingdata_base_failed) {
   unsetenv("ENABLE_RUNTIME_V2");
 }
 
-extern "C" int Tik2PyInterfaceOpReplay(const char *optype, const char *soc_version, int block_dim,
+extern "C" int AscendCPyInterfaceOpReplay(const char *optype, const char *soc_version, int block_dim,
                                        const char *tiling_data, const char *kernel_name, const char *entry_file,
                                        const char *output_kernel_file, int core_type, int task_ration);
 
@@ -1822,19 +1822,19 @@ int replay_stub_invalid_ret(ReplayFuncParam &param, const int core_typ) {
   return 0;
 }
 
-TEST_F(UtestRegister, tik2_py_interface_op_replay_ok) {
+TEST_F(UtestRegister, ascendC_py_interface_op_replay_ok) {
   setenv("ENABLE_RUNTIME_V2", "1", 0);
-  std::string op_type = "tik2_py_interface_op_replay_ok";
+  std::string op_type = "ascendC_py_interface_op_replay_ok";
   std::string soc_version = "ascend710";
   int blkdim = 32;
   std::string tilingdata = "\x00\x14\x00\x00\x00\n\x00(\x1e\x00\x00\x00\x00\x00\x00\x00";
-  std::string kernel_name = "tik2_py_interface_op_replay_ok";
-  std::string entry_file = "tik2_py_interface_op_replay_ok_entry_file.h";
-  std::string output_kernel_file = "tik2_py_interface_op_replay_ok_kernel_file.cce";
+  std::string kernel_name = "ascendC_py_interface_op_replay_ok";
+  std::string entry_file = "ascendC_py_interface_op_replay_ok_entry_file.h";
+  std::string output_kernel_file = "ascendC_py_interface_op_replay_ok_kernel_file.cce";
   int core_type = 0;
   int task_ration = 1;
-  REG_REPLAY_FUNC(tik2_py_interface_op_replay_ok, ascend710, replay_stub);
-  EXPECT_EQ(Tik2PyInterfaceOpReplay(op_type.c_str(), soc_version.c_str(), blkdim, tilingdata.c_str(),
+  REG_REPLAY_FUNC(ascendC_py_interface_op_replay_ok, ascend710, replay_stub);
+  EXPECT_EQ(AscendCPyInterfaceOpReplay(op_type.c_str(), soc_version.c_str(), blkdim, tilingdata.c_str(),
                                     kernel_name.c_str(), entry_file.c_str(), output_kernel_file.c_str(), core_type,
                                     task_ration),
             1);
@@ -1842,18 +1842,18 @@ TEST_F(UtestRegister, tik2_py_interface_op_replay_ok) {
   unsetenv("ENABLE_RUNTIME_V2");
 }
 
-TEST_F(UtestRegister, tik2_py_interface_op_replay_fail_without_callback) {
+TEST_F(UtestRegister, ascendC_py_interface_op_replay_fail_without_callback) {
   setenv("ENABLE_RUNTIME_V2", "1", 0);
-  std::string op_type = "tik2_py_interface_op_replay_fail_without_callback";
+  std::string op_type = "ascendC_py_interface_op_replay_fail_without_callback";
   std::string soc_version = "ascend710";
   int blkdim = 32;
   std::string tilingdata = "\x00\x14\x00\x00\x00\n\x00(\x1e\x00\x00\x00\x00\x00\x00\x00";
-  std::string kernel_name = "tik2_py_interface_op_replay_fail_without_callback";
-  std::string entry_file = "tik2_py_interface_op_replay_fail_without_callback_entry_file.h";
-  std::string output_kernel_file = "tik2_py_interface_op_replay_fail_without_callback_kernel_file.cce";
+  std::string kernel_name = "ascendC_py_interface_op_replay_fail_without_callback";
+  std::string entry_file = "ascendC_py_interface_op_replay_fail_without_callback_entry_file.h";
+  std::string output_kernel_file = "ascendC_py_interface_op_replay_fail_without_callback_kernel_file.cce";
   int core_type = 0;
   int task_ration = 1;
-  EXPECT_EQ(Tik2PyInterfaceOpReplay(op_type.c_str(), soc_version.c_str(), blkdim, tilingdata.c_str(),
+  EXPECT_EQ(AscendCPyInterfaceOpReplay(op_type.c_str(), soc_version.c_str(), blkdim, tilingdata.c_str(),
                                     kernel_name.c_str(), entry_file.c_str(), output_kernel_file.c_str(), core_type,
                                     task_ration),
             0);
@@ -1861,19 +1861,19 @@ TEST_F(UtestRegister, tik2_py_interface_op_replay_fail_without_callback) {
   unsetenv("ENABLE_RUNTIME_V2");
 }
 
-TEST_F(UtestRegister, tik2_py_interface_op_replay_fail_throw) {
+TEST_F(UtestRegister, ascendC_py_interface_op_replay_fail_throw) {
   setenv("ENABLE_RUNTIME_V2", "1", 0);
-  std::string op_type = "tik2_py_interface_op_replay_fail_throw";
+  std::string op_type = "ascendC_py_interface_op_replay_fail_throw";
   std::string soc_version = "ascend710";
   int blkdim = 32;
   std::string tilingdata = "\x00\x14\x00\x00\x00\n\x00(\x1e\x00\x00\x00\x00\x00\x00\x00";
-  std::string kernel_name = "tik2_py_interface_op_replay_fail_throw";
-  std::string entry_file = "tik2_py_interface_op_replay_fail_throw_entry_file.h";
-  std::string output_kernel_file = "tik2_py_interface_op_replay_fail_throw_kernel_file.cce";
+  std::string kernel_name = "ascendC_py_interface_op_replay_fail_throw";
+  std::string entry_file = "ascendC_py_interface_op_replay_fail_throw_entry_file.h";
+  std::string output_kernel_file = "ascendC_py_interface_op_replay_fail_throw_kernel_file.cce";
   int core_type = 0;
   int task_ration = 1;
-  REG_REPLAY_FUNC(tik2_py_interface_op_replay_fail_throw, ascend710, replay_stub_throw);
-  EXPECT_EQ(Tik2PyInterfaceOpReplay(op_type.c_str(), soc_version.c_str(), blkdim, tilingdata.c_str(),
+  REG_REPLAY_FUNC(ascendC_py_interface_op_replay_fail_throw, ascend710, replay_stub_throw);
+  EXPECT_EQ(AscendCPyInterfaceOpReplay(op_type.c_str(), soc_version.c_str(), blkdim, tilingdata.c_str(),
                                     kernel_name.c_str(), entry_file.c_str(), output_kernel_file.c_str(), core_type,
                                     task_ration),
             0);
@@ -1881,25 +1881,25 @@ TEST_F(UtestRegister, tik2_py_interface_op_replay_fail_throw) {
   unsetenv("ENABLE_RUNTIME_V2");
 }
 
-TEST_F(UtestRegister, tik2_py_interface_op_replay_fail_without_params) {
+TEST_F(UtestRegister, ascendC_py_interface_op_replay_fail_without_params) {
   setenv("ENABLE_RUNTIME_V2", "1", 0);
-  EXPECT_EQ(Tik2PyInterfaceOpReplay(nullptr, nullptr, 0, nullptr, nullptr, nullptr, nullptr, 0, 1), 0);
+  EXPECT_EQ(AscendCPyInterfaceOpReplay(nullptr, nullptr, 0, nullptr, nullptr, nullptr, nullptr, 0, 1), 0);
   unsetenv("ENABLE_RUNTIME_V2");
 }
 
-TEST_F(UtestRegister, tik2_py_interface_op_replay_invalid_core_type) {
+TEST_F(UtestRegister, ascendC_py_interface_op_replay_invalid_core_type) {
   setenv("ENABLE_RUNTIME_V2", "1", 0);
-  std::string op_type = "tik2_py_interface_op_replay_invalid_core_type";
+  std::string op_type = "ascendC_py_interface_op_replay_invalid_core_type";
   std::string soc_version = "ascend710";
   int blkdim = 32;
   std::string tilingdata = "\x00\x14\x00\x00\x00\n\x00(\x1e\x00\x00\x00\x00\x00\x00\x00";
-  std::string kernel_name = "tik2_py_interface_op_replay_invalid_core_type";
-  std::string entry_file = "tik2_py_interface_op_replay_invalid_core_type_entry_file.h";
-  std::string output_kernel_file = "tik2_py_interface_op_replay_invalid_core_type_kernel_file.cce";
+  std::string kernel_name = "ascendC_py_interface_op_replay_invalid_core_type";
+  std::string entry_file = "ascendC_py_interface_op_replay_invalid_core_type_entry_file.h";
+  std::string output_kernel_file = "ascendC_py_interface_op_replay_invalid_core_type_kernel_file.cce";
   int core_type = 4;
   int task_ration = 1;
-  REG_REPLAY_FUNC(tik2_py_interface_op_replay_invalid_core_type, ascend710, replay_stub);
-  EXPECT_EQ(Tik2PyInterfaceOpReplay(op_type.c_str(), soc_version.c_str(), blkdim, tilingdata.c_str(),
+  REG_REPLAY_FUNC(ascendC_py_interface_op_replay_invalid_core_type, ascend710, replay_stub);
+  EXPECT_EQ(AscendCPyInterfaceOpReplay(op_type.c_str(), soc_version.c_str(), blkdim, tilingdata.c_str(),
                                     kernel_name.c_str(), entry_file.c_str(), output_kernel_file.c_str(), core_type,
                                     task_ration),
             0);
@@ -1907,19 +1907,19 @@ TEST_F(UtestRegister, tik2_py_interface_op_replay_invalid_core_type) {
   unsetenv("ENABLE_RUNTIME_V2");
 }
 
-TEST_F(UtestRegister, tik2_py_interface_op_replay_invalid_task_ration) {
+TEST_F(UtestRegister, ascendC_py_interface_op_replay_invalid_task_ration) {
   setenv("ENABLE_RUNTIME_V2", "1", 0);
-  std::string op_type = "tik2_py_interface_op_replay_invalid_task_ration";
+  std::string op_type = "ascendC_py_interface_op_replay_invalid_task_ration";
   std::string soc_version = "ascend710";
   int blkdim = 32;
   std::string tilingdata = "\x00\x14\x00\x00\x00\n\x00(\x1e\x00\x00\x00\x00\x00\x00\x00";
-  std::string kernel_name = "tik2_py_interface_op_replay_invalid_task_ration";
-  std::string entry_file = "tik2_py_interface_op_replay_invalid_task_ration_entry_file.h";
-  std::string output_kernel_file = "tik2_py_interface_op_replay_invalid_task_ration_kernel_file.cce";
+  std::string kernel_name = "ascendC_py_interface_op_replay_invalid_task_ration";
+  std::string entry_file = "ascendC_py_interface_op_replay_invalid_task_ration_entry_file.h";
+  std::string output_kernel_file = "ascendC_py_interface_op_replay_invalid_task_ration_kernel_file.cce";
   int core_type = 0;
   int task_ration = -1;
-  REG_REPLAY_FUNC(tik2_py_interface_op_replay_invalid_task_ration, ascend710, replay_stub);
-  EXPECT_EQ(Tik2PyInterfaceOpReplay(op_type.c_str(), soc_version.c_str(), blkdim, tilingdata.c_str(),
+  REG_REPLAY_FUNC(ascendC_py_interface_op_replay_invalid_task_ration, ascend710, replay_stub);
+  EXPECT_EQ(AscendCPyInterfaceOpReplay(op_type.c_str(), soc_version.c_str(), blkdim, tilingdata.c_str(),
                                     kernel_name.c_str(), entry_file.c_str(), output_kernel_file.c_str(), core_type,
                                     task_ration),
             0);
@@ -1927,19 +1927,19 @@ TEST_F(UtestRegister, tik2_py_interface_op_replay_invalid_task_ration) {
   unsetenv("ENABLE_RUNTIME_V2");
 }
 
-TEST_F(UtestRegister, tik2_py_interface_op_replay_invalid_ret) {
+TEST_F(UtestRegister, ascendC_py_interface_op_replay_invalid_ret) {
   setenv("ENABLE_RUNTIME_V2", "1", 0);
-  std::string op_type = "tik2_py_interface_op_replay_invalid_ret";
+  std::string op_type = "ascendC_py_interface_op_replay_invalid_ret";
   std::string soc_version = "ascend710";
   int blkdim = 32;
   std::string tilingdata = "\x00\x14\x00\x00\x00\n\x00(\x1e\x00\x00\x00\x00\x00\x00\x00";
-  std::string kernel_name = "tik2_py_interface_op_replay_invalid_ret";
-  std::string entry_file = "tik2_py_interface_op_replay_invalid_ret_entry_file.h";
-  std::string output_kernel_file = "tik2_py_interface_op_replay_invalid_ret_kernel_file.cce";
+  std::string kernel_name = "ascendC_py_interface_op_replay_invalid_ret";
+  std::string entry_file = "ascendC_py_interface_op_replay_invalid_ret_entry_file.h";
+  std::string output_kernel_file = "ascendC_py_interface_op_replay_invalid_ret_kernel_file.cce";
   int core_type = 1;
   int task_ration = 2;
-  REG_REPLAY_FUNC(tik2_py_interface_op_replay_invalid_ret, ascend710, replay_stub_invalid_ret);
-  EXPECT_EQ(Tik2PyInterfaceOpReplay(op_type.c_str(), soc_version.c_str(), blkdim, tilingdata.c_str(),
+  REG_REPLAY_FUNC(ascendC_py_interface_op_replay_invalid_ret, ascend710, replay_stub_invalid_ret);
+  EXPECT_EQ(AscendCPyInterfaceOpReplay(op_type.c_str(), soc_version.c_str(), blkdim, tilingdata.c_str(),
                                     kernel_name.c_str(), entry_file.c_str(), output_kernel_file.c_str(), core_type,
                                     task_ration),
             0);

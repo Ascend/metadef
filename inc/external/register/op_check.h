@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-#ifndef INC_REGISTER_TIK2_OP_CHECK_H_
-#define INC_REGISTER_TIK2_OP_CHECK_H_
+#ifndef INC_REGISTER_ASCENDC_OP_CHECK_H_
+#define INC_REGISTER_ASCENDC_OP_CHECK_H_
 
 #include <map>
 
@@ -94,4 +94,4 @@ public:
 #define REG_REPLAY_FUNC(op_type, soc_version, func)                                                                    \
   static ReplayFuncHelper op_replay_registry_##op_type_##soc_version(#op_type, #soc_version, func)
 }  // end of namespace optiling
-#endif  // INC_REGISTER_TIK2_OP_CHECK_H_
+#endif  // INC_REGISTER_ASCENDC_OP_CHECK_H_
