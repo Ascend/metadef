@@ -220,4 +220,23 @@ TEST_F(BgIrAttrsUT, CreateListStringAttrBuffer) {
   EXPECT_STREQ(reinterpret_cast<const char *>(base->GetData()) + 12, "good");
   EXPECT_STREQ(reinterpret_cast<const char *>(base->GetData()) + 17, "job");
 }
+
+TEST_F(BgIrAttrsUT, CreateAttrBufferWithoutIrAttr) {
+  auto op_desc = std::make_shared<ge::OpDesc>("foo", "Foo");
+  op_desc->AppendIrAttrName("dtype");
+  ge::AttrUtils::SetDataType(op_desc, "dtype", ge::DT_INT32);
+
+  auto node = ge::NodeUtils::CreatNodeWithoutGraph(op_desc);
+  size_t attr_size;
+  ge::AnyValue value = ge::AnyValue::CreateFrom<int64_t>(2);
+  auto attr_buffer = bg::CreateAttrBufferWithoutIr(node, {value}, attr_size);
+  size_t gt_attr_size = sizeof(RuntimeAttrsDef) + sizeof(size_t) + sizeof(int64_t);
+  EXPECT_EQ(attr_size, gt_attr_size);
+  auto rt_attr_def = reinterpret_cast<RuntimeAttrsDef *>(attr_buffer.get());
+  ASSERT_NE(rt_attr_def, nullptr);
+  EXPECT_EQ(rt_attr_def->attr_num, 1U);
+  EXPECT_EQ(rt_attr_def->offset[0], sizeof(size_t) + sizeof(RuntimeAttrsDef));
+  auto base = reinterpret_cast<int8_t *>(rt_attr_def);
+  EXPECT_EQ(*reinterpret_cast<int64_t *>(base + rt_attr_def->offset[0]), 2);
+}
 }  // namespace gert
