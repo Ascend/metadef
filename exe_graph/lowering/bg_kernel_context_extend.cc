@@ -185,6 +185,15 @@ std::unique_ptr<uint8_t[]> CreateComputeNodeInfo(const ge::NodePtr &node,
   GE_ASSERT_NOTNULL(attr_buf, "Create attr buffer for node: %s failed", node->GetName().c_str());
   return CreateComputeNodeInfoImpl(attr_buf, attr_size, node, buffer_pool, total_size);
 }
+std::unique_ptr<uint8_t[]> CreateComputeNodeInfoWithoutIrAttr(const ge::NodePtr &node, BufferPool &buffer_pool,
+    const gert::OpImplKernelRegistry::PrivateAttrList &private_attrs, size_t &total_size) {
+  std::vector<ge::AnyValue> runtime_attrs_list;
+  GE_ASSERT_TRUE(GetPrivateAttrsList(node, private_attrs, runtime_attrs_list));
+  size_t attr_size;
+  const auto attr_buf = CreateAttrBufferWithoutIr(node, runtime_attrs_list, attr_size);
+  GE_ASSERT_NOTNULL(attr_buf, "Create attr buffer without ir for node: %s failed", node->GetName().c_str());
+  return CreateComputeNodeInfoImpl(attr_buf, attr_size, node, buffer_pool, total_size);
+}
 std::unique_ptr<uint8_t[]> CreateComputeNodeInfo(const ge::NodePtr &node, BufferPool &buffer_pool) {
   size_t total_size;
   return CreateComputeNodeInfo(node, buffer_pool, total_size);

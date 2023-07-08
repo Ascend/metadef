@@ -326,5 +326,16 @@ std::unique_ptr<uint8_t[]> CreateAttrBuffer(const ge::NodePtr &node,
   }
   return CreateAttrBuffer(runtime_attrs, size);
 }
+
+std::unique_ptr<uint8_t[]> CreateAttrBufferWithoutIr(const ge::NodePtr &node,
+                                                     const std::vector<ge::AnyValue> &runtime_attrs_list,
+                                                     size_t &size) {
+  (void)node;
+  std::vector<std::vector<uint8_t>> runtime_attrs;
+  for (auto &runtime_attr : runtime_attrs_list) {
+    AppendAttr(runtime_attr, runtime_attrs);
+  }
+  return CreateAttrBuffer(runtime_attrs, size);
+}
 }  // namespace bg
 }  // namespace gert
