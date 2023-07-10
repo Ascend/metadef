@@ -56,15 +56,15 @@ OpAttrDef &OpDef::Attr(const char *name) {
   return this->GetOrCreateAttr(name);
 }
 
-int OpDef::FindAttr(const char *name, OpAttrDef **attr) {
+ItemFindStatus OpDef::FindAttr(const char *name, OpAttrDef **attr) {
   std::vector<OpAttrDef> *attrList = &this->impl_->attrs;
   for (auto it = attrList->begin(); it != attrList->end(); it++) {
     if (ge::AscendString(it->GetName()) == ge::AscendString(name)) {
       *attr = &(*it);
-      return ITEM_FIND;
+      return ItemFindStatus::ITEM_FIND;
     }
   }
-  return ITEM_NOEXIST;
+  return ItemFindStatus::ITEM_NOEXIST;
 }
 
 OpAttrDef &OpDef::AddAttr(OpAttrDef &attr) {
@@ -74,7 +74,7 @@ OpAttrDef &OpDef::AddAttr(OpAttrDef &attr) {
 
 OpAttrDef &OpDef::GetOrCreateAttr(const char *name) {
   OpAttrDef *pAttr;
-  if (this->FindAttr(name, &pAttr) == ITEM_FIND) {
+  if (this->FindAttr(name, &pAttr) == ItemFindStatus::ITEM_FIND) {
     return *pAttr;
   } else {
     OpAttrDef attr(name);
@@ -130,7 +130,7 @@ void OpDef::OpProtoPost(const char *op_type) {
   gert::OpImplRegisterV2 implReg(impl);
 }
 
-void OpDef::MergeParam(std::vector<OpParamDef> &merge, std::vector<OpParamDef> &aicore_params) {
+void OpDef::MergeParam(std::vector<OpParamDef> &merge, std::vector<OpParamDef> &aicore_params) const {
   for (auto &aicoreParam : aicore_params) {
     bool find = false;
     for (auto &mergeParam : merge) {
@@ -146,7 +146,7 @@ void OpDef::MergeParam(std::vector<OpParamDef> &merge, std::vector<OpParamDef> &
   }
 }
 
-void OpDef::CheckParam(std::vector<OpParamDef> &params) {
+void OpDef::CheckParam(std::vector<OpParamDef> &params) const {
   for (auto &param : params) {
     if (param.GetFormats().size() != 0) {
       if (param.GetDataTypes().size() == 0) {

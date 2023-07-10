@@ -19,7 +19,6 @@
 
 #include <iostream>
 #include <vector>
-#include <utility>
 #include <memory>
 #include "register/op_impl_registry.h"
 #include "register/op_check.h"
@@ -28,7 +27,7 @@
 namespace ops {
 enum Option { IGNORE = 0, OPTIONAL = 1, REQUIRED = 2, DYNAMIC = 3 };
 
-enum AttrDataType {
+enum class AttrDataType {
   ATTR_DT_BOOL = 0,
   ATTR_DT_FLOAT = 1,
   ATTR_DT_INT = 2,
@@ -40,12 +39,12 @@ enum AttrDataType {
   ATTR_DT_MAX
 };
 
-enum ItemFindStatus { ITEM_FIND = 0, ITEM_NOEXIST = 1 };
+enum class ItemFindStatus { ITEM_FIND = 0, ITEM_NOEXIST = 1 };
 
 class OpParamDefImpl;
 class OpParamDef {
 public:
-  OpParamDef(const char *name);
+  explicit OpParamDef(const char *name);
   OpParamDef(const OpParamDef &def);
   ~OpParamDef();
   OpParamDef &operator=(const OpParamDef &def);
@@ -74,7 +73,7 @@ private:
 class OpAttrDefImpl;
 class OpAttrDef {
 public:
-  OpAttrDef(const char *name);
+  explicit OpAttrDef(const char *name);
   OpAttrDef(const OpAttrDef &attr_def);
   ~OpAttrDef();
   OpAttrDef &operator=(const OpAttrDef &attr_def);
@@ -177,14 +176,14 @@ public:
   void OpCheckPost(const char *op_type);
 
 private:
-  void Log(const char *op_type, const char *info);
+  void Log(const char *op_type, const char *info) const;
   std::unique_ptr<OpAICoreDefImpl> impl_;
 };
 
 class OpDefImpl;
 class OpDef {
 public:
-  OpDef(const char *type);
+  explicit OpDef(const char *type);
   OpDef(const OpDef &op_def);
   ~OpDef();
   OpDef &operator=(const OpDef &op_def);
@@ -209,9 +208,9 @@ public:
   OpAICoreDef &AICore(void);
 
 private:
-  void MergeParam(std::vector<OpParamDef> &merge, std::vector<OpParamDef> &aicore_params);
-  void CheckParam(std::vector<OpParamDef> &params);
-  int FindAttr(const char *name, OpAttrDef **attr);
+  void MergeParam(std::vector<OpParamDef> &merge, std::vector<OpParamDef> &aicore_params) const;
+  void CheckParam(std::vector<OpParamDef> &params) const;
+  ItemFindStatus FindAttr(const char *name, OpAttrDef **attr);
   OpAttrDef &AddAttr(OpAttrDef &attr);
   OpAttrDef &GetOrCreateAttr(const char *name);
   std::unique_ptr<OpDefImpl> impl_;

@@ -103,9 +103,9 @@ OpParamDef &OpParamDef::ReshapeType(const char *reshape_type) {
 }
 
 OpParamDef &OpParamDef::ValueDepend(Option value_depend) {
-  if (value_depend == REQUIRED) {
+  if (value_depend == Option::REQUIRED) {
     this->impl_->value_depend = "required";
-  } else if (value_depend == OPTIONAL) {
+  } else if (value_depend == Option::OPTIONAL) {
     this->impl_->value_depend = "optional";
   } else {
     this->impl_->value_depend = "";
@@ -117,7 +117,7 @@ ge::AscendString &OpParamDef::GetParamName(void) {
   return this->impl_->name;
 }
 Option OpParamDef::GetParamType(void) {
-  return Option(this->impl_->param_type);
+  return this->impl_->param_type;
 }
 std::vector<ge::DataType> &OpParamDef::GetDataTypes(void) {
   return this->impl_->types;
@@ -149,7 +149,7 @@ OpParamDef &OpParamTrunk::Output(const char *name) {
 
 OpParamDef &OpParamTrunk::ParamGetOrCreate(const char *name, bool is_output) {
   OpParamDef *param;
-  if (this->ParamFind(name, is_output, &param) == ITEM_FIND) {
+  if (this->ParamFind(name, is_output, &param) == ItemFindStatus::ITEM_FIND) {
     return *param;
   } else {
     OpParamDef addParam(name);
@@ -157,7 +157,7 @@ OpParamDef &OpParamTrunk::ParamGetOrCreate(const char *name, bool is_output) {
   }
 }
 
-int OpParamTrunk::ParamFind(const char *name, bool is_output, OpParamDef **param) {
+ItemFindStatus OpParamTrunk::ParamFind(const char *name, bool is_output, OpParamDef **param) {
   std::vector<OpParamDef> *paramList;
 
   if (is_output) {
@@ -168,10 +168,10 @@ int OpParamTrunk::ParamFind(const char *name, bool is_output, OpParamDef **param
   for (auto it = paramList->begin(); it != paramList->end(); it++) {
     if (it->GetParamName() == name) {
       *param = &(*it);
-      return ITEM_FIND;
+      return ItemFindStatus::ITEM_FIND;
     }
   }
-  return ITEM_NOEXIST;
+  return ItemFindStatus::ITEM_NOEXIST;
 }
 
 OpParamDef &OpParamTrunk::ParamAdd(OpParamDef &param, bool is_output) {

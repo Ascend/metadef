@@ -56,14 +56,14 @@ bool OpAttrDef::operator==(const OpAttrDef &attr_def) const {
 }
 
 OpAttrDef &OpAttrDef::AttrType(Option attr_type) {
-  if (attr_type == OPTIONAL) {
+  if (attr_type == Option::OPTIONAL) {
     this->impl_->required = false;
   }
   return *this;
 }
 
 OpAttrDef &OpAttrDef::Bool(void) {
-  this->impl_->data_type = ATTR_DT_BOOL;
+  this->impl_->data_type = AttrDataType::ATTR_DT_BOOL;
   return *this;
 }
 
@@ -73,7 +73,7 @@ OpAttrDef &OpAttrDef::Bool(bool value) {
 }
 
 OpAttrDef &OpAttrDef::Float(void) {
-  this->impl_->data_type = ATTR_DT_FLOAT;
+  this->impl_->data_type = AttrDataType::ATTR_DT_FLOAT;
   return *this;
 }
 
@@ -83,7 +83,7 @@ OpAttrDef &OpAttrDef::Float(float value) {
 }
 
 OpAttrDef &OpAttrDef::Int(void) {
-  this->impl_->data_type = ATTR_DT_INT;
+  this->impl_->data_type = AttrDataType::ATTR_DT_INT;
   return *this;
 }
 
@@ -93,7 +93,7 @@ OpAttrDef &OpAttrDef::Int(int64_t value) {
 }
 
 OpAttrDef &OpAttrDef::String(void) {
-  this->impl_->data_type = ATTR_DT_STR;
+  this->impl_->data_type = AttrDataType::ATTR_DT_STR;
   return *this;
 }
 
@@ -103,7 +103,7 @@ OpAttrDef &OpAttrDef::String(const char *value) {
 }
 
 OpAttrDef &OpAttrDef::ListBool(void) {
-  this->impl_->data_type = ATTR_DT_LIST_BOOL;
+  this->impl_->data_type = AttrDataType::ATTR_DT_LIST_BOOL;
   return *this;
 }
 
@@ -113,7 +113,7 @@ OpAttrDef &OpAttrDef::ListBool(std::vector<bool> value) {
 }
 
 OpAttrDef &OpAttrDef::ListFloat(void) {
-  this->impl_->data_type = ATTR_DT_LIST_FLOAT;
+  this->impl_->data_type = AttrDataType::ATTR_DT_LIST_FLOAT;
   return *this;
 }
 
@@ -123,7 +123,7 @@ OpAttrDef &OpAttrDef::ListFloat(std::vector<float> value) {
 }
 
 OpAttrDef &OpAttrDef::ListInt(void) {
-  this->impl_->data_type = ATTR_DT_LIST_INT;
+  this->impl_->data_type = AttrDataType::ATTR_DT_LIST_INT;
   return *this;
 }
 
@@ -133,7 +133,7 @@ OpAttrDef &OpAttrDef::ListInt(std::vector<int64_t> value) {
 }
 
 OpAttrDef &OpAttrDef::ListListInt(void) {
-  this->impl_->data_type = ATTR_DT_LIST_LIST_INT;
+  this->impl_->data_type = AttrDataType::ATTR_DT_LIST_LIST_INT;
   return *this;
 }
 
@@ -153,13 +153,13 @@ bool OpAttrDef::IsRequired(void) {
 ge::AscendString &OpAttrDef::GetCfgDataType(void) const {
   static ge::AscendString dtype_names[] = {"bool",     "float",     "int",     "str",
                                            "listBool", "listFloat", "listInt", "listListInt"};
-  return dtype_names[this->impl_->data_type];
+  return dtype_names[static_cast<size_t>(this->impl_->data_type)];
 }
 
 ge::AscendString &OpAttrDef::GetProtoDataType(void) const {
   static ge::AscendString dtype_names[] = {"Bool",     "Float",     "Int",     "String",
                                            "ListBool", "ListFloat", "ListInt", "ListListInt"};
-  return dtype_names[this->impl_->data_type];
+  return dtype_names[static_cast<size_t>(this->impl_->data_type)];
 }
 
 template<class T>
@@ -185,29 +185,29 @@ ge::AscendString &OpAttrDef::GetAttrDefaultVal(const char *brac) {
   std::stringstream sstream;
   std::vector<std::string> strList;
 
-  if (this->impl_->data_type == ATTR_DT_BOOL) {
+  if (this->impl_->data_type == AttrDataType::ATTR_DT_BOOL) {
     sstream << (this->impl_->bool_value ? "true" : "false");
     this->impl_->value = sstream.str().c_str();
-  } else if (this->impl_->data_type == ATTR_DT_FLOAT) {
+  } else if (this->impl_->data_type == AttrDataType::ATTR_DT_FLOAT) {
     sstream << this->impl_->float_value;
     this->impl_->value = sstream.str().c_str();
-  } else if (this->impl_->data_type == ATTR_DT_INT) {
+  } else if (this->impl_->data_type == AttrDataType::ATTR_DT_INT) {
     sstream << this->impl_->int_value;
     this->impl_->value = sstream.str().c_str();
-  } else if (this->impl_->data_type == ATTR_DT_STR) {
+  } else if (this->impl_->data_type == AttrDataType::ATTR_DT_STR) {
     this->impl_->value = this->impl_->str_value;
-  } else if (this->impl_->data_type == ATTR_DT_LIST_BOOL) {
+  } else if (this->impl_->data_type == AttrDataType::ATTR_DT_LIST_BOOL) {
     this->impl_->value = GetListStr<bool>(this->impl_->list_bool, brac, [](std::stringstream &s, bool v) {
                            s << (v ? "true" : "false") << ",";
                          }).c_str();
-  } else if (this->impl_->data_type == ATTR_DT_LIST_FLOAT) {
+  } else if (this->impl_->data_type == AttrDataType::ATTR_DT_LIST_FLOAT) {
     this->impl_->value =
         GetListStr<float>(this->impl_->list_float, brac, [](std::stringstream &s, float v) { s << v << ","; }).c_str();
-  } else if (this->impl_->data_type == ATTR_DT_LIST_INT) {
+  } else if (this->impl_->data_type == AttrDataType::ATTR_DT_LIST_INT) {
     this->impl_->value = GetListStr<int64_t>(this->impl_->list_int, brac, [](std::stringstream &s, int64_t v) {
                            s << v << ",";
                          }).c_str();
-  } else if (this->impl_->data_type == ATTR_DT_LIST_LIST_INT) {
+  } else if (this->impl_->data_type == AttrDataType::ATTR_DT_LIST_LIST_INT) {
     for (auto listInt : this->impl_->list_list_int) {
       strList.emplace_back(GetListStr<int64_t>(listInt, brac, [](std::stringstream &s, int64_t v) { s << v << ","; }));
     }
