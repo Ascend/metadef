@@ -21,6 +21,7 @@
 
 #include "graph/ascend_string.h"
 #include "graph/operator.h"
+#include "graph/ge_error_codes.h"
 
 namespace optiling {
 #define FUNC_CHECK_SUPPORTED "check_supported"

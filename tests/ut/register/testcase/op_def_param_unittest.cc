@@ -23,39 +23,39 @@ TEST_F(OpDefParamUT, ParamTest) {
   EXPECT_EQ(param == param3, false);
   OpParamTrunk desc;
   desc.Input("x1")
-      .ParamType(OPTIONAL)
+      .ParamType(Option::OPTIONAL)
       .DataType({ge::DT_FLOAT16})
       .Format({ge::FORMAT_ND})
       .UnknownShapeFormat({ge::FORMAT_NCHW})
       .NeedCompile(false)
-      .ValueDepend(REQUIRED)
+      .ValueDepend(Option::REQUIRED)
       .ReshapeType("NC");
   desc.Input("x2")
-      .ParamType(OPTIONAL)
+      .ParamType(Option::OPTIONAL)
       .DataType({ge::DT_FLOAT16})
       .Format({ge::FORMAT_ND})
       .UnknownShapeFormat({ge::FORMAT_ND})
       .NeedCompile(false)
-      .ValueDepend(REQUIRED)
+      .ValueDepend(Option::REQUIRED)
       .ReshapeType("NC");
   desc.Input("x2")
-      .ParamType(OPTIONAL)
+      .ParamType(Option::OPTIONAL)
       .DataType({ge::DT_FLOAT16})
       .Format({ge::FORMAT_ND})
       .UnknownShapeFormat({ge::FORMAT_ND})
       .NeedCompile(true)
-      .ValueDepend(OPTIONAL)
+      .ValueDepend(Option::OPTIONAL)
       .ReshapeType("NC");
   desc.Output("y")
-      .ParamType(OPTIONAL)
+      .ParamType(Option::OPTIONAL)
       .DataType({ge::DT_FLOAT16})
       .Format({ge::FORMAT_ND})
       .UnknownShapeFormat({ge::FORMAT_ND})
       .NeedCompile(false)
-      .ValueDepend(REQUIRED)
+      .ValueDepend(Option::REQUIRED)
       .ReshapeType("NC");
   EXPECT_EQ(desc.Input("x1").GetParamName(), "x1");
-  EXPECT_EQ(desc.Input("x1").GetParamType(), OPTIONAL);
+  EXPECT_EQ(desc.Input("x1").GetParamType(), Option::OPTIONAL);
   EXPECT_EQ(desc.Input("x1").GetDataTypes().size(), 1);
   EXPECT_EQ(desc.Input("x1").GetFormats().size(), 1);
   EXPECT_EQ(desc.Input("x1").GetUnknownShapeFormats().size(), 1);

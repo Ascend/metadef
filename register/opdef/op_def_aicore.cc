@@ -265,7 +265,7 @@ optiling::OP_CHECK_FUNC &OpAICoreDef::GetOpSpecInfo(void) {
 optiling::PARAM_GENERALIZE_FUNC &OpAICoreDef::GetParamGeneralize(void) {
   return this->impl_->op_generlize_func;
 }
-void OpAICoreDef::Log(const char *op_type, const char *info) {
+void OpAICoreDef::Log(const char *op_type, const char *info) const {
   GELOGD("%s, op_type:%s.", info, op_type);
 }
 }  // namespace ops

@@ -40,12 +40,12 @@ TEST_F(OpDefUT, Construct) {
   opDef.SetWorkspaceFlag(true);
   OpAICoreConfig aicConfig;
   aicConfig.Input("x1")
-      .ParamType(OPTIONAL)
+      .ParamType(Option::OPTIONAL)
       .DataType({ge::DT_FLOAT})
       .Format({ge::FORMAT_ND})
       .UnknownShapeFormat({ge::FORMAT_ND})
       .NeedCompile(false)
-      .ValueDepend(REQUIRED)
+      .ValueDepend(Option::REQUIRED)
       .ReshapeType("NC");
   opDef.AICore().AddConfig("ascend310p", aicConfig);
   opDef.OpProtoPost("Test");
@@ -55,7 +55,7 @@ TEST_F(OpDefUT, Construct) {
   EXPECT_EQ(inputs.size(), 1);
   OpParamDef param = inputs[0];
   EXPECT_EQ(param.GetParamName(), ge::AscendString("x1"));
-  EXPECT_EQ(param.GetParamType(), OPTIONAL);
+  EXPECT_EQ(param.GetParamType(), Option::OPTIONAL);
   EXPECT_EQ(param.GetDataTypes()[0], ge::DT_FLOAT);
   EXPECT_EQ(param.GetFormats()[0], ge::FORMAT_ND);
   EXPECT_EQ(param.GetUnknownShapeFormats()[0], ge::FORMAT_ND);
@@ -65,7 +65,7 @@ TEST_F(OpDefUT, Construct) {
   std::vector<OpParamDef> outputs = opDef.GetMergeOutputs(aicConfig);
   EXPECT_EQ(outputs.size(), 1);
   OpParamDef paramOut = outputs[0];
-  EXPECT_EQ(paramOut.GetParamType(), REQUIRED);
+  EXPECT_EQ(paramOut.GetParamType(), Option::REQUIRED);
   EXPECT_EQ(paramOut.GetDataTypes()[0], ge::DT_FLOAT16);
   EXPECT_EQ(paramOut.GetFormats()[0], ge::FORMAT_ND);
   EXPECT_EQ(opDef.GetWorkspaceFlag(), true);

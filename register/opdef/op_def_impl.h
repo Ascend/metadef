@@ -26,7 +26,7 @@ namespace ops {
 class OpParamDefImpl {
 public:
   ge::AscendString name;
-  int param_type = REQUIRED;
+  Option param_type = Option::REQUIRED;
   std::vector<ge::DataType> types;
   std::vector<ge::Format> formats;
   ge::AscendString need_compile = "";
@@ -43,7 +43,7 @@ public:
   std::vector<OpParamDef> &GetOutputs(void);
 
 private:
-  int ParamFind(const char *name, bool is_output, OpParamDef **param);
+  ItemFindStatus ParamFind(const char *name, bool is_output, OpParamDef **param);
   OpParamDef &ParamAdd(OpParamDef &param, bool is_output);
   OpParamDef &ParamGetOrCreate(const char *name, bool is_output);
   std::vector<OpParamDef> inputs_;
@@ -53,7 +53,7 @@ private:
 class OpAttrDefImpl {
 public:
   ge::AscendString name;
-  int data_type = 0;
+  AttrDataType data_type = AttrDataType::ATTR_DT_BOOL;
   bool required = true;
   bool bool_value = false;
   float float_value = 0;
