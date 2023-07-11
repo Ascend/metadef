@@ -123,7 +123,10 @@ TEST_F(InferShapeContextUT, GetInferenceContextPtrOK) {
                     .Build(op_desc);
   auto infer_shape_ctx = reinterpret_cast<gert::InferShapeContext *>(holder.context_);
   ASSERT_NE(infer_shape_ctx, nullptr);
-  EXPECT_EQ(reinterpret_cast<const void *>(infer_shape_ctx->GetInferShapeFunc()), kernel_func);
+  const size_t inputs_num = infer_shape_ctx->GetComputeNodeInputNum();
+  const size_t offset = inputs_num + static_cast<size_t>(InputExternLayout::kInferShapeFunc);
+  EXPECT_EQ(reinterpret_cast<const void *>(holder.context_->GetInputValue<KernelRegistry::KernelFunc>(offset - 1U)),
+            kernel_func);
   EXPECT_EQ(infer_shape_ctx->GetInferenceContextPtr(), inference_ctx.get());
 }
 }  // namespace gert
