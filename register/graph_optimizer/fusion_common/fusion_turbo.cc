@@ -329,6 +329,7 @@ ge::NodePtr FusionTurbo::AddWeightAfter(const ge::NodePtr &node, const int32_t &
                                         const WeightInfo &w_info) const {
   FUSION_TURBO_NOTNULL(node, nullptr);
   const auto output_anchor = node->GetOutDataAnchor(index);
+  FUSION_TURBO_NOTNULL(output_anchor, nullptr);
   const auto peer_in_anchors = output_anchor->GetPeerInDataAnchors();
   if (peer_in_anchors.empty()) {
     GELOGD("Node %s does not have peer in anchors.", node->GetName().c_str());
@@ -565,6 +566,7 @@ ge::NodePtr FusionTurbo::InsertNodeAfter(const string &op_name, const string &op
   FUSION_TURBO_NOTNULL(base_output, nullptr);
 
   const auto base_out_anchor = base_node->GetOutDataAnchor(base_output_index);
+  FUSION_TURBO_NOTNULL(base_out_anchor, nullptr);
   auto peer_in_anchors = base_out_anchor->GetPeerInDataAnchors();
 
   /* 1. Create new operator, OpDesc and Node. */
@@ -1013,6 +1015,7 @@ Status FusionTurbo::MoveDataOutputUp(const ge::NodePtr &node, int32_t index) {
           node->GetOpDesc()->GetOutputDesc(static_cast<uint32_t>(node_outanchor_index)));
     }
     const auto node_outanchor = node->GetOutDataAnchor(static_cast<int32_t>(node_outanchor_index));
+    FUSION_TURBO_NOTNULL(node_outanchor, FAILED);
     for (auto &peer_in_anchor : node_outanchor->GetPeerInDataAnchors()) {
       if (peer_in_anchor->Unlink(node_outanchor) != ge::GRAPH_SUCCESS) {
         return FAILED;
@@ -1082,6 +1085,7 @@ Status MoveDataInputUpToSubgraph(const ge::NodePtr &node, const int32_t index, R
   */
   for (uint32_t node_inanchor_index = 0; node_inanchor_index < node->GetAllInDataAnchorsSize(); ++node_inanchor_index) {
     const auto node_inanchor = node->GetInDataAnchor(static_cast<int32_t>(node_inanchor_index));
+    FUSION_TURBO_NOTNULL(node_inanchor, FAILED);
     const auto out_data_anchor = node_inanchor->GetPeerOutAnchor();
     if (out_data_anchor == nullptr) {
       continue;
@@ -1166,6 +1170,7 @@ Status MoveDataInputDownToSubgraph(const ge::NodePtr &node, const int32_t index,
 
   uint32_t subgraph_node_input_size = out_node_index.node->GetAllInDataAnchorsSize();
   ge::InDataAnchorPtr linkin_anchor = out_node_index.node->GetInDataAnchor(out_node_index.index);
+  FUSION_TURBO_NOTNULL(linkin_anchor, FAILED);
   linkin_anchor->UnlinkAll();
 
   // for multi inputs, first input connect to current node data in subgraph, others need create new data node
@@ -1182,7 +1187,9 @@ Status MoveDataInputDownToSubgraph(const ge::NodePtr &node, const int32_t index,
           input_tensor_desc);
     }
     const auto node_inanchor = node->GetInDataAnchor(static_cast<int32_t>(node_inanchor_index));
+    FUSION_TURBO_NOTNULL(node_inanchor, FAILED);
     const auto peer_out_anchor = node_inanchor->GetPeerOutAnchor();
+    FUSION_TURBO_NOTNULL(peer_out_anchor, FAILED);
     if (peer_out_anchor->Unlink(node_inanchor) != ge::GRAPH_SUCCESS) {
       return FAILED;
     }
