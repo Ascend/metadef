@@ -82,23 +82,6 @@ class InferShapeContext : public ExtendedKernelContext {
   }
 
   /**
-   * 获取InferShapeFunc
-   * @param NA
-   * @return 输出InferShapeFunc指针, 指针在节点输入地址后，仅执行态使用，编译态设置为null
-   */
-  KernelRegistry::KernelFunc GetInferShapeFunc() const {
-    const auto compute_node_info = reinterpret_cast<const ComputeNodeInfo *>(GetContext()->compute_node_info);
-    if (compute_node_info == nullptr) {
-      return nullptr;
-    }
-    const size_t offset = compute_node_info->GetInputsNum() + static_cast<size_t>(InputExternLayout::kInferShapeFunc);
-    if (GetContext()->input_size < offset) {
-      return nullptr;
-    }
-    return GetInputValue<KernelRegistry::KernelFunc>(offset - 1UL);
-  }
-
-  /**
    * 获取InferenceContext指针
    * @param NA
    * @return 输出InferenceContext指针 指针在节点输入地址后，仅编译态使用
