@@ -84,10 +84,10 @@ public:
   std::vector<FieldInfo> GetFieldInfo() const;
   const char *GetTilingClassName() const;
   size_t GetDataSize() const;
-  void InitData();
-  void GeLogError(const std::string& str) const;
 
 protected:
+  void InitData();
+  void GeLogError(const std::string& str) const;
   // dtype, name
   std::vector<FieldInfo> field_info_;
   std::map<const char *, size_t, CharPtrCmp> field_offset_map_;

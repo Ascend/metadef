@@ -92,16 +92,6 @@ OpParamDef &OpParamDef::UnknownShapeFormat(std::vector<ge::Format> formats) {
   return *this;
 }
 
-OpParamDef &OpParamDef::NeedCompile(bool need_compile) {
-  this->impl_->need_compile = need_compile ? "true" : "false";
-  return *this;
-}
-
-OpParamDef &OpParamDef::ReshapeType(const char *reshape_type) {
-  this->impl_->reshape_type = reshape_type;
-  return *this;
-}
-
 OpParamDef &OpParamDef::ValueDepend(Option value_depend) {
   if (value_depend == Option::REQUIRED) {
     this->impl_->value_depend = "required";
@@ -128,13 +118,6 @@ std::vector<ge::Format> &OpParamDef::GetFormats(void) {
 std::vector<ge::Format> &OpParamDef::GetUnknownShapeFormats(void) {
   return this->impl_->unknown_shape_formats;
 }
-ge::AscendString &OpParamDef::GetNeedCompile(void) {
-  return this->impl_->need_compile;
-}
-ge::AscendString &OpParamDef::GetReshapeType(void) {
-  return this->impl_->reshape_type;
-}
-
 ge::AscendString &OpParamDef::GetValueDepend(void) {
   return this->impl_->value_depend;
 }

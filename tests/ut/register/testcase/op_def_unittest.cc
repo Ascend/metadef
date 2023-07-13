@@ -44,9 +44,7 @@ TEST_F(OpDefUT, Construct) {
       .DataType({ge::DT_FLOAT})
       .Format({ge::FORMAT_ND})
       .UnknownShapeFormat({ge::FORMAT_ND})
-      .NeedCompile(false)
-      .ValueDepend(Option::REQUIRED)
-      .ReshapeType("NC");
+      .ValueDepend(Option::REQUIRED);
   opDef.AICore().AddConfig("ascend310p", aicConfig);
   opDef.OpProtoPost("Test");
   aicConfig.ExtendCfgInfo("rangeLimit.value", "limited");
@@ -59,8 +57,6 @@ TEST_F(OpDefUT, Construct) {
   EXPECT_EQ(param.GetDataTypes()[0], ge::DT_FLOAT);
   EXPECT_EQ(param.GetFormats()[0], ge::FORMAT_ND);
   EXPECT_EQ(param.GetUnknownShapeFormats()[0], ge::FORMAT_ND);
-  EXPECT_EQ(param.GetNeedCompile(), ge::AscendString("false"));
-  EXPECT_EQ(param.GetReshapeType(), ge::AscendString("NC"));
   EXPECT_EQ(param.GetValueDepend(), ge::AscendString("required"));
   std::vector<OpParamDef> outputs = opDef.GetMergeOutputs(aicConfig);
   EXPECT_EQ(outputs.size(), 1);
