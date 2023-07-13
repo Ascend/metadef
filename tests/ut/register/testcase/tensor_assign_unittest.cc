@@ -234,6 +234,33 @@ TEST_F(ConvertTensorUtest, SetWeightVarient) {
   ret_ = ge::AutoMappingUtil::ConvertTensor(tensor_, weight_);
   EXPECT_EQ(ret_, domi::SUCCESS);
 }
+TEST_F(ConvertTensorUtest, SetWeightDataString) {
+  GeTensorPtr weight = std::make_shared<GeTensor>();
+  const int64_t count = 2;
+  std::string s[count] = {"0.941042", "0.508840"};
+  std::string tensor_content;
+  for (int i = 0; i < count; ++i) {
+    tensor_content.push_back(static_cast<uint8_t>(s[i].size()));
+  }
+  for (int i = 0; i < count; ++i) {
+    tensor_content += s[i];
+  }
+  TensorAssign::SetWeightData(domi::tensorflow::DT_STRING, count, tensor_content, weight);
+  uint64_t tensor_data_size = 0;
+  for (int i = 0; i < count; ++i) {
+    tensor_data_size += sizeof(StringHead) + s[i].size() + 1;
+  }
+  EXPECT_EQ(weight->GetData().GetSize(), tensor_data_size);
+  std::string tensor_data[count];
+  int start_index = count * sizeof(StringHead);
+  for (int i = 0; i < count; ++i) {
+    for (int j = 0; j < s[i].size(); ++j) {
+      tensor_data[i] += weight->GetData().data()[start_index + j];
+    }
+    start_index += s[i].size() + 1;
+    EXPECT_EQ(tensor_data[i], s[i]);
+  }
+}
 
 TEST_F(ConvertTensorUtest, GetStringVal) {
   Status retStatus;
