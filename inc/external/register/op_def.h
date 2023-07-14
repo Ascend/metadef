@@ -168,13 +168,6 @@ public:
   void AddConfig(const char *soc);
   void AddConfig(const char *soc, OpAICoreConfig &aicore_config);
   std::map<ge::AscendString, OpAICoreConfig> &GetAICoreConfigs(void);
-  template<class T>
-  void OpTilingPost(const char *op_type) {
-    this->Log(op_type, "do optiling post");
-    gert::OpImplRegisterV2 impl(op_type);
-    impl.Tiling(this->GetTiling());
-    gert::OpImplRegisterV2 implReg(impl);
-  }
 
 private:
   void Log(const char *op_type, const char *info) const;
@@ -205,7 +198,6 @@ public:
   std::vector<OpParamDef> GetMergeInputs(OpAICoreConfig &aicore_config);
   std::vector<OpParamDef> GetMergeOutputs(OpAICoreConfig &aicore_config);
   bool GetWorkspaceFlag(void);
-  void OpProtoPost(const char *op_type);
   OpAICoreDef &AICore(void);
 
 private:

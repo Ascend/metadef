@@ -46,7 +46,6 @@ TEST_F(OpDefUT, Construct) {
       .UnknownShapeFormat({ge::FORMAT_ND})
       .ValueDepend(Option::REQUIRED);
   opDef.AICore().AddConfig("ascend310p", aicConfig);
-  opDef.OpProtoPost("Test");
   aicConfig.ExtendCfgInfo("rangeLimit.value", "limited");
   EXPECT_EQ(ge::AscendString("Test"), opDef.GetOpType());
   std::vector<OpParamDef> inputs = opDef.GetMergeInputs(aicConfig);
