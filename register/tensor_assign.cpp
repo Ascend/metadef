@@ -362,18 +362,32 @@ void TensorAssign::SetWeightData(const tensorflow::DataType data_type, const int
                           static_cast<size_t>(count) * sizeof(std::complex<float>));
   } else if (CheckStringVal(data_type)) {
     std::string weight_content;
-    if (tensor_content.size() > 1U) {
-      weight_content = tensor_content.substr(1U);  // first byte is tensor length
+    if (count > 0) {
+      weight_content = tensor_content.substr(count);  // each byte of top count bytes is each string length
     }
-    const size_t total_size = weight_content.size() + sizeof(ge::StringHead) + 1U;
+    GE_RETURN_IF(ge::TypeUtils::CheckUint64MulOverflow(static_cast<uint64_t>(count),
+                                                       static_cast<uint32_t>(sizeof(ge::StringHead))),
+                 "count multiply StringHead is overflow uint64, count: %u", static_cast<uint64_t>(count));
+    const size_t total_size = weight_content.size() + static_cast<size_t>(count) * (sizeof(ge::StringHead) + 1U);
     std::vector<uint8_t> addr(total_size);
     ge::StringHead *const string_head = ge::PtrToPtr<uint8_t, ge::StringHead>(addr.data());
-    const auto raw_data = ge::PtrAdd<uint8_t>(addr.data(), total_size + 1U, sizeof(ge::StringHead));
-    string_head->addr = static_cast<int64_t>(sizeof(ge::StringHead));
-    string_head->len = static_cast<int64_t>(weight_content.size());
-    CHECK_FALSE_EXEC(
-        memcpy_s(raw_data, weight_content.size() + 1U, weight_content.c_str(), weight_content.size() + 1U) == EOK,
-        GELOGW("[SetWeight][Copy] memcpy failed"));
+    auto raw_data =
+        ge::PtrAdd<uint8_t>(addr.data(), total_size + 1U, static_cast<size_t>(count) * sizeof(ge::StringHead));
+    uint64_t ptr_size = static_cast<uint64_t>(count) * sizeof(ge::StringHead);
+    uint64_t str_start_index = 0U;
+    for (int64_t i = 0; i < count; ++i) {
+      ge::PtrAdd<ge::StringHead>(string_head, static_cast<size_t>(count) + 1U, static_cast<size_t>(i))->addr =
+          static_cast<int64_t>(ptr_size);
+      auto str_len = static_cast<int64_t>(tensor_content.at(i));
+      const string &str = weight_content.substr(str_start_index, str_len);
+      str_start_index += str_len;
+      ge::PtrAdd<ge::StringHead>(string_head, static_cast<size_t>(count) + 1U, static_cast<size_t>(i))->len =
+          static_cast<int64_t>(str.size());
+      CHECK_FALSE_EXEC(memcpy_s(raw_data, str.size() + 1U, str.c_str(), str.size() + 1U) == EOK,
+                       GELOGW("[SetWeight][Copy] memcpy failed"));
+      raw_data = ge::PtrAdd<uint8_t>(raw_data, total_size + 1U, str.size() + 1U);
+      ptr_size += (str.size() + 1U);
+    }
     (void)weight->SetData(ge::PtrToPtr<uint8_t, const uint8_t>(addr.data()), total_size);
   } else {
     (void)weight->SetData(ge::PtrToPtr<char, uint8_t>(tensor_content_data),
