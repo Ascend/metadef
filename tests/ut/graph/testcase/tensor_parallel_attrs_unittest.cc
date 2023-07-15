@@ -71,6 +71,59 @@ TEST_F(TensorParallelAttrsTest, DeviceIndex_ToAndFromJsonStr) {
   EXPECT_EQ(device_index, another_device_index);
 }
 
+TEST_F(TensorParallelAttrsTest, ModelIndex_ToAndFromJsonStr) {
+  ModelIndex model_index;
+  model_index.stage_id = 0;
+  model_index.virtual_stage_id = 0;
+  model_index.device_index.indices = {0, 1, 2};
+  model_index.device_index.engine_type = "MyEngine";
+  std::string json_str = TensorParallelAttrs::ToJson(model_index);
+  ModelIndex another_model_index;
+  TensorParallelAttrs::FromJson(json_str, another_model_index);
+  EXPECT_TRUE(model_index.DebugString() == "MyEngine[0, 1, 2][S0, V0]");
+  EXPECT_EQ(model_index, another_model_index);
+}
+
+TEST_F(TensorParallelAttrsTest, ModelIndex_NotEqual) {
+  ModelIndex model_index;
+  model_index.stage_id = 0;
+  model_index.virtual_stage_id = 0;
+  model_index.device_index.indices = {0, 1, 2};
+  model_index.device_index.engine_type = "MyEngine";
+  std::string json_str = TensorParallelAttrs::ToJson(model_index);
+  ModelIndex another_model_index(model_index);
+  another_model_index.virtual_stage_id = 1;
+  EXPECT_TRUE(model_index != another_model_index);
+}
+
+TEST_F(TensorParallelAttrsTest, ModelIndex_LessBigger) {
+  ModelIndex model_index;
+  model_index.stage_id = 0;
+  model_index.virtual_stage_id = 1;
+  model_index.device_index.indices = {0, 1, 2};
+  model_index.device_index.engine_type = "MyEngine";
+  std::string json_str = TensorParallelAttrs::ToJson(model_index);
+  ModelIndex another_model_index(model_index);
+  another_model_index.virtual_stage_id = 2;
+  EXPECT_TRUE(model_index < another_model_index);
+  EXPECT_FALSE(another_model_index < model_index);
+  another_model_index.virtual_stage_id = 1;
+  EXPECT_FALSE(another_model_index < model_index);
+}
+
+TEST_F(TensorParallelAttrsTest, PipelineConfig_ToAndFromJsonStr) {
+  PipelineConfig pipeline_config;
+  pipeline_config.micro_batch = 1;
+  pipeline_config.stage_id = 0;
+  pipeline_config.virtual_stage_id = {0, 1};
+  std::string json_str = TensorParallelAttrs::ToJson(pipeline_config);
+  PipelineConfig another_pipeline_config;
+  TensorParallelAttrs::FromJson(json_str, another_pipeline_config);
+  EXPECT_EQ(pipeline_config.micro_batch, another_pipeline_config.micro_batch);
+  EXPECT_EQ(pipeline_config.stage_id, another_pipeline_config.stage_id);
+  EXPECT_EQ(pipeline_config.virtual_stage_id, another_pipeline_config.virtual_stage_id);
+}
+
 TEST_F(TensorParallelAttrsTest, DeviceIndex_operators) {
   std::map<DeviceIndex, int32_t> device_index_to_value;
   DeviceIndex device_index;
@@ -86,13 +139,6 @@ TEST_F(TensorParallelAttrsTest, DeviceIndex_operators) {
   ASSERT_EQ(device_index_to_value.count(another_device_index), 0U);
   ASSERT_NE(device_index, another_device_index);
   ASSERT_EQ(device_index, device_index);
-}
-
-TEST_F(TensorParallelAttrsTest, DeviceIndex_DeviceIdToString) {
-  DeviceIndex device_index;
-  device_index.indices = {0, 1, 2};
-  device_index.engine_type = "MyEngine";
-  ASSERT_EQ(device_index.DeviceIdToString(), "0:1:2");
 }
 
 TEST_F(TensorParallelAttrsTest, NodeDeployment_ToAndFromJsonStr) {
@@ -120,9 +166,16 @@ TEST_F(TensorParallelAttrsTest, ParseSendRecvTaskInfo) {
   "comm_pairs": [
     {
       "src_device_index": {"engine_type": "NPU", "index": [0, 0, 1]},
-      "dst_device_index": {"engine_type": "NPU", "index": [0, 0, 2]}
+      "src_virtual_stage_id": 0,
+      "dst_device_index": {"engine_type": "NPU", "index": [0, 0, 2]},
+      "dst_virtual_stage_id": 0
     }
-  ]
+  ],
+  "comm_type": "Queue",
+  "flow_attr": {
+    "depth":128,
+    "enqueue_policy":"FIFO"
+  }
 }
 )";
   CommTask comm_task;
@@ -131,6 +184,9 @@ TEST_F(TensorParallelAttrsTest, ParseSendRecvTaskInfo) {
   ASSERT_EQ(comm_task.send_recv_reshard_task->comm_pairs.size(), 1U);
   EXPECT_EQ(comm_task.send_recv_reshard_task->comm_pairs[0].src_device_index.indices, (std::vector<int32_t>{0, 0, 1}));
   EXPECT_EQ(comm_task.send_recv_reshard_task->comm_pairs[0].dst_device_index.indices, (std::vector<int32_t>{0, 0, 2}));
+  EXPECT_EQ(comm_task.send_recv_reshard_task->comm_type, kSendRecvCommTypeQueue);
+  EXPECT_EQ(comm_task.send_recv_reshard_task->flow_attr.depth, 128);
+  EXPECT_EQ(comm_task.send_recv_reshard_task->flow_attr.enqueue_policy, kFlowAttrEnqueuePolicyFifo);
 
   CommTask out_comm_task;
   TestToAndFromJson(comm_task, out_comm_task);
@@ -307,7 +363,8 @@ TEST_F(TensorParallelAttrsTest, ParseSliceCommTask) {
 {
   "task_type": "Slice",
   "offsets": [2, 4],
-  "size": [4, 8]
+  "size": [4, 8],
+  "device_index":{"engine_type": "NPU", "index": [0]}
 }
 )";
   CommTask comm_task;
@@ -318,6 +375,8 @@ TEST_F(TensorParallelAttrsTest, ParseSliceCommTask) {
   ASSERT_TRUE(out_comm_task.slice_reshard_task != nullptr);
   ASSERT_EQ(out_comm_task.slice_reshard_task->offsets, (std::vector<int64_t>{2, 4}));
   ASSERT_EQ(out_comm_task.slice_reshard_task->sizes, (std::vector<int64_t>{4, 8}));
+  ASSERT_EQ(out_comm_task.slice_reshard_task->device_index.engine_type, "NPU");
+  ASSERT_EQ(out_comm_task.slice_reshard_task->device_index.indices, (std::vector<int32_t>{0}));
 }
 
 TEST_F(TensorParallelAttrsTest, ParseSliceByAxisCommTask) {
@@ -537,9 +596,11 @@ TEST_F(TensorParallelAttrsTest, ParseTensorReshardInfo) {
     }
   ],
   "peer_inputs": [
-    {"step_id": 1, "node_name": "dst_node", "input_index": 0},
-    {"step_id": 1, "node_name": "dst_node_1", "input_index": 1}
-  ]
+    {"step_id": 1, "node_name": "dst_node", "input_index": 0, "stage_id": 0, "virtual_stage_id": 0},
+    {"step_id": 1, "node_name": "dst_node_1", "input_index": 1, "stage_id": 0, "virtual_stage_id": 0}
+  ],
+  "stage_id":1,
+  "virtual_stage_id":2
 }
 )";
   OutputReshardRes tensor_reshard_info;
@@ -552,6 +613,8 @@ TEST_F(TensorParallelAttrsTest, ParseTensorReshardInfo) {
   EXPECT_EQ(tensor_reshard_info.peer_inputs[1].node_name, "dst_node_1");
   EXPECT_EQ(tensor_reshard_info.peer_inputs[1].step_id, 1);
   EXPECT_EQ(tensor_reshard_info.peer_inputs[1].input_index, 1);
+  EXPECT_EQ(tensor_reshard_info.stage_id, 1);
+  EXPECT_EQ(tensor_reshard_info.virtual_stage_id, 2);
 }
 
 TEST_F(TensorParallelAttrsTest, ReshardAttrToAndFromJson) {
@@ -587,8 +650,8 @@ TEST_F(TensorParallelAttrsTest, ReshardAttrToAndFromJson) {
         }
       ],
       "peer_inputs": [
-        {"step_id": 1, "node_name": "dst_node", "input_index": 0},
-        {"step_id": 1, "node_name": "dst_node_1", "input_index": 1}
+        {"step_id": 1, "node_name": "dst_node", "input_index": 0, "stage_id": 0, "virtual_stage_id": 0},
+        {"step_id": 1, "node_name": "dst_node_1", "input_index": 1, "stage_id": 0, "virtual_stage_id": 0}
       ]
     }
   ]
@@ -629,6 +692,102 @@ TEST_F(TensorParallelAttrsTest, TensorDeploymentToAndFromJson) {
   const auto &tensor_slice_deployment = tensor_deployment_from_json.shard_deployment;
   EXPECT_EQ(tensor_slice_deployment.device_indices_each_slice.size(), 4);
   EXPECT_EQ(tensor_slice_deployment.axis_slices.size(), 2);
+}
+
+TEST_F(TensorParallelAttrsTest, TensorDeploymentsToAndFromJson) {
+  const std::string &json_str =
+      R"(
+{
+	"deployments": [
+		[1, {
+			"shard_deployment": {
+				"axis_slices": [
+                  [[0, 2], [2, 4]],
+                  [[0, 4], [4, 8]]
+				],
+				"device_indices_each_slice": [
+                  [{"engine_type": "NPU", "index": [0, 0, 0]}],
+                  [{"engine_type": "NPU", "index": [0, 0, 1]}],
+                  [{"engine_type": "NPU", "index": [0, 0, 2]}],
+                  [{"engine_type": "NPU", "index": [0, 0, 3]}]
+				]
+			},
+			"verbose": "verbose_val"
+		}],
+        [2, {
+			"shard_deployment": {
+				"axis_slices": [
+                  [[0, 2], [2, 4]],
+                  [[0, 4], [4, 8]]
+				],
+				"device_indices_each_slice": [
+                  [{"engine_type": "NPU", "index": [0, 1, 0]}],
+                  [{"engine_type": "NPU", "index": [0, 1, 1]}],
+                  [{"engine_type": "NPU", "index": [0, 1, 2]}],
+                  [{"engine_type": "NPU", "index": [0, 1, 3]}]
+				]
+			},
+			"verbose": "verbose_val"
+		}]
+	]
+}
+)";
+  TensorDeployments tensor_deployments;
+  ASSERT_EQ(TensorParallelAttrs::FromJson(json_str, tensor_deployments), SUCCESS);
+  const auto str = TensorParallelAttrs::ToJson(tensor_deployments);
+  ASSERT_EQ(tensor_deployments.deployments.size(), 2);
+
+  TensorDeployments tensor_deployments_from_json;
+  ASSERT_EQ(TensorParallelAttrs::FromJson(str, tensor_deployments_from_json), SUCCESS);
+  const auto &tensor_slice_deployment = tensor_deployments_from_json.deployments[1].shard_deployment;
+  EXPECT_EQ(tensor_slice_deployment.device_indices_each_slice.size(), 4);
+  EXPECT_EQ(tensor_slice_deployment.axis_slices.size(), 2);
+}
+
+TEST_F(TensorParallelAttrsTest, NodeDeploymentsToAndFromJson) {
+  const std::string &json_str =
+      R"(
+{
+	"deployments": [
+		[1, {
+			"devices": [{
+				"engine_type": "CPU",
+				"index": [0, 0, 1]
+			}, {
+				"engine_type": "NPU",
+				"index": [0, 0, 3]
+			}],
+			"pipeline_config": {
+				"micro_batch": 1,
+				"stage_id": 0,
+				"virtual_stage_id": []
+			}
+		}],
+		[2, {
+			"devices": [{
+				"engine_type": "",
+				"index": []
+			}],
+			"pipeline_config": {
+				"micro_batch": 1,
+				"stage_id": 0,
+				"virtual_stage_id": []
+			}
+		}]
+	]
+}
+)";
+  NodeDeployments node_deployments;
+  ASSERT_EQ(TensorParallelAttrs::FromJson(json_str, node_deployments), SUCCESS);
+  const auto str = TensorParallelAttrs::ToJson(node_deployments);
+  ASSERT_EQ(node_deployments.deployments.size(), 2);
+
+  NodeDeployments node_deployments_from_json;
+  ASSERT_EQ(TensorParallelAttrs::FromJson(str, node_deployments_from_json), SUCCESS);
+  const auto &devices = node_deployments_from_json.deployments[1].devices;
+  EXPECT_EQ(devices.size(), 2);
+  EXPECT_TRUE(devices[0].engine_type == "CPU");
+  EXPECT_TRUE(devices[1].engine_type == "NPU");
 }
 
 TEST_F(TensorParallelAttrsTest, StructCmp) {

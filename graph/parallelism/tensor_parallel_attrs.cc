@@ -112,17 +112,6 @@ std::string DeviceIndex::DebugString() const {
   return engine_type + ToString(indices);
 }
 
-std::string DeviceIndex::DeviceIdToString() const {
-  if (indices.empty()) {
-    return "";
-  }
-  auto device_id = std::to_string(indices[0U]);
-  for (size_t i = 1U; i < indices.size(); ++i) {
-    device_id += (":" + std::to_string(indices[i]));
-  }
-  return device_id;
-}
-
 USED_BY_JSON void to_json(Json &j, const DimSlice &dim_slice) {
   j = std::vector<int64_t>{dim_slice.begin, dim_slice.end};
 }
@@ -150,6 +139,32 @@ USED_BY_JSON void from_json(const Json &j, DeviceIndex &device_index) {
   GetValue(j, "index", device_index.indices);
 }
 
+USED_BY_JSON void to_json(Json &j, const ModelIndex &model_index) {
+  j = Json();
+  j["device_index"] = model_index.device_index;
+  j["virtual_stage_id"] = model_index.virtual_stage_id;
+  j["stage_id"] = model_index.stage_id;
+}
+
+USED_BY_JSON void from_json(const Json &j, ModelIndex &model_index) {
+  GetValue(j, "device_index", model_index.device_index);
+  GetValue(j, "virtual_stage_id", model_index.virtual_stage_id);
+  GetValue(j, "stage_id", model_index.stage_id);
+}
+
+USED_BY_JSON void to_json(Json &j, const PipelineConfig &pipeline_config) {
+  j = Json();
+  j["micro_batch"] = pipeline_config.micro_batch;
+  j["stage_id"] = pipeline_config.stage_id;
+  j["virtual_stage_id"] = pipeline_config.virtual_stage_id;
+}
+
+USED_BY_JSON void from_json(const Json &j, PipelineConfig &pipeline_config) {
+  GetValue(j, "micro_batch", pipeline_config.micro_batch);
+  GetValue(j, "stage_id", pipeline_config.stage_id);
+  GetValue(j, "virtual_stage_id", pipeline_config.virtual_stage_id);
+}
+
 USED_BY_JSON void to_json(Json &j, const TensorSliceDeployment &tensor_slice_deployment) {
   j = Json();
   j["device_indices_each_slice"] = tensor_slice_deployment.device_indices_each_slice;
@@ -174,24 +189,60 @@ USED_BY_JSON void from_json(const Json &j, TensorDeployment &tensor_deployment) 
   TryGetValue(j, "verbose", tensor_deployment.verbose);
 }
 
+USED_BY_JSON void to_json(Json &j, const TensorDeployments &tensor_deployments) {
+  j = Json();
+  j["deployments"] = tensor_deployments.deployments;
+}
+
+USED_BY_JSON void from_json(const Json &j, NodeDeployments &node_deployments) {
+  GetValue(j, "deployments", node_deployments.deployments);
+}
+
+USED_BY_JSON void from_json(const Json &j, TensorDeployments &tensor_deployments) {
+  GetValue(j, "deployments", tensor_deployments.deployments);
+}
+
 USED_BY_JSON void to_json(Json &j, const NodeDeployment &node_deployment) {
   j = Json();
   j["devices"] = node_deployment.devices;
+  j["pipeline_config"] = node_deployment.pipeline_config;
 }
 
 USED_BY_JSON void from_json(const Json &j, NodeDeployment &node_deployment) {
   GetValue(j, "devices", node_deployment.devices);
+  GetValue(j, "pipeline_config", node_deployment.pipeline_config);
 }
+
+USED_BY_JSON void to_json(Json &j, const NodeDeployments &node_deployments) {
+  j = Json();
+  j["deployments"] = node_deployments.deployments;
+}
+
 
 USED_BY_JSON void to_json(Json &j, const CommPair &comm_pair) {
   j = Json();
   j["src_device_index"] = comm_pair.src_device_index;
   j["dst_device_index"] = comm_pair.dst_device_index;
+  j["src_virtual_stage_id"] = comm_pair.src_virtual_stage_id;
+  j["dst_virtual_stage_id"] = comm_pair.dst_virtual_stage_id;
 }
 
 USED_BY_JSON void from_json(const Json &j, CommPair &comm_pair) {
   GetValue(j, "src_device_index", comm_pair.src_device_index);
   GetValue(j, "dst_device_index", comm_pair.dst_device_index);
+  TryGetValue(j, "src_virtual_stage_id", comm_pair.src_virtual_stage_id);
+  TryGetValue(j, "dst_virtual_stage_id", comm_pair.dst_virtual_stage_id);
+}
+
+USED_BY_JSON void to_json(Json &j, const FlowAttr &comm_group) {
+  j = Json();
+  j["depth"] = comm_group.depth;
+  j["enqueue_policy"] = comm_group.enqueue_policy;
+}
+
+USED_BY_JSON void from_json(const Json &j, FlowAttr &comm_group) {
+  GetValue(j, "depth", comm_group.depth);
+  GetValue(j, "enqueue_policy", comm_group.enqueue_policy);
 }
 
 USED_BY_JSON void to_json(Json &j, const CommGroup &comm_group) {
@@ -207,11 +258,15 @@ USED_BY_JSON void to_json(Json &j, const SendRecvReshardTask &task_info) {
   j["task_type"] = kCommTaskTypeSendReceive;
   j["comm_pairs"] = task_info.comm_pairs;
   j["parallel_group"] = task_info.parallel_group;
+  j["comm_type"] = task_info.comm_type;
+  j["flow_attr"] = task_info.flow_attr;
 }
 
 USED_BY_JSON void from_json(const Json &j, SendRecvReshardTask &task_info) {
   GetValue(j, "comm_pairs", task_info.comm_pairs);
+  GetValue(j, "comm_type", task_info.comm_type);
   TryGetValue(j, "parallel_group", task_info.parallel_group);
+  TryGetValue(j, "flow_attr", task_info.flow_attr);
 }
 
 USED_BY_JSON void to_json(Json &j, const AllGatherReshardTask &task_info) {
@@ -305,11 +360,13 @@ USED_BY_JSON void to_json(Json &j, const SliceReshardTask &task_info) {
   j["task_type"] = kCommTaskTypeSlice;
   j["offsets"] = task_info.offsets;
   j["size"] = task_info.sizes;
+  j["device_index"] = task_info.device_index;
 }
 
 USED_BY_JSON void from_json(const Json &j, SliceReshardTask &task_info) {
   GetValue(j, "offsets", task_info.offsets);
   GetValue(j, "size", task_info.sizes);
+  GetValue(j, "device_index", task_info.device_index);
 }
 
 USED_BY_JSON void to_json(Json &j, const SliceByAxisReshardTask &task_info) {
@@ -427,12 +484,16 @@ USED_BY_JSON void to_json(Json &j, const PeerInput &peer_input) {
   j["step_id"] = peer_input.step_id;
   j["node_name"] = peer_input.node_name;
   j["input_index"] = peer_input.input_index;
+  j["stage_id"] = peer_input.stage_id;
+  j["virtual_stage_id"] = peer_input.virtual_stage_id;
 }
 
 USED_BY_JSON void from_json(const Json &j, PeerInput &peer_input) {
   GetValue(j, "step_id", peer_input.step_id);
   GetValue(j, "node_name", peer_input.node_name);
   GetValue(j, "input_index", peer_input.input_index);
+  GetValue(j, "stage_id", peer_input.stage_id);
+  GetValue(j, "virtual_stage_id", peer_input.virtual_stage_id);
 }
 
 USED_BY_JSON void to_json(Json &j, const OutputReshardRes &reshard_res) {
@@ -440,12 +501,16 @@ USED_BY_JSON void to_json(Json &j, const OutputReshardRes &reshard_res) {
   j["comm_steps"] = reshard_res.comm_steps;
   j["peer_inputs"] = reshard_res.peer_inputs;
   j["device_list"] = reshard_res.device_indices;
+  j["stage_id"] = reshard_res.stage_id;
+  j["virtual_stage_id"] = reshard_res.virtual_stage_id;
 }
 
 USED_BY_JSON void from_json(const Json &j, OutputReshardRes &reshard_res) {
   GetValue(j, "comm_steps", reshard_res.comm_steps);
   GetValue(j, "peer_inputs", reshard_res.peer_inputs);
   GetValue(j, "device_list", reshard_res.device_indices);
+  TryGetValue(j, "stage_id", reshard_res.stage_id);
+  TryGetValue(j, "virtual_stage_id", reshard_res.virtual_stage_id);
 }
 
 USED_BY_JSON void to_json(Json &j, const ReshardAttr &reshard_attr) {
@@ -460,6 +525,15 @@ Status TensorParallelAttrs::FromJson(const std::string &json_str, DeviceIndex &d
   return ParseFromJson("DeviceIndex", json_str, device_index);
 }
 
+Status TensorParallelAttrs::FromJson(const std::string &json_str, ModelIndex &model_index) {
+  return ParseFromJson("ModelIndex", json_str, model_index);
+}
+
+Status TensorParallelAttrs::FromJson(const std::string &json_str, PipelineConfig &pipeline_config) {
+  return ParseFromJson("PipelineConfig", json_str, pipeline_config);
+}
+
+
 Status TensorParallelAttrs::FromJson(const std::string &json_str,
                                      ReshardAttr &reshard_attr) {
   return ParseFromJson("ReshardRes", json_str, reshard_attr);
@@ -468,6 +542,16 @@ Status TensorParallelAttrs::FromJson(const std::string &json_str,
 Status TensorParallelAttrs::FromJson(const std::string &json_str,
                                      TensorDeployment &tensor_deployment) {
   return ParseFromJson("TensorDeployment", json_str, tensor_deployment);
+}
+
+Status TensorParallelAttrs::FromJson(const std::string &json_str,
+                                     TensorDeployments &tensor_deployments) {
+  return ParseFromJson("TensorDeployments", json_str, tensor_deployments);
+}
+
+Status TensorParallelAttrs::FromJson(const std::string &json_str,
+                                     NodeDeployments &node_deployments) {
+  return ParseFromJson("NodeDeployments", json_str, node_deployments);
 }
 
 Status TensorParallelAttrs::FromJson(const std::string &json_str, CommTask &comm_task) {
@@ -491,6 +575,14 @@ std::string TensorParallelAttrs::ToJson(const DeviceIndex &device_index) {
   return ToJsonString(device_index);
 }
 
+std::string TensorParallelAttrs::ToJson(const ModelIndex &model_index) {
+  return ToJsonString(model_index);
+}
+
+std::string TensorParallelAttrs::ToJson(const PipelineConfig &pipeline_config) {
+  return ToJsonString(pipeline_config);
+}
+
 std::string TensorParallelAttrs::ToJson(const NodeDeployment &node_deployment) {
   return ToJsonString(node_deployment);
 }
@@ -501,6 +593,14 @@ std::string TensorParallelAttrs::ToJson(const TensorDeployment &tensor_deploymen
 
 std::string TensorParallelAttrs::ToJson(const ReshardAttr &reshard_attr) {
   return ToJsonString(reshard_attr);
+}
+
+std::string TensorParallelAttrs::ToJson(const TensorDeployments &tensor_deployments) {
+  return ToJsonString(tensor_deployments);
+}
+
+std::string TensorParallelAttrs::ToJson(const NodeDeployments &node_deployments) {
+  return ToJsonString(node_deployments);
 }
 
 CommTaskBuilder::CommTaskBuilder() {
@@ -624,6 +724,24 @@ bool operator<(const DeviceIndex &lhs, const DeviceIndex &rhs) {
   return lhs.indices < rhs.indices;
 }
 
+bool operator==(const ModelIndex &lhs, const ModelIndex &rhs) {
+  return (lhs.device_index == rhs.device_index) && (lhs.virtual_stage_id == rhs.virtual_stage_id);
+}
+
+bool operator!=(const ModelIndex &lhs, const ModelIndex &rhs) {
+  return !(rhs == lhs);
+}
+
+bool operator<(const ModelIndex &lhs, const ModelIndex &rhs) {
+  if (lhs.virtual_stage_id < rhs.virtual_stage_id) {
+    return true;
+  }
+  if (rhs.virtual_stage_id < lhs.virtual_stage_id) {
+    return false;
+  }
+  return lhs.device_index < rhs.device_index;
+}
+
 bool operator==(const CommStepInput &lhs, const CommStepInput &rhs) {
   return (lhs.step_id == rhs.step_id) && (lhs.output_index == rhs.output_index);
 }
@@ -710,6 +828,10 @@ bool operator<(const PeerOutNodeInfo &lhs, const PeerOutNodeInfo &rhs) {
     return false;
   }
   return lhs.node_info < rhs.node_info;
+}
+
+std::string ModelIndex::DebugString() const {
+  return device_index.DebugString() + "[S" + std::to_string(stage_id) + ", V" + std::to_string(virtual_stage_id) + "]";
 }
 }  // namespace tp
 }  // namespace ge
