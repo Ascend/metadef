@@ -168,7 +168,7 @@ OpAICoreDef &OpAICoreDef::SetParamGeneralize(optiling::PARAM_GENERALIZE_FUNC fun
   return *this;
 }
 
-void OpAICoreDef::AddConfig(const char *soc) {
+OpAICoreDef &OpAICoreDef::AddConfig(const char *soc) {
   OpAICoreConfig aicore_config;
   aicore_config.DynamicCompileStaticFlag(true)
     .DynamicFormatFlag(true)
@@ -177,11 +177,13 @@ void OpAICoreDef::AddConfig(const char *soc) {
     .NeedCheckSupportFlag(false)
     .PrecisionReduceFlag(true);
   this->AddConfig(soc, aicore_config);
+  return *this;
 }
 
-void OpAICoreDef::AddConfig(const char *soc, OpAICoreConfig &aicore_config) {
+OpAICoreDef &OpAICoreDef::AddConfig(const char *soc, OpAICoreConfig &aicore_config) {
   this->impl_->aicore_configs.erase(ge::AscendString(soc));
   this->impl_->aicore_configs.emplace(ge::AscendString(soc), aicore_config);
+  return *this;
 }
 
 std::map<ge::AscendString, OpAICoreConfig> &OpAICoreDef::GetAICoreConfigs(void) {
