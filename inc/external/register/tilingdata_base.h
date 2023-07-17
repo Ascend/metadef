@@ -129,57 +129,54 @@ REGISTER_TILING_DATA_CLASS(MaxPool, MaxPoolTilingData)
 #define BEGIN_TILING_DATA_DEF(class_name)                                                                              \
   class class_name : public TilingDef {                                                                                \
    public:                                                                                                             \
-    class FieldHandler {                                                                                               \
-     public:                                                                                                           \
-      FieldHandler(class_name *pinstance, const char *dtype, const char *name, size_t len) {                           \
-        pinstance->field_info_.push_back( { dtype, name });                                                            \
-        pinstance->field_offset_map_[name] = pinstance->data_size_;                                                    \
-        pinstance->data_size_ += len;                                                                                  \
-        pinstance->InitData();                                                                                         \
-        StructSizeInfoBase::GetInstance().SetStructSize(#class_name, pinstance->data_size_);                           \
-      }                                                                                                                \
-      FieldHandler(class_name *pinstance, const char *dtype, const char *name, size_t len,                             \
-                   size_t arrSize) {                                                                                   \
-        pinstance->field_info_.push_back(FieldInfo(dtype, name, arrSize));                                             \
-        pinstance->field_offset_map_[name] = pinstance->data_size_;                                                    \
-        pinstance->data_size_ += len * arrSize;                                                                        \
-        pinstance->InitData();                                                                                         \
-        StructSizeInfoBase::GetInstance().SetStructSize(#class_name, pinstance->data_size_);                           \
-      }                                                                                                                \
-      FieldHandler(class_name *pinstance, const char *dtype, const char *name,                                         \
-                   const char *structType, size_t structSize, void *ptr) {                                             \
-        pinstance->field_info_.push_back(FieldInfo(dtype, name, structType, structSize));                              \
-        pinstance->field_offset_map_[name] = pinstance->data_size_;                                                    \
-        pinstance->data_size_ += structSize;                                                                           \
-        pinstance->InitData();                                                                                         \
-        StructSizeInfoBase::GetInstance().SetStructSize(#class_name, pinstance->data_size_);                           \
-        pinstance->saveBufferPtr[name] = ptr;                                                                          \
-        pinstance->struct_size_ += structSize;                                                                         \
-      }                                                                                                                \
-    };                                                                                                                 \
-    friend class FieldHandler;                                                                                         \
+    size_t FieldHandler(const char *dtype, const char *name, size_t len) {                                             \
+      field_info_.emplace_back(FieldInfo(dtype, name));                                                                \
+      size_t ret_val = data_size_;                                                                                     \
+      data_size_ += len;                                                                                               \
+      return ret_val;                                                                                                  \
+    }                                                                                                                  \
+    size_t FieldHandler(const char *dtype, const char *name, size_t len,                                               \
+                 size_t arrSize) {                                                                                     \
+      field_info_.emplace_back(FieldInfo(dtype, name, arrSize));                                                       \
+      size_t ret_val = data_size_;                                                                                     \
+      data_size_ += len * arrSize;                                                                                     \
+      return ret_val;                                                                                                  \
+    }                                                                                                                  \
+    size_t FieldHandler(const char *dtype, const char *name,                                                           \
+                 const char *structType, size_t structSize, void *ptr) {                                               \
+      field_info_.emplace_back(FieldInfo(dtype, name, structType, structSize));                                        \
+      field_offset_map_[name] = data_size_;                                                                            \
+      size_t ret_val = data_size_;                                                                                     \
+      data_size_ += structSize;                                                                                        \
+      saveBufferPtr[name] = ptr;                                                                                       \
+      struct_size_ += structSize;                                                                                      \
+      return ret_val;                                                                                                  \
+    }                                                                                                                  \
                                                                                                                        \
    public:                                                                                                             \
-    class_name() { class_name_ = #class_name; }
+    class_name() {                                                                                                     \
+      class_name_ = #class_name;                                                                                       \
+      InitData();                                                                                                      \
+      StructSizeInfoBase::GetInstance().SetStructSize(#class_name, data_size_);                                        \
+  }
 
 #define TILING_DATA_FIELD_DEF(data_type, field_name)                                                                   \
  public:                                                                                                               \
   void set_##field_name(data_type field_name) {                                                                        \
     field_name##_ = field_name;                                                                                        \
-    auto offset = field_offset_map_[#field_name];                                                                      \
-    *((data_type *) (data_ptr_ + offset)) = field_name;                                                                \
+    *((data_type *) (data_ptr_ + field_name##_offset_)) = field_name;                                                  \
   }                                                                                                                    \
   data_type get_##field_name() { return field_name##_; }                                                               \
                                                                                                                        \
  private:                                                                                                              \
   data_type field_name##_ = 0;                                                                                         \
-  FieldHandler field_name##_handler_ = FieldHandler(this, #data_type, #field_name, sizeof(data_type));
+  size_t field_name##_offset_ = FieldHandler(#data_type, #field_name, sizeof(data_type));
 
 #define TILING_DATA_FIELD_DEF_ARR(arr_type, arr_size, field_name)                                                      \
  public:                                                                                                               \
   void set_##field_name(arr_type *field_name) {                                                                        \
     field_name##_ = field_name;                                                                                        \
-    auto offset = field_offset_map_[#field_name];                                                                      \
+    auto offset = field_name##_offset_;                                                                                \
     if (data_ptr_ + offset == (uint8_t *)field_name) {                                                                 \
       return;                                                                                                          \
     }                                                                                                                  \
@@ -189,21 +186,20 @@ REGISTER_TILING_DATA_CLASS(MaxPool, MaxPoolTilingData)
     }                                                                                                                  \
   }                                                                                                                    \
   arr_type *get_##field_name() {                                                                                       \
-    auto offset = field_offset_map_[#field_name];                                                                      \
-    return (arr_type *)(data_ptr_ + offset);                                                                           \
+    return (arr_type *)(data_ptr_ + field_name##_offset_);                                                             \
   }                                                                                                                    \
                                                                                                                        \
  private:                                                                                                              \
   arr_type *field_name##_ = nullptr;                                                                                   \
-  FieldHandler field_name##_handler_ = FieldHandler(this, #arr_type, #field_name, sizeof(arr_type), arr_size);
+  size_t field_name##_offset_ = FieldHandler(#arr_type, #field_name, sizeof(arr_type), arr_size);
 
 #define TILING_DATA_FIELD_DEF_STRUCT(struct_type, field_name)                                                          \
  public:                                                                                                               \
   struct_type field_name;                                                                                              \
                                                                                                                        \
  private:                                                                                                              \
-  FieldHandler field_name##_handler_ =                                                                                 \
-      FieldHandler(this, "struct", #field_name, #struct_type,                                                          \
+  size_t field_name##_offset_ =                                                                                        \
+      FieldHandler("struct", #field_name, #struct_type,                                                                \
                    StructSizeInfoBase::GetInstance().GetStructSize(#struct_type), (void *) &field_name)
 
 #define END_TILING_DATA_DEF                                                                                            \
