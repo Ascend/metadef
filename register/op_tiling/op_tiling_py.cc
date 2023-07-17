@@ -261,7 +261,12 @@ void ParseStorageFormat(const nlohmann::json &json, ge::GeTensorDesc &tensor_des
   if (json.contains("format")) {
     std::string format_str = json["format"].get<std::string>();
     (void)std::transform(format_str.begin(), format_str.end(), format_str.begin(), ::toupper);
-    const ge::Format ge_format = ge::TypeUtils::SerialStringToFormat(format_str);
+    ge::Format ge_format = ge::TypeUtils::SerialStringToFormat(format_str);
+    if (json.contains("sub_format")) {
+      int32_t sub_format = json["sub_format"].get<std::int32_t>();
+      GELOGD("Get sub format:%d, primary format:%d", sub_format, static_cast<int32_t>(ge_format));
+      ge_format = static_cast<ge::Format>(ge::GetFormatFromSub(static_cast<int32_t>(ge_format), sub_format));
+    }
     tensor_desc.SetFormat(ge_format);
   }
   if (json.contains("ori_format")) {
