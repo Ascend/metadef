@@ -121,15 +121,6 @@ std::vector<OpParamDef> &OpDef::GetOutputs(void) {
   return this->impl_->op_params.GetOutputs();
 }
 
-void OpDef::OpProtoPost(const char *op_type) {
-  GELOGD("do opproto post, op_type:%s.", op_type);
-  gert::OpImplRegisterV2 impl(op_type);
-  impl.InferShape(this->impl_->infer_shape)
-      .InferShapeRange(this->impl_->infer_shape_range)
-      .InferDataType(this->impl_->infer_data_type);
-  gert::OpImplRegisterV2 implReg(impl);
-}
-
 void OpDef::MergeParam(std::vector<OpParamDef> &merge, std::vector<OpParamDef> &aicore_params) const {
   for (auto &aicoreParam : aicore_params) {
     bool find = false;

@@ -26,10 +26,6 @@ static ge::graphStatus TilingAscendCAdd(gert::TilingContext *context) {
   return ge::GRAPH_SUCCESS;
 }
 
-static ge::graphStatus TilingPrepareAscendCAdd(gert::TilingParseContext *context) {
-  return ge::GRAPH_SUCCESS;
-}
-
 static ge::graphStatus check_op_support(const ge::Operator &op, ge::AscendString &result) {
   return ge::GRAPH_SUCCESS;
 }
@@ -68,7 +64,7 @@ TEST_F(OpDefAPIUT, APITest) {
   opDef.SetInferShape(ge::InferShape4AddAscendC);
   opDef.SetInferShapeRange(ge::InferShapeRange4AddAscendC);
   opDef.SetInferDataType(ge::InferDataType4AddAscendC);
-  opDef.AICore().SetTiling(optiling::TilingAscendCAdd).SetTilingParse(optiling::TilingPrepareAscendCAdd);
+  opDef.AICore().SetTiling(optiling::TilingAscendCAdd);
   opDef.AICore()
       .SetCheckSupport(optiling::check_op_support)
       .SetOpSelectFormat(optiling::op_select_format)
@@ -79,7 +75,6 @@ TEST_F(OpDefAPIUT, APITest) {
   EXPECT_EQ(opDef.GetInferShapeRange(), ge::InferShapeRange4AddAscendC);
   EXPECT_EQ(opDef.GetInferDataType(), ge::InferDataType4AddAscendC);
   EXPECT_EQ(opDef.AICore().GetTiling(), optiling::TilingAscendCAdd);
-  EXPECT_EQ(opDef.AICore().GetTilingParse(), optiling::TilingPrepareAscendCAdd);
   EXPECT_EQ(opDef.AICore().GetCheckSupport(), optiling::check_op_support);
   EXPECT_EQ(opDef.AICore().GetOpSelectFormat(), optiling::op_select_format);
   EXPECT_EQ(opDef.AICore().GetOpSupportInfo(), optiling::get_op_support);

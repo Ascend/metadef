@@ -44,11 +44,6 @@ OpParamDef &OpAICoreConfig::Output(const char *name) {
   return this->impl_->op_params.Output(name);
 }
 
-OpAICoreConfig &OpAICoreConfig::AsyncFlag(bool flag) {
-  this->AddCfgItem("async.flag", flag ? "true" : "false");
-  return *this;
-}
-
 OpAICoreConfig &OpAICoreConfig::DynamicCompileStaticFlag(bool flag) {
   this->AddCfgItem("dynamicCompileStatic.flag", flag ? "true" : "false");
   return *this;
@@ -69,33 +64,13 @@ OpAICoreConfig &OpAICoreConfig::DynamicShapeSupportFlag(bool flag) {
   return *this;
 }
 
-OpAICoreConfig &OpAICoreConfig::HeavyOpFlag(bool flag) {
-  this->AddCfgItem("heavyOp.flag", flag ? "true" : "false");
-  return *this;
-}
-
 OpAICoreConfig &OpAICoreConfig::NeedCheckSupportFlag(bool flag) {
   this->AddCfgItem("needCheckSupport.flag", flag ? "true" : "false");
   return *this;
 }
 
-OpAICoreConfig &OpAICoreConfig::OpPattern(const char *pattern) {
-  this->AddCfgItem("op.pattern", pattern);
-  return *this;
-}
-
 OpAICoreConfig &OpAICoreConfig::PrecisionReduceFlag(bool flag) {
   this->AddCfgItem("precision_reduce.flag", flag ? "true" : "false");
-  return *this;
-}
-
-OpAICoreConfig &OpAICoreConfig::RangeLimitValue(const char *value) {
-  this->AddCfgItem("rangeLimit.value", value);
-  return *this;
-}
-
-OpAICoreConfig &OpAICoreConfig::SlicePatternValue(const char *value) {
-  this->AddCfgItem("slicePattern.value", value);
   return *this;
 }
 
@@ -168,21 +143,6 @@ OpAICoreDef &OpAICoreDef::SetTiling(gert::OpImplKernelRegistry::TilingKernelFunc
   return *this;
 }
 
-OpAICoreDef &OpAICoreDef::SetTilingParse(gert::OpImplRegister::TilingParseFunc func) {
-  this->impl_->tiling_parse = func;
-  return *this;
-}
-
-OpAICoreDef &OpAICoreDef::SetCompileInfoCreator(gert::OpImplKernelRegistry::CompileInfoCreatorFunc func) {
-  this->impl_->ci_creator = func;
-  return *this;
-}
-
-OpAICoreDef &OpAICoreDef::SetCompileInfoDeleter(gert::OpImplKernelRegistry::CompileInfoDeleterFunc func) {
-  this->impl_->ci_deleter = func;
-  return *this;
-}
-
 OpAICoreDef &OpAICoreDef::SetCheckSupport(optiling::OP_CHECK_FUNC func) {
   this->impl_->op_chk_support = func;
   return *this;
@@ -215,8 +175,7 @@ void OpAICoreDef::AddConfig(const char *soc) {
     .DynamicRankSupportFlag(true)
     .DynamicShapeSupportFlag(true)
     .NeedCheckSupportFlag(false)
-    .PrecisionReduceFlag(true)
-    .RangeLimitValue("limited");
+    .PrecisionReduceFlag(true);
   this->AddConfig(soc, aicore_config);
 }
 
@@ -229,27 +188,10 @@ std::map<ge::AscendString, OpAICoreConfig> &OpAICoreDef::GetAICoreConfigs(void) 
   return this->impl_->aicore_configs;
 }
 
-void OpAICoreDef::OpCheckPost(const char *op_type) {
-  GELOGD("do opcheck post, op_type:%s.", op_type);
-  optiling::OpCheckFuncHelper(FUNC_CHECK_SUPPORTED, op_type, this->impl_->op_chk_support);
-  optiling::OpCheckFuncHelper(FUNC_OP_SELECT_FORMAT, op_type, this->impl_->op_sel_format);
-  optiling::OpCheckFuncHelper(FUNC_GET_OP_SUPPORT_INFO, op_type, this->impl_->op_get_support);
-  optiling::OpCheckFuncHelper(FUNC_GET_SPECIFIC_INFO, op_type, this->impl_->op_get_spec);
-  optiling::OpCheckFuncHelper(op_type, this->impl_->op_generlize_func);
-}
-
 gert::OpImplKernelRegistry::TilingKernelFunc &OpAICoreDef::GetTiling(void) {
   return this->impl_->tiling_func;
 }
-gert::OpImplRegister::TilingParseFunc &OpAICoreDef::GetTilingParse(void) {
-  return this->impl_->tiling_parse;
-}
-gert::OpImplKernelRegistry::CompileInfoCreatorFunc &OpAICoreDef::GetCompileInfoCreator(void) {
-  return this->impl_->ci_creator;
-}
-gert::OpImplKernelRegistry::CompileInfoDeleterFunc &OpAICoreDef::GetCompileInfoDeleter(void) {
-  return this->impl_->ci_deleter;
-}
+
 optiling::OP_CHECK_FUNC &OpAICoreDef::GetCheckSupport(void) {
   return this->impl_->op_chk_support;
 }
