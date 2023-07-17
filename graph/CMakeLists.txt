@@ -66,14 +66,6 @@ set(GRAPH_BASE_SOURCE_LIST
     "tensor.cc"
 )
 
-set(DATA_FLOW_GRAPH_SOURCE_LIST
-    "flow_graph/flow_attr_util.cc"
-    "flow_graph/flow_graph.cc"
-    "flow_graph/process_point.cc"
-    "flow_graph/data_flow_attr_define.cc"
-    "flow_graph/data_flow_utils.cc"
-)
-
 SET(GRAPH_SOURCE_LIST
     "ascend_string.cc"
     "attr_value.cc"
@@ -207,58 +199,6 @@ target_link_libraries(graph
 
 target_link_libraries(graph PRIVATE graph_base error_manager)
 target_compile_options(graph PRIVATE -O2 -Werror)
-
-######### libflow_graph.so #############
-add_library(flow_graph SHARED
-    ${DATA_FLOW_GRAPH_SOURCE_LIST}
-    $<TARGET_OBJECTS:metadef_flow_graph_protos_obj>
-)
-
-target_compile_options(flow_graph PRIVATE
-    $<$<OR:$<STREQUAL:${PRODUCT_SIDE},host>,$<STREQUAL:${ENABLE_OPEN_SRC},True>>:-fexceptions>
-    $<$<OR:$<STREQUAL:${TARGET_SYSTEM_NAME},Linux>,$<STREQUAL:${TARGET_SYSTEM_NAME},Android>>: -fno-common -Wextra -Wfloat-equal>
-    $<$<AND:$<STREQUAL:${TARGET_SYSTEM_NAME},Windows>,$<STREQUAL:${CMAKE_CONFIGURATION_TYPES},Debug>>:/MTd>
-    $<$<AND:$<STREQUAL:${TARGET_SYSTEM_NAME},Windows>,$<STREQUAL:${CMAKE_CONFIGURATION_TYPES},Release>>:/MT>)
-
-target_compile_definitions(flow_graph PRIVATE
-    $<$<OR:$<STREQUAL:${PRODUCT_SIDE},host>,$<STREQUAL:${ENABLE_OPEN_SRC},True>>:FMK_SUPPORT_DUMP>
-    $<$<STREQUAL:${ENABLE_OPEN_SRC},True>:ONLY_COMPILE_OPEN_SRC>
-    google=ascend_private
-    $<IF:$<STREQUAL:${TARGET_SYSTEM_NAME},Windows>,OS_TYPE=WIN,OS_TYPE=0>
-    $<$<STREQUAL:${TARGET_SYSTEM_NAME},Windows>:SECUREC_USING_STD_SECURE_LIB=0 NOMINMAX>
-)
-
-target_include_directories(flow_graph PRIVATE
-    ${CMAKE_CURRENT_LIST_DIR}
-    ${CMAKE_BINARY_DIR}
-    ${CMAKE_BINARY_DIR}/proto/metadef_data_flow_protos
-    ${METADEF_DIR}
-)
-
-target_link_options(flow_graph PRIVATE
-    -Wl,-Bsymbolic
-)
-
-target_link_libraries(flow_graph
-    PRIVATE
-        intf_pub
-        air_headers
-        static_mmpa
-        -Wl,--no-as-needed
-        graph_base
-        graph
-        c_sec
-        slog
-        json
-        -Wl,--as-needed
-        $<$<NOT:$<STREQUAL:${TARGET_SYSTEM_NAME},Android>>:-lrt>
-        -ldl
-    PUBLIC
-        metadef_headers
-)
-
-target_link_libraries(flow_graph PRIVATE ascend_protobuf error_manager)
-target_compile_options(flow_graph PRIVATE -O2)
 
 if (${ENABLE_OPEN_SRC} STREQUAL "True")
 else()
