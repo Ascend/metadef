@@ -1,7 +1,8 @@
 file(GLOB_RECURSE TEST_SRCS CONFIGURE_DEPENDS "${METADEF_DIR}/tests/ut/exe_graph/*.cc")
 file(GLOB_RECURSE FAKER_SRCS CONFIGURE_DEPENDS "${METADEF_DIR}/tests/depends/faker/*.cc")
+file(GLOB_RECURSE GE_RUNTIME_STUB_SRCS CONFIGURE_DEPENDS "${METADEF_DIR}/tests/depends/ge_runtime_stub/*.cc")
 
-add_executable(ut_exe_graph ${TEST_SRCS} ${FAKER_SRCS})
+add_executable(ut_exe_graph ${TEST_SRCS} ${FAKER_SRCS} ${GE_RUNTIME_STUB_SRCS})
 
 target_include_directories(ut_exe_graph PRIVATE
         ${METADEF_DIR}
@@ -28,7 +29,7 @@ target_link_libraries(ut_exe_graph PRIVATE
         platform_stub
         msprof_headers
         runtime_headers
-        exe_graph error_manager
+        exe_graph register error_manager
         mmpa
         GTest::gtest GTest::gtest_main slog_stub ascend_protobuf c_sec mmpa_stub -lrt -ldl -lgcov
         metadef_headers
