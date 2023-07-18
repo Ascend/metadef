@@ -282,6 +282,22 @@
     }                                                                                                                 \
     return GRAPH_SUCCESS;                                                                                             \
   }
+
+// 此宏因兼容问题需要保留，只在operator类内使用
+#define GE_RETURN_IF_NULL(v, ...)                                                                                      \
+  do {                                                                                                                 \
+    if ((v) == nullptr) {                                                                                              \
+      auto msg = CreateErrorMsg(__VA_ARGS__);                                                                          \
+      if (msg.empty()) {                                                                                               \
+        REPORT_INNER_ERROR("E19999", "Assert %s not null failed", #v);                                                 \
+        GELOGE(ge::FAILED, "Assert %s not null failed", #v);                                                           \
+      } else {                                                                                                         \
+        REPORT_INNER_ERROR("E19999", "%s", msg.data());                                                                \
+        GELOGE(ge::FAILED, "%s", msg.data());                                                                          \
+      }                                                                                                                \
+      return;                                                                                                          \
+    }                                                                                                                  \
+  } while (false)
 #define EDGE_ATTR_SET_IMP(ArgType, AttrUtilsFunc) \
   EDGE_ATTR_SET_BY_IDX_IMP(ArgType, AttrUtilsFunc) \
   EDGE_ATTR_SET_BY_NAME_IMP(ArgType, AttrUtilsFunc)
