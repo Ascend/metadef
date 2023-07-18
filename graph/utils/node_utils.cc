@@ -28,6 +28,7 @@
 #include "graph/utils/tensor_utils.h"
 #include "graph/utils/tensor_adapter.h"
 #include "graph/utils/type_utils.h"
+#include "graph/utils/constant_utils.h"
 #include "common/checker.h"
 
 namespace ge {
@@ -1228,5 +1229,79 @@ std::vector<NodePtr> NodeUtils::GetInControlNodes(const Node &node, const NodeFi
     }
   }
   return in_ctrl_nodes;
+}
+
+graphStatus NodeUtils::TryGetWeightByPlaceHolderNode(const NodePtr &node_ptr, ConstGeTensorPtr &ge_tensor) {
+  if (ge_tensor != nullptr) {
+    GELOGE(GRAPH_PARAM_INVALID, "ge_tensor already has value");
+    return GRAPH_PARAM_INVALID;
+  }
+  if (node_ptr->GetType() != PLACEHOLDER) {
+    return GRAPH_SUCCESS;
+  }
+  const auto &op_desc = node_ptr->GetOpDesc();
+  GE_ASSERT_NOTNULL(op_desc);
+  // In some case, Placeholder operator may has it's peer const node's weight
+  if (ConstantUtils::GetWeight(op_desc, 0U, ge_tensor)) {
+    GELOGI("op [%s %s] has direct weight attr", op_desc->GetType().c_str(), op_desc->GetName().c_str());
+    return GRAPH_SUCCESS;
+  }
+  NodePtr parent_node = nullptr;
+  parent_node = op_desc->TryGetExtAttr("parentNode", parent_node);
+  if (parent_node == nullptr) {
+    GELOGI("op [%s %s] get not any ext node attr", op_desc->GetType().c_str(), op_desc->GetName().c_str());
+    return GRAPH_SUCCESS;
+  }
+  const auto &parent_op_desc = parent_node->GetOpDesc();
+  GE_CHECK_NOTNULL(parent_op_desc);
+  if (ConstantUtils::IsConstant(parent_op_desc)) {
+    if (ConstantUtils::GetWeight(parent_op_desc, 0U, ge_tensor)) {
+      GELOGI("op [%s %s] has indirect weight attr from other op [%s %s]", op_desc->GetType().c_str(),
+             op_desc->GetName().c_str(), parent_op_desc->GetType().c_str(), parent_op_desc->GetName().c_str());
+      return GRAPH_SUCCESS;
+    }
+  }
+  if (parent_op_desc->GetType() == DATA) {
+    return TryGetWeightByDataNode(parent_node, ge_tensor);
+  }
+  GELOGI("op [%s %s] get not any weight attr", op_desc->GetType().c_str(), op_desc->GetName().c_str());
+  return GRAPH_SUCCESS;
+}
+
+graphStatus NodeUtils::TryGetWeightByDataNode(const NodePtr &node_ptr, ConstGeTensorPtr &ge_tensor) {
+  if (ge_tensor != nullptr) {
+    GELOGE(GRAPH_PARAM_INVALID, "ge_tensor already has value");
+    return GRAPH_PARAM_INVALID;
+  }
+  if (node_ptr->GetType() != DATA) {
+    return GRAPH_SUCCESS;
+  }
+  const auto &op_desc = node_ptr->GetOpDesc();
+  GE_ASSERT_NOTNULL(op_desc);
+  // the input const data should not be obtained,
+  // as the input will change during multiple rounds of infershape for while
+  if ((node_ptr->GetOwnerComputeGraphBarePtr() != nullptr) &&
+      (node_ptr->GetOwnerComputeGraphBarePtr()->GetParentNodeBarePtr() != nullptr) &&
+      (kWhileOpTypes.count(node_ptr->GetOwnerComputeGraphBarePtr()->GetParentNodeBarePtr()->GetType()) > 0U)) {
+    GELOGI("The value of a const node should not be obtained, when the const node is outside a while node, "
+           "while node name: %s",
+           node_ptr->GetOwnerComputeGraphBarePtr()->GetParentNodeBarePtr()->GetName().c_str());
+    return GRAPH_SUCCESS;
+  }
+  NodePtr real_parent_node = nullptr;
+  (void) NodeUtils::GetInNodeCrossPartionedCallNode(node_ptr, 0U, real_parent_node);
+  if ((real_parent_node != nullptr) && (ConstantUtils::IsConstant(real_parent_node->GetOpDesc()))) {
+    GELOGI("Get in really parent node:[%s %s] for node:[%s %s]", real_parent_node->GetName().c_str(),
+           real_parent_node->GetType().c_str(), op_desc->GetName().c_str(), op_desc->GetType().c_str());
+    if (ConstantUtils::IsConstant(real_parent_node)) {
+      if (ConstantUtils::GetWeight(real_parent_node->GetOpDesc(), 0U, ge_tensor)) {
+        GELOGI("op [%s %s] has indirect weight attr from other op [%s %s]", op_desc->GetType().c_str(),
+               op_desc->GetName().c_str(), real_parent_node->GetType().c_str(), real_parent_node->GetName().c_str());
+        return GRAPH_SUCCESS;
+      }
+    }
+  }
+  GELOGI("op [%s %s] get not any weight attr", op_desc->GetType().c_str(), op_desc->GetName().c_str());
+  return GRAPH_SUCCESS;
 }
 }  // namespace ge

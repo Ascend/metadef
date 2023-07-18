@@ -191,49 +191,18 @@ graphStatus OperatorImpl::GetFromPeerNode(NodePtr &peer_node,
   // Place holder operator, try to get the weight from `parentNode`;
   // `parentNode` is the real node of the placeholder node in engine partition graph
   if (peer_op_type == PLACEHOLDER) {
-    NodePtr parent_node = nullptr;
-    parent_node = peer_op_desc->TryGetExtAttr("parentNode", parent_node);
-    if (parent_node != nullptr) {
-      const auto parent_op_desc = parent_node->GetOpDesc();
-      GE_CHECK_NOTNULL(parent_op_desc);
-      if (ConstantUtils::IsConstant(parent_op_desc)) {
-        return ConstantUtils::GetWeight(parent_op_desc, 0U, ge_tensor) ? GRAPH_SUCCESS : GRAPH_FAILED;
-      }
-      if (parent_op_desc->GetType() == DATA) {
-        NodePtr real_parent_node = nullptr;
-        (void)NodeUtils::GetInNodeCrossPartionedCallNode(parent_node, 0U, real_parent_node);
-        if ((real_parent_node != nullptr) && (NodeUtils::IsConst(*real_parent_node))) {
-          GELOGD("Get in really parent node:%s:%s and parent node:%s:%s for node:%s:%s",
-                 real_parent_node->GetName().c_str(), real_parent_node->GetType().c_str(),
-                 parent_node->GetName().c_str(), parent_node->GetType().c_str(),
-                 peer_op_desc->GetName().c_str(), peer_op_desc->GetType().c_str());
-          return ConstantUtils::GetWeight(real_parent_node->GetOpDesc(), 0U,
-                                          ge_tensor) ? GRAPH_SUCCESS : GRAPH_FAILED;
-        }
-      }
+    if ((NodeUtils::TryGetWeightByPlaceHolderNode(peer_node, ge_tensor) != GRAPH_SUCCESS) || (ge_tensor == nullptr)) {
+      return GRAPH_FAILED;
+    } else {
+      return GRAPH_SUCCESS;
     }
   }
 
   if (peer_op_type == DATA) {
-    // the input const data should not be obtained,
-    // as the input will change during multiple rounds of infershape for while
-    if ((peer_node->GetOwnerComputeGraphBarePtr() != nullptr) &&
-        (peer_node->GetOwnerComputeGraphBarePtr()->GetParentNodeBarePtr() != nullptr) &&
-        (kWhileOpTypes.count(peer_node->GetOwnerComputeGraphBarePtr()->GetParentNodeBarePtr()->GetType()) > 0U)) {
-      GELOGI("The value of a const node should not be obtained, when the const node is outside a while node, "
-             "while node name: %s",
-             peer_node->GetOwnerComputeGraphBarePtr()->GetParentNodeBarePtr()->GetName().c_str());
+    if ((NodeUtils::TryGetWeightByDataNode(peer_node, ge_tensor) != GRAPH_SUCCESS) || (ge_tensor == nullptr)) {
       return GRAPH_FAILED;
-    }
-    auto parent_node_2_out_anchor = NodeUtils::GetParentInputAndAnchor(peer_node);
-    while ((parent_node_2_out_anchor.first != nullptr) && (parent_node_2_out_anchor.first->GetType() == DATA)) {
-      parent_node_2_out_anchor = NodeUtils::GetParentInputAndAnchor(parent_node_2_out_anchor.first);
-    }
-    if ((parent_node_2_out_anchor.first != nullptr) && (ConstantUtils::IsConstant(parent_node_2_out_anchor.first))) {
-      const auto op_desc = parent_node_2_out_anchor.first->GetOpDesc();
-      GE_CHECK_NOTNULL(op_desc);
-      return ConstantUtils::GetWeight(op_desc, static_cast<uint32_t>(parent_node_2_out_anchor.second->GetIdx()),
-                                      ge_tensor) ? GRAPH_SUCCESS : GRAPH_FAILED;
+    } else {
+      return GRAPH_SUCCESS;
     }
   }
   return GRAPH_FAILED;
@@ -252,8 +221,13 @@ graphStatus OperatorImpl::GetInputConstData(const std::string &dst_name, Tensor 
 }
 
 graphStatus OperatorImpl::GetInputConstData(const uint32_t idx, ConstGeTensorPtr &ge_tensor) const {
+  if (ge_tensor != nullptr) {
+    GELOGE(GRAPH_PARAM_INVALID, "ge_tensor already has value");
+    return GRAPH_PARAM_INVALID;
+  }
   const auto node = GetNode();
   if (node == nullptr) {
+    // for out graph
     return GetInputConstDataOut(idx, ge_tensor);
   }
   // from runtime context
@@ -282,12 +256,13 @@ graphStatus OperatorImpl::GetInputConstData(const uint32_t idx, ConstGeTensorPtr
       return GRAPH_SUCCESS;
     }
   }
-  // For inner compute graph
   const auto op_desc = node->GetOpDesc();
   GE_CHECK_NOTNULL(op_desc);
+  // from input desc
   if (GetFromInputDesc(op_desc, static_cast<int32_t>(idx), ge_tensor) == GRAPH_SUCCESS) {
     return GRAPH_SUCCESS;
   }
+  // from peer node
   return GetFromPeerNode(peer_node, out_data_anchor, ge_tensor);
 }
 

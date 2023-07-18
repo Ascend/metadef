@@ -222,6 +222,20 @@ class NodeUtils {
    * @return
    */
   static bool IsIdentityUsefulForRWControl(const NodePtr &node_ptr);
+  /**
+   * 尝试通过pld占位节点对应的实际const节点来获取权重
+   * @param node_ptr placeholder的占位节点，常见于图拆分中间状态的图的输入节点类型
+   * @param ge_tensor 权重的承载对象，成功获取时ge_tensor被设置为非空
+   * @return 失败时代表内部流程错误，成功时不代表一定获取到了权重
+   */
+  static graphStatus TryGetWeightByPlaceHolderNode(const NodePtr &node_ptr, ConstGeTensorPtr &ge_tensor);
+  /**
+  * 尝试通过Data占位节点对应的实际const节点来获取权重
+  * @param node_ptr Data占位节点，常见于子图的输入节点类型
+  * @param ge_tensor 权重的承载对象，成功获取时ge_tensor被设置为非空
+  * @return 失败时代表内部流程错误，成功时不代表一定获取到了权重
+  */
+  static graphStatus TryGetWeightByDataNode(const NodePtr &node_ptr, ConstGeTensorPtr &ge_tensor);
 };
 
 struct NodeCompareKey {

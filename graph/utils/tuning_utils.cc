@@ -29,7 +29,6 @@ const char_t *const peer_node_name_attr = "_peerNodeName";
 const char_t *const parent_node_name_attr = "_parentNodeName";
 const char_t *const alias_name_attr = "_aliasName";
 const char_t *const alias_indexes_attr = "_aliasIndexes";
-const char_t *const parent_node_attr = "parentNode";
 const char_t *const parent_node_anchor_index_attr = "_parentNodeAnchorIndex";
 const char_t *const tuning_subgraph_prefix = "/aicore_subgraph_";
 const char_t *const non_tuning_subgraph_prefix = "/subgraph_";
@@ -267,20 +266,10 @@ void TuningUtils::DumpGraphToPath(const ComputeGraphPtr &exe_graph, const int64_
 
 void TuningUtils::TryGetWeight(const NodePtr &node, std::vector<ge::GeTensorPtr> &weight) {
   // The caller guarantees that the node is not null
-  weight = OpDescUtils::MutableWeights(node);
-  if (weight.empty() && (node->GetOpDesc() != nullptr)) {
-    const NodePtr parent_node = node->GetOpDesc()->TryGetExtAttr<NodePtr>(parent_node_attr, nullptr);
-    if ((parent_node != nullptr) && (parent_node->GetType() == DATA)) {
-      NodePtr really_parent_node = nullptr;
-      if ((NodeUtils::GetInNodeCrossPartionedCallNode(parent_node, 0U, really_parent_node) == GRAPH_SUCCESS) &&
-          (really_parent_node != nullptr) && (NodeUtils::IsConst(*really_parent_node))) {
-        GELOGD("Get in really parent node:%s:%s and parent node:%s:%s for node:%s:%s",
-               really_parent_node->GetName().c_str(), really_parent_node->GetType().c_str(),
-               parent_node->GetName().c_str(), parent_node->GetType().c_str(),
-               node->GetName().c_str(), node->GetType().c_str());
-        weight = OpDescUtils::MutableWeights(really_parent_node);
-      }
-    }
+  ConstGeTensorPtr ge_tensor = nullptr;
+  (void) NodeUtils::TryGetWeightByPlaceHolderNode(node, ge_tensor);
+  if (ge_tensor != nullptr) {
+    weight.emplace_back(std::const_pointer_cast<GeTensor>(ge_tensor));
   }
 }
 

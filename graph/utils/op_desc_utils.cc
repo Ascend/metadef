@@ -653,25 +653,8 @@ std::vector<GeTensorPtr> OpDescUtils::MutableWeights(const ge::Node &node) {
   auto op_desc = node.GetOpDesc();
   GE_CHK_BOOL_EXEC(op_desc != nullptr, REPORT_INNER_ERROR("E18888", "param node's op_desc is nullptr.");
                    return ret, "[Check][Param] op_desc is nullptr!");
-  // Place holder operator, try to get the weight from parent node
-  // when parent node is const operator
-  if (node.GetType() == PLACEHOLDER) {
-    std::string parent_op;
-    (void) AttrUtils::GetStr(op_desc, "parentOpType", parent_op);
-    // This if judgment is necessary because the current subgraph optimization is multithreaded
-    // and the parent node of the PLD operation should be a stable type, such as const
-    if ((parent_op == CONSTANT) || (parent_op == CONSTANTOP)) {
-      NodePtr parent_node = nullptr;
-      parent_node = op_desc->TryGetExtAttr("parentNode", parent_node);
-      if (parent_node != nullptr) {
-        op_desc = parent_node->GetOpDesc();
-        GELOGD("pld[%s] get weight from const[%s]", node.GetName().c_str(), op_desc->GetName().c_str());
-      }
-    }
-  }
   // Const operator, take the weight directly
-  // In some case, Placeholder operator may has it's peer const node's weight
-  if ((op_desc->GetType() == CONSTANT) || (op_desc->GetType() == CONSTANTOP) || (op_desc->GetType() == PLACEHOLDER)) {
+  if ((op_desc->GetType() == CONSTANT) || (op_desc->GetType() == CONSTANTOP)) {
     const auto weight = MutableWeights(op_desc);
     if (weight == nullptr) {
       GELOGD("op type %s has no weight, op name:%s", node.GetType().c_str(), node.GetName().c_str());
@@ -680,16 +663,24 @@ std::vector<GeTensorPtr> OpDescUtils::MutableWeights(const ge::Node &node) {
     ret.push_back(weight);
     return ret;
   }
+  // Place holder operator, try to get the weight from parent node
+  // when parent node is const operator
+  if (node.GetType() == PLACEHOLDER) {
+    ConstGeTensorPtr ge_tensor = nullptr;
+    if (NodeUtils::TryGetWeightByPlaceHolderNode(std::const_pointer_cast<Node>(node.shared_from_this()), ge_tensor) ==
+            GRAPH_SUCCESS &&
+        ge_tensor != nullptr) {
+      ret.push_back(std::const_pointer_cast<GeTensor>(ge_tensor));
+    }
+    return ret;
+  }
 
   if (node.GetType() == DATA) {
-    const auto parent = NodeUtils::GetParentInput(node);
-    if ((parent != nullptr) && NodeUtils::IsConst(*parent)) {
-      const auto weight = MutableWeights(parent->GetOpDesc());
-      if (weight == nullptr) {
-        GELOGI("const op has no weight, op name:%s", parent->GetName().c_str());
-        return ret;
-      }
-      ret.push_back(weight);
+    ConstGeTensorPtr ge_tensor = nullptr;
+    if (NodeUtils::TryGetWeightByDataNode(std::const_pointer_cast<Node>(node.shared_from_this()), ge_tensor) ==
+            GRAPH_SUCCESS &&
+        ge_tensor != nullptr) {
+      ret.push_back(std::const_pointer_cast<GeTensor>(ge_tensor));
     }
     return ret;
   }
