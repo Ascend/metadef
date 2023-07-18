@@ -361,14 +361,16 @@ void TensorAssign::SetWeightData(const tensorflow::DataType data_type, const int
     (void)weight->SetData(ge::PtrToPtr<char, uint8_t>(tensor_content_data),
                           static_cast<size_t>(count) * sizeof(std::complex<float>));
   } else if (CheckStringVal(data_type)) {
+    if (ge::TypeUtils::CheckUint64MulOverflow(static_cast<uint64_t>(count),
+                                              static_cast<uint32_t>(sizeof(ge::StringHead)))) {
+      GELOGE(ge::FAILED, "count multiply StringHead is overflow uint64, count: %u", static_cast<uint64_t>(count));
+      return;
+    }
     std::string weight_content;
     if (count > 0) {
       // each byte of top count bytes is each string length
       weight_content = tensor_content.substr(static_cast<uint64_t>(count));
     }
-    GE_RETURN_IF(ge::TypeUtils::CheckUint64MulOverflow(static_cast<uint64_t>(count),
-                                                       static_cast<uint32_t>(sizeof(ge::StringHead))),
-                 "count multiply StringHead is overflow uint64, count: %u", static_cast<uint64_t>(count));
     const size_t total_size = weight_content.size() + static_cast<size_t>(count) * (sizeof(ge::StringHead) + 1U);
     std::vector<uint8_t> addr(total_size);
     ge::StringHead *const string_head = ge::PtrToPtr<uint8_t, ge::StringHead>(addr.data());
