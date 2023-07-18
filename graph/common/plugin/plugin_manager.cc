@@ -832,9 +832,9 @@ void PluginManager::GetCurEnvPackageOsAndCpuType(std::string &host_env_os, std::
   GELOGD("Run package path is:%s", model_path.c_str());
 
   std::string scene;
-  if (mmIsDir((model_path + kOppPath).c_str()) == EN_OK) {
+  if (mmAccess2((model_path + kOppPath + kScene).c_str(), M_R_OK) == EN_OK) {
     scene = model_path + kOppPath + kScene;
-  } else if (mmIsDir((model_path + kRuntimePath).c_str()) == EN_OK) {
+  } else if (mmAccess2((model_path + kRuntimePath + kScene).c_str(), M_R_OK) == EN_OK) {
     scene = model_path + kRuntimePath + kScene;
   } else {
     GELOGW("opp and runtime not exit");
