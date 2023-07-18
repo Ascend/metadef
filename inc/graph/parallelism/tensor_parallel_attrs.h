@@ -42,6 +42,10 @@ constexpr const char_t *kCommTaskTypeHcomAllToAll = "HcomAllToAll";
 constexpr const char_t *kCommTaskTypeSendReceive = "SendReceive";
 constexpr const char_t *kCommTaskTypeLocalReduce = "LocalReduce";
 constexpr const char_t *kGraphSlicingSuffix = "_by_graph_slice_";
+constexpr const char_t *kFlowAttrEnqueuePolicyFifo = "FIFO";
+constexpr const char_t *kFlowAttrEnqueuePolicyOverwrite = "OVERWRITE";
+constexpr const char_t *kSendRecvCommTypeQueue = "Queue";
+constexpr const char_t *kSendRecvCommTypeP2p = "P2pComm";
 
 // tensor deployment attrs
 struct DimSlice {
@@ -53,12 +57,28 @@ struct DeviceIndex {
   std::string engine_type;
   std::vector<int32_t> indices;
   std::string DebugString() const;
-  std::string DeviceIdToString() const;
+};
+
+struct ModelIndex {
+  DeviceIndex device_index;
+  int64_t virtual_stage_id = 0L;
+  int64_t stage_id = 0L;
+  std::string DebugString() const;
+};
+
+struct PipelineConfig {
+  int64_t micro_batch = 1L;
+  int64_t stage_id = 0L;
+  std::vector<int64_t> virtual_stage_id {0L};
 };
 
 bool operator==(const DeviceIndex &lhs, const DeviceIndex &rhs);
 bool operator!=(const DeviceIndex &lhs, const DeviceIndex &rhs);
 bool operator<(const DeviceIndex &lhs, const DeviceIndex &rhs);
+
+bool operator==(const ModelIndex &lhs, const ModelIndex &rhs);
+bool operator!=(const ModelIndex &lhs, const ModelIndex &rhs);
+bool operator<(const ModelIndex &lhs, const ModelIndex &rhs);
 
 struct TensorSliceDeployment {
   std::vector<std::vector<DimSlice>> axis_slices;
@@ -73,17 +93,35 @@ struct TensorDeployment {
 
 struct NodeDeployment {
   std::vector<DeviceIndex> devices;
+  PipelineConfig pipeline_config;
+};
+
+struct NodeDeployments {
+  std::map<int64_t, NodeDeployment> deployments;
+};
+
+struct TensorDeployments {
+  std::map<int64_t, TensorDeployment> deployments;
 };
 
 // P2P communications
 struct CommPair {
   DeviceIndex src_device_index;
+  int64_t src_virtual_stage_id = 0L;
   DeviceIndex dst_device_index;
+  int64_t dst_virtual_stage_id = 0L;
+};
+
+struct FlowAttr {
+  int32_t depth = 1;
+  std::string enqueue_policy = kFlowAttrEnqueuePolicyFifo;
 };
 
 struct SendRecvReshardTask {
   std::vector<CommPair> comm_pairs;
   std::string parallel_group;
+  std::string comm_type = kSendRecvCommTypeQueue;
+  FlowAttr flow_attr; // used when comm_type is Queue
 };
 
 // group communications
@@ -132,6 +170,7 @@ struct BroadcastReshardTask {
 struct SliceReshardTask {
   std::vector<int64_t> offsets;
   std::vector<int64_t> sizes;
+  DeviceIndex device_index;
 };
 
 struct SliceByAxisReshardTask {
@@ -207,6 +246,8 @@ struct PeerInput {
   int32_t step_id = -1;
   std::string node_name;
   uint32_t input_index;
+  int64_t stage_id = 0L;
+  int64_t virtual_stage_id = 0L;
 };
 
 // reshard ops for one output tensor
@@ -214,6 +255,8 @@ struct OutputReshardRes {
   std::vector<CommStep> comm_steps;
   std::vector<PeerInput> peer_inputs;
   std::vector<DeviceIndex> device_indices;
+  int64_t stage_id = 0L;
+  int64_t virtual_stage_id = 0L;
 };
 
 struct ReshardAttr {
@@ -302,8 +345,12 @@ struct NodeSliceStrategy {
 class TensorParallelAttrs {
  public:
   static Status FromJson(const std::string &json_str, DeviceIndex &device_index);
+  static Status FromJson(const std::string &json_str, ModelIndex &model_index);
+  static Status FromJson(const std::string &json_str, PipelineConfig &pipeline_config);
   static Status FromJson(const std::string &json_str, NodeDeployment &node_deployment);
   static Status FromJson(const std::string &json_str, TensorDeployment &tensor_deployment);
+  static Status FromJson(const std::string &json_str, TensorDeployments &tensor_deployment);
+  static Status FromJson(const std::string &json_str, NodeDeployments &node_deployments);
   static Status FromJson(const std::string &json_str, CommTask &comm_task);
   static Status FromJson(const std::string &json_str, CommStep &comm_step);
   static Status FromJson(const std::string &json_str, OutputReshardRes &output_reshard_res);
@@ -311,8 +358,12 @@ class TensorParallelAttrs {
 
   static std::string ToJson(const NodeDeployment &node_deployment);
   static std::string ToJson(const DeviceIndex &device_index);
+  static std::string ToJson(const ModelIndex &model_index);
+  static std::string ToJson(const PipelineConfig &pipeline_config);
   static std::string ToJson(const TensorDeployment &tensor_deployment);
+  static std::string ToJson(const NodeDeployments &node_deployments);
   static std::string ToJson(const ReshardAttr &reshard_attr);
+  static std::string ToJson(const TensorDeployments &tensor_deployments);
 };
 }  // namespace tp
 }  // namespace ge

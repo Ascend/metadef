@@ -32,18 +32,29 @@ struct PipelineParallelOption {
 struct TensorParallelOption {
   bool is_enabled = false;
   bool is_auto = false;
-  int32_t tensor_parallel_size = 4;
+  int32_t tensor_parallel_size = -1;
   int32_t inter_batch_flow_num = 1;
 };
 
 struct DataParallelOption {
   bool is_enabled = false;
   bool is_auto = false;
+  // to be deleted below
   bool optimizer_state_sharding = false;
   bool gradient_sharding = false;
   bool model_weight_sharding = false;
   bool model_weight_prefetch = true;
   int32_t data_parallel_size = -1;
+  // model weight prefetch buffer size(MB)
+  uint32_t model_weight_prefetch_buffer_size = 0U;
+};
+
+struct TensorShardingOption {
+  bool is_enabled = false;
+  bool optimizer_state_sharding = false;
+  bool gradient_sharding = false;
+  bool model_weight_sharding = false;
+  bool model_weight_prefetch = true;
   // model weight prefetch buffer size(MB)
   uint32_t model_weight_prefetch_buffer_size = 0U;
 };
@@ -55,12 +66,12 @@ struct OptimizerOffloadGraphOption {
 };
 
 struct GraphParallelOption {
-  int32_t graph_id = -1;
-  int32_t version = -1;
   bool auto_deploy = false;
+  std::string opt_level;
   int32_t global_batch_size = -1;
   DataParallelOption data_parallel_option;
   TensorParallelOption tensor_parallel_option;
+  TensorShardingOption tensor_sharding_option;
   PipelineParallelOption pipeline_parallel_option;
   OptimizerOffloadGraphOption optimizer_offload_option;
 };

@@ -363,7 +363,8 @@ void TensorAssign::SetWeightData(const tensorflow::DataType data_type, const int
   } else if (CheckStringVal(data_type)) {
     std::string weight_content;
     if (count > 0) {
-      weight_content = tensor_content.substr(count);  // each byte of top count bytes is each string length
+      // each byte of top count bytes is each string length
+      weight_content = tensor_content.substr(static_cast<uint64_t>(count));
     }
     GE_RETURN_IF(ge::TypeUtils::CheckUint64MulOverflow(static_cast<uint64_t>(count),
                                                        static_cast<uint32_t>(sizeof(ge::StringHead))),
@@ -374,11 +375,11 @@ void TensorAssign::SetWeightData(const tensorflow::DataType data_type, const int
     auto raw_data =
         ge::PtrAdd<uint8_t>(addr.data(), total_size + 1U, static_cast<size_t>(count) * sizeof(ge::StringHead));
     uint64_t ptr_size = static_cast<uint64_t>(count) * sizeof(ge::StringHead);
-    uint64_t str_start_index = 0U;
+    size_t str_start_index = 0U;
     for (int64_t i = 0; i < count; ++i) {
       ge::PtrAdd<ge::StringHead>(string_head, static_cast<size_t>(count) + 1U, static_cast<size_t>(i))->addr =
           static_cast<int64_t>(ptr_size);
-      auto str_len = static_cast<int64_t>(tensor_content.at(i));
+      const size_t str_len = static_cast<size_t>(tensor_content.at(static_cast<size_t>(i)));
       const string &str = weight_content.substr(str_start_index, str_len);
       str_start_index += str_len;
       ge::PtrAdd<ge::StringHead>(string_head, static_cast<size_t>(count) + 1U, static_cast<size_t>(i))->len =
@@ -386,7 +387,7 @@ void TensorAssign::SetWeightData(const tensorflow::DataType data_type, const int
       CHECK_FALSE_EXEC(memcpy_s(raw_data, str.size() + 1U, str.c_str(), str.size() + 1U) == EOK,
                        GELOGW("[SetWeight][Copy] memcpy failed"));
       raw_data = ge::PtrAdd<uint8_t>(raw_data, total_size + 1U, str.size() + 1U);
-      ptr_size += (str.size() + 1U);
+      ptr_size += static_cast<uint64_t>(str.size()) + 1U;
     }
     (void)weight->SetData(ge::PtrToPtr<uint8_t, const uint8_t>(addr.data()), total_size);
   } else {

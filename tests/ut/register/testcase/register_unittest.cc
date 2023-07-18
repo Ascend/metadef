@@ -181,6 +181,18 @@ UINT32 OpTilingParseStubV5(gert::KernelContext *kernel_context) {
   return ge::GRAPH_SUCCESS;
 }
 
+UINT32 OpTilingStubV6(gert::TilingContext *kernel_context) {
+  auto input_desc = kernel_context->GetComputeNodeInfo()->GetInputTdInfo(0);
+  EXPECT_EQ(input_desc->GetFormat().GetStorageFormat(),
+            ge::GetFormatFromSub(static_cast<int32_t>(Format::FORMAT_FRACTAL_Z), 32));
+  auto tensor = kernel_context->GetInputTensor(0);
+  std::vector<float> real_data = {1.1, 2.1, 3.1, 4.1};
+  for (size_t i = 0UL; i < 4UL; ++i) {
+    EXPECT_EQ((tensor->GetData<uint16_t>())[i], optiling::FloatToUint16(real_data[i]));
+  }
+  return ge::GRAPH_SUCCESS;
+}
+
 bool op_tiling_stub_failed(const Operator &op, const utils::OpCompileInfo &compile_info, utils::OpRunInfo &run_info) {
   EXPECT_EQ(true, false);
   return true;
@@ -1082,6 +1094,44 @@ TEST_F(UtestRegister, new_optiling_py_interface_ok_with_float_data) {
 
   EXPECT_EQ(TbeOpTilingPyInterface(op_type, cmp_info, cmp_info_hash, input_str.c_str(), output_str.c_str(),
                                    attrs.dump().c_str(), const_cast<char *>(runinfo.c_str()), size, elapse),
+            1);
+  auto defaultSpaceRegistry = gert::DefaultOpImplSpaceRegistry::GetInstance().GetDefaultSpaceRegistry();
+  defaultSpaceRegistry->merged_types_to_impl_.clear();
+  defaultSpaceRegistry->op_impl_registries_.clear();
+}
+
+TEST_F(UtestRegister, new_optiling_py_interface_ok_with_sub_format) {
+  const nlohmann::json input = R"([
+{"name": "t0", "dtype": "float16","const_value": [1.1,2.1,3.1,4.1] ,"shape": [4,4,4,4], "ori_shape":[4,4,4,4],"format": "FRACTAL_Z", "sub_format" :32},
+{"dtype": "int8", "shape": [4,4,4,4], "ori_shape":[4,4,4,4],"format": "ND"}
+])"_json;
+  std::string input_str = input.dump();
+  const nlohmann::json output = R"([
+{"name": "y_0","dtype": "int8","shape": [9,9,9,9],"ori_shape" :[9,9,9,9],"format": "ND","ori_format":"ND"}])"_json;
+  std::string output_str = output.dump();
+  const char *op_type = "TestReluV2";
+  const char *cmp_info = "";
+  std::string runinfo(100, 'a');
+  size_t size = 100;
+  const char *cmp_info_hash = "";
+  uint64_t *elapse = nullptr;
+  const nlohmann::json attrs = R"([
+{ "name": "op_para_size", "dtype": "int", "value": 50}])"_json;
+
+  auto space_registry = std::make_shared<gert::OpImplSpaceRegistry>();
+  auto registry_holder = std::make_shared<gert::OpImplRegistryHolder>();
+  gert::OpImplKernelRegistry::OpImplFunctions op_impl_func;
+  op_impl_func.tiling = OpTilingStubV6;
+  op_impl_func.tiling_parse = OpTilingParseStubV5;
+  op_impl_func.compile_info_creator = CreateCompileInfo;
+  op_impl_func.compile_info_deleter = DeleteCompileInfo;
+  op_impl_func.max_tiling_data_size = 50;
+  registry_holder->AddTypesToImpl(op_type, op_impl_func);
+  space_registry->AddRegistry(registry_holder);
+  gert::DefaultOpImplSpaceRegistry::GetInstance().SetDefaultSpaceRegistry(space_registry);
+
+  EXPECT_EQ(OpTilingForCompile(op_type, cmp_info, cmp_info_hash, input_str.c_str(), output_str.c_str(),
+                               attrs.dump().c_str(), const_cast<char *>(runinfo.c_str()), size, elapse, nullptr),
             1);
   auto defaultSpaceRegistry = gert::DefaultOpImplSpaceRegistry::GetInstance().GetDefaultSpaceRegistry();
   defaultSpaceRegistry->merged_types_to_impl_.clear();

@@ -1386,6 +1386,7 @@ const std::string ATTR_NAME_NEED_GENTASK_ATOMIC = "_need_gentask_atomic";
 // for pipeline partition attribute
 const std::string ATTR_NAME_PARALLEL_SHARDED = "_parallel_sharded";
 const std::string ATTR_NAME_PIPELINE_STAGE = "_pipeline_stage";
+const std::string ATTR_NAME_VIRTUAL_STAGE = "_virtual_stage";
 const std::string ATTR_NAME_LOGIC_DEV_ID = "_logic_device_id";
 const std::string ATTR_NAME_STAGE_ORDER_ID = "_stage_order_id";
 
@@ -1402,9 +1403,13 @@ const std::string ATTR_NAME_ESCHED_EVENT_PRIORITY = "_eschedEventPriority";
 
 // for graph deployment
 const std::string ATTR_NAME_DEVICE_INDEX = "_device_index";
+const std::string ATTR_NAME_MODEL_INDEX = "_model_index";
 const std::string ATTR_NAME_DEVICE_INDEX_TO_LOGIC_DEVICE_ID = "_device_index_to_logic_device_id";
 const std::string ATTR_NAME_NODE_DEPLOYMENT = "_node_deployment";
+const std::string ATTR_NAME_NODE_DEPLOYMENTS = "_node_deployments";
 const std::string ATTR_NAME_TENSOR_DEPLOYMENT = "_tensor_deployment";
+const std::string ATTR_NAME_TENSOR_DEPLOYMENTS = "_tensor_deployments";
+const std::string ATTR_NAME_MODEL_INDEX_TO_LOGIC_DEVICE_ID = "_model_index_to_logic_device_id";
 
 // for tensor parallelism
 const std::string ATTR_NAME_TP_RESHARD_ATTR = "_reshard_attr";
