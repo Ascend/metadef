@@ -61,8 +61,10 @@ enum class SocVersion {
   ASCEND031 = 31,
   ASCEND035 = 32,
   ASCEND310B2 = 33,
-  ASCEND320 = 34,
-  ASCEND920A = 35,
+  ASCEND310B3 = 34,
+  ASCEND310B4 = 35,
+  ASCEND320 = 36,
+  ASCEND920A = 37,
   SOC_VERSION_BOTTOM
 };
 const size_t TOTAL_SOC_COUNT = static_cast<size_t>(SocVersion::SOC_VERSION_BOTTOM);
@@ -86,6 +88,8 @@ const std::map<std::string, SocVersion> SOC_VERSION_STR {
     {"Ascend310", SocVersion::ASCEND310},
     {"Ascend310B1", SocVersion::ASCEND310B1},
     {"Ascend310B2", SocVersion::ASCEND310B2},
+    {"Ascend310B3", SocVersion::ASCEND310B3},
+    {"Ascend310B4", SocVersion::ASCEND310B4},
     {"Ascend310M1", SocVersion::ASCEND310M1},
     {"Ascend320", SocVersion::ASCEND320},
     {"Ascend610", SocVersion::ASCEND610},
