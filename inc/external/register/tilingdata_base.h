@@ -90,11 +90,10 @@ protected:
   void GeLogError(const std::string& str) const;
   // dtype, name
   std::vector<FieldInfo> field_info_;
-  std::map<const char *, size_t, CharPtrCmp> field_offset_map_;
   uint8_t *data_ptr_ = nullptr;
   size_t data_size_ = 0;
   const char *class_name_;
-  std::map<const char *, void *, CharPtrCmp> saveBufferPtr;
+  std::vector<std::pair<void *, size_t>> saveBufferPtr;
   size_t struct_size_ = 0;
 };
 
@@ -145,10 +144,9 @@ REGISTER_TILING_DATA_CLASS(MaxPool, MaxPoolTilingData)
     size_t FieldHandler(const char *dtype, const char *name,                                                           \
                  const char *structType, size_t structSize, void *ptr) {                                               \
       field_info_.emplace_back(FieldInfo(dtype, name, structType, structSize));                                        \
-      field_offset_map_[name] = data_size_;                                                                            \
       size_t ret_val = data_size_;                                                                                     \
       data_size_ += structSize;                                                                                        \
-      saveBufferPtr[name] = ptr;                                                                                       \
+      saveBufferPtr.emplace_back(std::make_pair(ptr, ret_val));                                                        \
       struct_size_ += structSize;                                                                                      \
       return ret_val;                                                                                                  \
     }                                                                                                                  \

@@ -35,9 +35,8 @@ void TilingDef::SaveToBuffer(void *pdata, size_t capacity) {
   }
   // save struct tiling data to buffer
   for (auto ptr : saveBufferPtr) {
-    const char* struct_name = ptr.first;
-    TilingDef* sub_ptr = (TilingDef *)ptr.second;
-    size_t offset = field_offset_map_[struct_name];
+    TilingDef* sub_ptr = (TilingDef *)ptr.first;
+    size_t offset = ptr.second;
     uint8_t* struct_ptr = (uint8_t*)pdata + offset;
     mem_ret = memcpy_s(struct_ptr, sub_ptr->data_size_, sub_ptr->data_ptr_, sub_ptr->data_size_);
     if (mem_ret != EOK) {
@@ -61,13 +60,11 @@ size_t TilingDef::GetDataSize() const {
 }
 
 void TilingDef::InitData() {
-  if (data_ptr_ != nullptr) {
-    delete[] data_ptr_;
-    data_ptr_ = nullptr;
-  }
-  if (data_size_ > 0) {
+    GELOGI("TilingDef::InitData, init data size %d.", data_size_);
     data_ptr_ = new uint8_t[data_size_]();
-  }
+    if (data_ptr_ == nullptr) {
+          GELOGE(ge::GRAPH_FAILED, "TilingDef::InitData failed: init data size %d.", data_size_);
+    }
 }
 
 StructSizeInfoBase &StructSizeInfoBase::GetInstance()
