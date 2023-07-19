@@ -608,6 +608,36 @@ TEST_F(UtestOperater, RequiredAttrRegister_Success) {
   ASSERT_EQ(op_desc->GetIrAttrNames(), std::vector<std::string>({"x", "y"}));
 }
 
+TEST_F(UtestOperater, RequiredAttrWithTypeRegister_Success) {
+  auto op = Operator("Cast");
+  op.RequiredAttrWithTypeRegister("dst_type", "Int");
+  op.AttrRegister("fake_ir_attr", true);
+  op.RequiredAttrWithTypeRegister(nullptr, nullptr); // invalid case
+
+  auto op_desc = OpDescUtils::GetOpDescFromOperator(op);
+  ASSERT_NE(op_desc, nullptr);
+  AttrUtils::SetBool(op_desc, "fake_custom_attr", false);
+  ASSERT_EQ(op_desc->GetIrAttrNames(), std::vector<std::string>({"dst_type", "fake_ir_attr"}));
+  std::map<AscendString, AscendString> ir_attr_name_types;
+  ASSERT_EQ(op.GetAllIrAttrNamesAndTypes(ir_attr_name_types), GRAPH_SUCCESS);
+  std::map<AscendString, AscendString> ir_attr_name_types_expected{{"dst_type", "VT_INT"}, {"fake_ir_attr", "VT_BOOL"}};
+  ASSERT_EQ(ir_attr_name_types, ir_attr_name_types_expected);
+  ASSERT_TRUE(op_desc->HasAttr("dst_type"));
+  ASSERT_TRUE(op_desc->HasAttr("fake_ir_attr"));
+  ASSERT_TRUE(op_desc->HasAttr("fake_custom_attr"));
+  ASSERT_TRUE(op_desc->HasRequiredAttr("dst_type"));
+  ASSERT_FALSE(op_desc->HasRequiredAttr("fake_ir_attr"));
+  ASSERT_FALSE(op_desc->HasRequiredAttr("fake_custom_attr"));
+  std::map<AscendString, AscendString> setted_attr_name_types;
+  ASSERT_EQ(op.GetAllAttrNamesAndTypes(setted_attr_name_types), GRAPH_SUCCESS);
+  for (auto pair : setted_attr_name_types) {
+    std::cout << pair.first.GetString() << "|" << pair.second.GetString() << std::endl;
+  }
+  std::map<AscendString, AscendString> setted_attr_name_types_expected{{"fake_ir_attr", "VT_BOOL"},
+                                                                       {"fake_custom_attr", "VT_BOOL"}};
+  ASSERT_EQ(setted_attr_name_types, setted_attr_name_types_expected);
+}
+
 TEST_F(UtestOperater, SubgraphRegister) {
   std::string name = "add";
   auto op = Operator("Add");

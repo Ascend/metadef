@@ -46,6 +46,57 @@ static std::string GetOverflowDescribeOfInt(const std::string &name, const int64
 }
 
 namespace ge {
+namespace {
+const std::map<AnyValue::ValueType, std::string> kAttrTypesMap = {
+    {AnyValue::VT_NONE, "VT_NONE"},
+    {AnyValue::VT_STRING, "VT_STRING"},
+    {AnyValue::VT_FLOAT, "VT_FLOAT"},
+    {AnyValue::VT_BOOL, "VT_BOOL"},
+    {AnyValue::VT_INT, "VT_INT"},
+    {AnyValue::VT_TENSOR_DESC, "VT_TENSOR_DESC"},
+    {AnyValue::VT_TENSOR, "VT_TENSOR"},
+    {AnyValue::VT_BYTES, "VT_BYTES"},
+    {AnyValue::VT_GRAPH, "VT_GRAPH"},
+    {AnyValue::VT_NAMED_ATTRS, "VT_NAMED_ATTRS"},
+    {AnyValue::VT_LIST_LIST_INT, "VT_LIST_LIST_INT"},
+    {AnyValue::VT_DATA_TYPE, "VT_DATA_TYPE"},
+    {AnyValue::VT_LIST_STRING, "VT_LIST_STRING"},
+    {AnyValue::VT_LIST_FLOAT, "VT_LIST_FLOAT"},
+    {AnyValue::VT_LIST_BOOL, "VT_LIST_BOOL"},
+    {AnyValue::VT_LIST_INT, "VT_LIST_INT"},
+    {AnyValue::VT_LIST_TENSOR_DESC, "VT_LIST_TENSOR_DESC"},
+    {AnyValue::VT_LIST_TENSOR, "VT_LIST_TENSOR"},
+    {AnyValue::VT_LIST_BYTES, "VT_LIST_BYTES"},
+    {AnyValue::VT_GRAPH, "VT_GRAPH"},
+    {AnyValue::VT_LIST_NAMED_ATTRS, "VT_LIST_NAMED_ATTRS"},
+    {AnyValue::VT_LIST_DATA_TYPE, "VT_LIST_DATA_TYPE"},
+};
+
+const std::map<std::string, AnyValue::ValueType> kAttrStrTypesMap = {
+    {"VT_NONE", AnyValue::VT_NONE},
+    {"VT_STRING", AnyValue::VT_STRING},
+    {"VT_FLOAT", AnyValue::VT_FLOAT},
+    {"VT_BOOL", AnyValue::VT_BOOL},
+    {"VT_INT", AnyValue::VT_INT},
+    {"VT_TENSOR_DESC", AnyValue::VT_TENSOR_DESC},
+    {"VT_TENSOR", AnyValue::VT_TENSOR},
+    {"VT_BYTES", AnyValue::VT_BYTES},
+    {"VT_GRAPH", AnyValue::VT_GRAPH},
+    {"VT_NAMED_ATTRS", AnyValue::VT_NAMED_ATTRS},
+    {"VT_LIST_LIST_INT", AnyValue::VT_LIST_LIST_INT},
+    {"VT_DATA_TYPE", AnyValue::VT_DATA_TYPE},
+    {"VT_LIST_STRING", AnyValue::VT_LIST_STRING},
+    {"VT_LIST_FLOAT", AnyValue::VT_LIST_FLOAT},
+    {"VT_LIST_BOOL", AnyValue::VT_LIST_BOOL},
+    {"VT_LIST_INT", AnyValue::VT_LIST_INT},
+    {"VT_LIST_TENSOR_DESC", AnyValue::VT_LIST_TENSOR_DESC},
+    {"VT_LIST_TENSOR", AnyValue::VT_LIST_TENSOR},
+    {"VT_LIST_BYTES", AnyValue::VT_LIST_BYTES},
+    {"VT_GRAPH", AnyValue::VT_GRAPH},
+    {"VT_LIST_NAMED_ATTRS", AnyValue::VT_LIST_NAMED_ATTRS},
+    {"VT_LIST_DATA_TYPE", AnyValue::VT_LIST_DATA_TYPE},
+};
+}  // namespace
 void NamedAttrs::SetName(const std::string &name) {
   name_ = name;
 }
@@ -894,5 +945,27 @@ bool AttrUtils::ClearAllAttrs(AttrHolderAdapter &&obj) {
   }
   obj->MutableAttrMap().Clear();
   return true;
+}
+
+std::string AttrUtils::ValueTypeToSerialString(const AnyValue::ValueType value_type) {
+  const auto it = kAttrTypesMap.find(value_type);
+  if (it != kAttrTypesMap.end()) {
+    return it->second;
+  } else {
+    REPORT_INNER_ERROR("E18888", "value_type not support %d", value_type);
+    GELOGE(GRAPH_FAILED, "[Check][Param] value_type not support %d", value_type);
+    return "";
+  }
+}
+
+AnyValue::ValueType AttrUtils::SerialStringToValueType(const string &value_type_string) {
+  const auto it = kAttrStrTypesMap.find(value_type_string);
+  if (it != kAttrStrTypesMap.end()) {
+    return it->second;
+  } else {
+    REPORT_INNER_ERROR("E18888", "value_type_string not support %s", value_type_string.c_str());
+    GELOGE(GRAPH_FAILED, "[Check][Param] value_type_string not support %s", value_type_string.c_str());
+    return AnyValue::VT_NONE;
+  }
 }
 }  // namespace ge

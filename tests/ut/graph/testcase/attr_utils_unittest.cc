@@ -1243,4 +1243,14 @@ TEST_F(AttrUtilsUt, ClearAttrs) {
   AttrUtils::ClearAllAttrs(op_desc);
   EXPECT_EQ(AttrUtils::GetAllAttrs(op_desc).size(), 0);
 }
+
+TEST_F(AttrUtilsUt, ValueTypeToSerialString) {
+  EXPECT_EQ(AttrUtils::ValueTypeToSerialString(AnyValue::VT_STRING), "VT_STRING");
+  EXPECT_EQ(AttrUtils::ValueTypeToSerialString(static_cast<AnyValue::ValueType>(-1)), "");
 }
+
+TEST_F(AttrUtilsUt, SerialStringToValueType) {
+  EXPECT_EQ(AttrUtils::SerialStringToValueType("VT_STRING"), AnyValue::VT_STRING);
+  EXPECT_EQ(AttrUtils::SerialStringToValueType("XXXXX"), AnyValue::VT_NONE);
+}
+}  // namespace ge

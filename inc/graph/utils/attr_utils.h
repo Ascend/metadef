@@ -128,6 +128,8 @@ class GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY AttrUtils {
   static std::map<std::string, AnyValue> GetAllAttrs(ConstAttrHolderAdapter &&obj);
   static std::string GetAttrsStrAfterRid(ConstAttrHolderAdapter &&obj, const std::set<std::string> &un_compute_attrs);
   static bool ClearAllAttrs(AttrHolderAdapter &&obj);
+  static std::string ValueTypeToSerialString(const AnyValue::ValueType value_type);
+  static AnyValue::ValueType SerialStringToValueType(const std::string &value_type_string);
 
   class AttrHolderAdapter {
    public:
