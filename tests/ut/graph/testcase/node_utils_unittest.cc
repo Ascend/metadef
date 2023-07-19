@@ -1044,4 +1044,28 @@ TEST_F(UtestNodeUtils, GetInControlNodes) {
   EXPECT_EQ(NodeUtils::GetInControlNodes(*dst_node, node_filter).size(), 1U);
   EXPECT_EQ(NodeUtils::GetInControlNodes(*dst_node, node_filter).front(), ctrl_node2);
 }
+
+TEST_F(UtestNodeUtils, TryGetWeightByPlaceHolderNode_invalid) {
+  auto node = std::make_shared<Node>();
+  auto ge_tensor = std::make_shared<const GeTensor>();
+  EXPECT_NE(NodeUtils::TryGetWeightByPlaceHolderNode(node, ge_tensor), GRAPH_SUCCESS);
+}
+
+TEST_F(UtestNodeUtils, TryGetWeightByDataNode_invalid) {
+  auto node = std::make_shared<Node>();
+  auto ge_tensor = std::make_shared<const GeTensor>();
+  EXPECT_NE(NodeUtils::TryGetWeightByDataNode(node, ge_tensor), GRAPH_SUCCESS);
+}
+
+TEST_F(UtestNodeUtils, TryGetWeightByPlaceHolderNode_fail) {
+  auto builder = ut::GraphBuilder("test_graph0");
+  const auto &pld = builder.AddNode("pld", PLACEHOLDER, 1, 1);
+  ConstGeTensorPtr ge_tensor = nullptr;
+  EXPECT_EQ(NodeUtils::TryGetWeightByPlaceHolderNode(pld, ge_tensor), GRAPH_SUCCESS);
+  EXPECT_EQ(ge_tensor, nullptr);
+  const auto &parent_node = builder.AddNode("fake", "fake", 1, 1);
+  EXPECT_TRUE(pld->GetOpDesc()->SetExtAttr("parentNode", parent_node));
+  EXPECT_EQ(NodeUtils::TryGetWeightByPlaceHolderNode(pld, ge_tensor), GRAPH_SUCCESS);
+  EXPECT_EQ(ge_tensor, nullptr);
+}
 }  // namespace ge

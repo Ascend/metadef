@@ -22,7 +22,6 @@
 #include <map>
 #include <mutex>
 #include "graph/op_so_bin.h"
-#include "external/register/op_impl_kernel_registry.h"
 #include "register/op_impl_registry_api.h"
 
 namespace gert {

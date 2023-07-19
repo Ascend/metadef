@@ -261,6 +261,13 @@ TEST_F(ConvertTensorUtest, SetWeightDataString) {
     EXPECT_EQ(tensor_data[i], s[i]);
   }
 }
+TEST_F(ConvertTensorUtest, SetWeightDataStringOverflow) {
+  GeTensorPtr weight = std::make_shared<GeTensor>();
+  std::string tensor_content = "\b\b0.9410420.508840";
+  const int64_t count = std::numeric_limits<uint64_t>::max() / sizeof(StringHead) + 1;
+  TensorAssign::SetWeightData(domi::tensorflow::DT_STRING, count, tensor_content, weight);
+  EXPECT_EQ(weight->GetData().size(), 0);
+}
 
 TEST_F(ConvertTensorUtest, GetStringVal) {
   Status retStatus;

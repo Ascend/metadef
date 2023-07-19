@@ -210,7 +210,7 @@ USED_BY_JSON void to_json(Json &j, const NodeDeployment &node_deployment) {
 
 USED_BY_JSON void from_json(const Json &j, NodeDeployment &node_deployment) {
   GetValue(j, "devices", node_deployment.devices);
-  GetValue(j, "pipeline_config", node_deployment.pipeline_config);
+  TryGetValue(j, "pipeline_config", node_deployment.pipeline_config);
 }
 
 USED_BY_JSON void to_json(Json &j, const NodeDeployments &node_deployments) {
@@ -264,7 +264,7 @@ USED_BY_JSON void to_json(Json &j, const SendRecvReshardTask &task_info) {
 
 USED_BY_JSON void from_json(const Json &j, SendRecvReshardTask &task_info) {
   GetValue(j, "comm_pairs", task_info.comm_pairs);
-  GetValue(j, "comm_type", task_info.comm_type);
+  TryGetValue(j, "comm_type", task_info.comm_type);
   TryGetValue(j, "parallel_group", task_info.parallel_group);
   TryGetValue(j, "flow_attr", task_info.flow_attr);
 }
@@ -366,7 +366,7 @@ USED_BY_JSON void to_json(Json &j, const SliceReshardTask &task_info) {
 USED_BY_JSON void from_json(const Json &j, SliceReshardTask &task_info) {
   GetValue(j, "offsets", task_info.offsets);
   GetValue(j, "size", task_info.sizes);
-  GetValue(j, "device_index", task_info.device_index);
+  TryGetValue(j, "device_index", task_info.device_index);
 }
 
 USED_BY_JSON void to_json(Json &j, const SliceByAxisReshardTask &task_info) {
@@ -492,8 +492,8 @@ USED_BY_JSON void from_json(const Json &j, PeerInput &peer_input) {
   GetValue(j, "step_id", peer_input.step_id);
   GetValue(j, "node_name", peer_input.node_name);
   GetValue(j, "input_index", peer_input.input_index);
-  GetValue(j, "stage_id", peer_input.stage_id);
-  GetValue(j, "virtual_stage_id", peer_input.virtual_stage_id);
+  TryGetValue(j, "stage_id", peer_input.stage_id);
+  TryGetValue(j, "virtual_stage_id", peer_input.virtual_stage_id);
 }
 
 USED_BY_JSON void to_json(Json &j, const OutputReshardRes &reshard_res) {

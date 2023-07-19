@@ -38,14 +38,14 @@ target_compile_options(exe_graph PRIVATE
 )
 
 if (${ENABLE_OPEN_SRC} STREQUAL "True")
-    target_link_libraries(exe_graph PRIVATE ascend_protobuf graph)
+    target_link_libraries(exe_graph PRIVATE ascend_protobuf graph register)
     target_compile_options(exe_graph PRIVATE -O2)
 else()
     target_clone(exe_graph exe_graph_static STATIC)
 
-    target_link_libraries(exe_graph PRIVATE ascend_protobuf graph)
+    target_link_libraries(exe_graph PRIVATE ascend_protobuf graph register)
     target_link_libraries(exe_graph_static PRIVATE
-            ascend_protobuf_static graph_static
+            ascend_protobuf_static graph_static register_static
             )
 
     target_compile_options(exe_graph PRIVATE -O2)
