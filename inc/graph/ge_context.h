@@ -37,7 +37,6 @@ class GEContext {
   void SetSessionId(const uint64_t session_id);
   void SetContextId(const uint64_t context_id);
   void SetCtxDeviceId(const uint32_t device_id);
-  void SetThreadDeviceId(const int32_t device_id);
   void SetStreamSyncTimeout(const int32_t timeout);
   void SetEventSyncTimeout(const int32_t timeout);
   graphStatus SetOptionNameMap(const std::string &option_name_map_json);
