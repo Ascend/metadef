@@ -171,7 +171,7 @@ std::unique_ptr<TypesToImpl[]> OpImplRegistryHolder::GetOpImplFunctionsByHandle(
   }
 
   for (size_t i = 0U; i < impl_num; ++i) {
-    GELOGD("impl_funcs[%d], optype: %s", i, impl_funcs[i].op_type);
+    GELOGD("impl_funcs[%zu], optype: %s", i, impl_funcs[i].op_type);
   }
 
   return impl_funcs;

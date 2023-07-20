@@ -355,7 +355,7 @@ void GraphPassUtil::GetOpCustomImplModeFromOriNode(const std::vector<ge::NodePtr
     if (tmp_op_impl_mode == 0) {
       continue;
     }
-    GELOGD("Node[%s, %s] has _op_custom_impl_mode_enum 0x%x.", origin_node->GetName().c_str(),
+    GELOGD("Node[%s, %s] has _op_custom_impl_mode_enum 0x%llx.", origin_node->GetName().c_str(),
            origin_node->GetType().c_str(), tmp_op_impl_mode);
     auto iter = kOpImplIntToPriorityMap.find(tmp_op_impl_mode);
     if (iter != kOpImplIntToPriorityMap.end()) {
@@ -373,7 +373,7 @@ void GraphPassUtil::SetOpCustomImplModeToFusNode(const ge::OpDescPtr &fusion_op,
     auto iter = origin_node_impl_mode_map.find(fusion_op->GetName());
     if (iter != origin_node_impl_mode_map.end()) {
       (void)ge::AttrUtils::SetInt(fusion_op, kOpCustomImplModeEnum, iter->second);
-      GELOGD("Node[%s, %s] set _op_impl_mode_enum 0x%x by op_name.", fusion_op->GetName().c_str(),
+      GELOGD("Node[%s, %s] set _op_impl_mode_enum 0x%llx by op_name.", fusion_op->GetName().c_str(),
              fusion_op->GetType().c_str(), iter->second);
     } else {
       if (op_impl_mode_priority_set.empty()) {
@@ -382,7 +382,7 @@ void GraphPassUtil::SetOpCustomImplModeToFusNode(const ge::OpDescPtr &fusion_op,
       for (auto iter = kOpImplIntToPriorityMap.begin(); iter != kOpImplIntToPriorityMap.end(); ++iter) {
         if (iter->second == *op_impl_mode_priority_set.begin()) {
           (void)ge::AttrUtils::SetInt(fusion_op, kOpCustomImplModeEnum, iter->first);
-          GELOGD("Node[%s, %s] set _op_impl_mode_enum 0x%x by priority.", fusion_op->GetName().c_str(),
+          GELOGD("Node[%s, %s] set _op_impl_mode_enum 0x%llx by priority.", fusion_op->GetName().c_str(),
                  fusion_op->GetType().c_str(), iter->first);
         }
       }
