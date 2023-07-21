@@ -162,9 +162,7 @@ void GEContext::Init() {
 
 uint64_t GEContext::SessionId() const { return session_id_; }
 
-uint32_t GEContext::DeviceId() const {
-  return (thread_device_id_ < 0) ? device_id_ : static_cast<uint32_t>(thread_device_id_);
-}
+uint32_t GEContext::DeviceId() const { return device_id_; }
 
 int32_t GEContext::StreamSyncTimeout() const { return stream_sync_timeout_; }
 
@@ -175,10 +173,6 @@ void GEContext::SetSessionId(const uint64_t session_id) { session_id_ = session_
 void GEContext::SetContextId(const uint64_t context_id) { context_id_ = context_id; }
 
 void GEContext::SetCtxDeviceId(const uint32_t device_id) { device_id_ = device_id; }
-
-void GEContext::SetThreadDeviceId(const int32_t device_id) {
-  thread_device_id_ = device_id;
-}
 
 void GEContext::SetStreamSyncTimeout(const int32_t timeout) { stream_sync_timeout_ = timeout; }
 
