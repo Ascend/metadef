@@ -81,6 +81,12 @@ message TensorProto {
 
   // DT_UINT64
   repeated uint64 uint64_val = 17 [packed = true];
+
+  // DT_COMPLEX32. icomplex_val(2*i) and icomplex_val(2*i+1) are real
+  // and imaginary parts of i-th single precision complex.
+  // Note that since protobuf has no int16 type, we'll have some
+  // pointless zero padding for each value here.
+  repeated int32 icomplex_val = 18 [packed = true];
 };
 
 // Protocol buffer representing the serialization format of DT_VARIANT tensors.

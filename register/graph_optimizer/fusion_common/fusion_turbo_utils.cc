@@ -54,7 +54,8 @@ const std::array<size_t, static_cast<size_t>(ge::DT_MAX + 1)> data_type_size = {
     1, // DT_UINT1 = 30,
     1, // DT_INT2 = 31,
     4, // DT_UINT2 = 32,
-    0, // DT_MAX = 33
+    4, // DT_COMPLEX32 = 33,
+    0, // DT_MAX = 34
 };
 
 ge::NodePtr FusionTurboUtils::GetConstInput(const ge::NodePtr &node, int32_t index) {

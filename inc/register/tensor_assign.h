@@ -48,6 +48,8 @@ class TensorAssign {
 
   static bool CheckDoubleVal(const tensorflow::DataType data_type);
 
+  static bool CheckComplex32Val(const tensorflow::DataType data_type);
+
   static bool CheckComplex64Val(const tensorflow::DataType data_type);
 
   static bool CheckComplex128Val(const tensorflow::DataType data_type);

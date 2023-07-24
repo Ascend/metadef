@@ -52,6 +52,7 @@ set(GRAPH_BASE_SOURCE_LIST
     "serialization/list_list_int_serializer.cc"
     "serialization/list_list_float_serializer.cc"
     "serialization/attr_serializer_registry.cc"
+    "serialization/utils/serialization_util.cc"
     "small_vector.cc"
     "compile_cache_policy/compile_cache_policy.cc"
     "cache_policy/cache_policy.cc"
