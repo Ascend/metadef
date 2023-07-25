@@ -77,6 +77,36 @@ TEST_F(ConvertTensorUtest, ConvertTensorDouble) {
   EXPECT_EQ(ret_, domi::SUCCESS);
   tensor_.clear_double_val();
 }
+TEST_F(ConvertTensorUtest, ConvertTensorComplex32_ValSize0_Success) {
+  tensor_.set_dtype(domi::tensorflow::DT_COMPLEX32);
+  ret_ = ge::AutoMappingUtil::ConvertTensor(tensor_, weight_);
+  EXPECT_EQ(ret_, domi::SUCCESS);
+  tensor_.clear_icomplex_val();
+}
+TEST_F(ConvertTensorUtest, ConvertTensorComplex32_ValSize2_DimSize2_Success) {
+  domi::tensorflow::TensorShapeProto *tensor_shape = new domi::tensorflow::TensorShapeProto();
+  tensor_shape->add_dim()->set_size(2);
+  tensor_.set_allocated_tensor_shape(tensor_shape);
+  tensor_.add_icomplex_val(INT_TEST_NUM);
+  tensor_.add_icomplex_val(INT_TEST_NUM);
+  tensor_.set_dtype(domi::tensorflow::DT_COMPLEX32);
+  ret_ = ge::AutoMappingUtil::ConvertTensor(tensor_, weight_);
+  EXPECT_EQ(ret_, domi::SUCCESS);
+  tensor_.clear_icomplex_val();
+}
+TEST_F(ConvertTensorUtest, ConvertTensorComplex32_ValSize4_DimSize3_Success) {
+  domi::tensorflow::TensorShapeProto *tensor_shape = new domi::tensorflow::TensorShapeProto();
+  tensor_shape->add_dim()->set_size(3);
+  tensor_.set_allocated_tensor_shape(tensor_shape);
+  tensor_.add_icomplex_val(INT_TEST_NUM);
+  tensor_.add_icomplex_val(INT_TEST_NUM);
+  tensor_.add_icomplex_val(INT_TEST_NUM);
+  tensor_.add_icomplex_val(INT_TEST_NUM);
+  tensor_.set_dtype(domi::tensorflow::DT_COMPLEX32);
+  ret_ = ge::AutoMappingUtil::ConvertTensor(tensor_, weight_);
+  EXPECT_EQ(ret_, domi::SUCCESS);
+  tensor_.clear_icomplex_val();
+}
 TEST_F(ConvertTensorUtest, ConvertTensorSComplex) {
   tensor_.add_scomplex_val(FLOAT_TEST_NUM);
   tensor_.add_scomplex_val(FLOAT_TEST_NUM);

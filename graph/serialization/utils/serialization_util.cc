@@ -36,6 +36,7 @@ const std::map<DataType, ::ge::proto::DataType> kDataTypeMap = {
     {DT_DUAL, proto::DT_DUAL},
     {DT_DUAL_SUB_INT8, proto::DT_DUAL_SUB_INT8},
     {DT_DUAL_SUB_UINT8, proto::DT_DUAL_SUB_UINT8},
+    {DT_COMPLEX32, proto::DT_COMPLEX32},
     {DT_COMPLEX64, proto::DT_COMPLEX64},
     {DT_COMPLEX128, proto::DT_COMPLEX128},
     {DT_QINT8, proto::DT_QINT8},

@@ -55,6 +55,7 @@ const std::map<DataType, ::ge::proto::DataType> kDataTypeMap = {
     {DT_DUAL, proto::DT_DUAL},
     {DT_DUAL_SUB_INT8, proto::DT_DUAL_SUB_INT8},
     {DT_DUAL_SUB_UINT8, proto::DT_DUAL_SUB_UINT8},
+    {DT_COMPLEX32, proto::DT_COMPLEX32},
     {DT_COMPLEX64, proto::DT_COMPLEX64},
     {DT_COMPLEX128, proto::DT_COMPLEX128},
     {DT_QINT8, proto::DT_QINT8},
@@ -76,6 +77,7 @@ const std::map<DataType, ::ge::proto::DataType> kDataTypeMap = {
 const std::map<DataType, int> kDataTypeSelfDefinedMap = {
     {DT_DUAL, 13},  {DT_DUAL_SUB_INT8, 14}, {DT_DUAL_SUB_UINT8, 15}, {DT_COMPLEX64, 16}, {DT_COMPLEX128, 17},
     {DT_QINT8, 18}, {DT_QINT16, 19},        {DT_QINT32, 20},         {DT_QUINT8, 21},    {DT_QUINT16, 22},
+    {DT_COMPLEX32, 33},
 };
 
 const std::map<DeviceType, std::string> kDeviceToStrMap = {

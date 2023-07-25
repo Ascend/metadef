@@ -27,6 +27,7 @@
 #include "register/register_error_codes.h"
 #include "graph/types.h"
 #include "graph/def_types.h"
+#include "graph/debug/ge_util.h"
 #include "register/tensor_assign.h"
 
 namespace domi {
@@ -50,6 +51,7 @@ const std::map<uint32_t, ge::DataType> data_type_map = {
     {domi::tensorflow::DataType::DT_UINT64, ge::DataType::DT_UINT64},
     {domi::tensorflow::DataType::DT_BOOL, ge::DataType::DT_BOOL},
     {domi::tensorflow::DataType::DT_DOUBLE, ge::DataType::DT_DOUBLE},
+    {domi::tensorflow::DataType::DT_COMPLEX32, ge::DataType::DT_COMPLEX32},
     {domi::tensorflow::DataType::DT_COMPLEX64, ge::DataType::DT_COMPLEX64},
     {domi::tensorflow::DataType::DT_QINT8, ge::DataType::DT_INT8},
     {domi::tensorflow::DataType::DT_QUINT8, ge::DataType::DT_UINT8},
@@ -67,6 +69,7 @@ const std::map<uint32_t, ge::DataType> data_type_map = {
     {domi::tensorflow::DataType::DT_UINT8_REF, ge::DataType::DT_UINT8},
     {domi::tensorflow::DataType::DT_INT16_REF, ge::DataType::DT_INT16},
     {domi::tensorflow::DataType::DT_UINT16_REF, ge::DataType::DT_UINT16},
+    {domi::tensorflow::DataType::DT_COMPLEX32_REF, ge::DataType::DT_COMPLEX32},
     {domi::tensorflow::DataType::DT_COMPLEX64_REF, ge::DataType::DT_COMPLEX64},
     {domi::tensorflow::DataType::DT_QINT8_REF, ge::DataType::DT_INT8},
     {domi::tensorflow::DataType::DT_QUINT8_REF, ge::DataType::DT_UINT8},
@@ -110,6 +113,10 @@ bool TensorAssign::CheckFloatVal(const tensorflow::DataType data_type) {
 
 bool TensorAssign::CheckDoubleVal(const tensorflow::DataType data_type) {
   return ((data_type == tensorflow::DT_DOUBLE) || (data_type == tensorflow::DT_DOUBLE_REF));
+}
+
+bool TensorAssign::CheckComplex32Val(const tensorflow::DataType data_type) {
+  return ((data_type == tensorflow::DT_COMPLEX32) || (data_type == tensorflow::DT_COMPLEX32_REF));
 }
 
 bool TensorAssign::CheckComplex64Val(const tensorflow::DataType data_type) {
@@ -289,12 +296,46 @@ Status TensorAssign::GetStringVal(const int64_t val_size,
   return SUCCESS;
 }
 
+static Status GetComplex32Val(const int64_t val_size, const google::protobuf::RepeatedField<int32> &val_vector,
+                              const int64_t count, GeTensorPtr &weight) {
+  // val_size must be even, and complex value should be an integer multiple of 2
+  GE_ASSERT_TRUE((val_size % kComplexWidth) == 0, "complex value should be an integer multiple of 2.");
+  const std::unique_ptr<uint16_t[]> addr = ge::ComGraphMakeUnique<uint16_t[]>(count);
+  GE_CHECK_NOTNULL(addr);
+  // Complex numbers are made up of real and imaginary numbers
+  const bool zerosLike = ((count != val_size) && (val_size == 2));
+  if (!zerosLike) {
+    for (size_t i = 0UL; i < static_cast<size_t>(val_size); i++) {
+      addr[i] = val_vector.Get(static_cast<int32_t>(i));
+    }
+    const int64_t value_r = val_size - 1;
+    GE_ASSERT_EQ(ge::IntegerChecker<int32_t>::Compat(value_r), true);
+    // val_vector format is real value, complex value..., here is getting the corresponding value.
+    // real value and complex value are stored spaced apart, so use 2 and 1 to store in the correct addr.
+    const int64_t value_l = val_size - kComplexWidth;
+    GE_ASSERT_EQ(ge::IntegerChecker<int32_t>::Compat(value_l), true);
+    for (int64_t i = val_size; i < count; i += kComplexWidth) {
+      addr[static_cast<size_t>(i)] = val_vector.Get(static_cast<int32_t>(value_l));
+      addr[static_cast<size_t>(i) + 1UL] = val_vector.Get(static_cast<int32_t>(value_r));
+    }
+  } else {
+    for (int64_t i = 0; i < count; i += kComplexWidth) {
+      addr[static_cast<size_t>(i)] = val_vector.Get(0);
+      addr[static_cast<size_t>(i) + 1UL] = val_vector.Get(1);
+    }
+  }
+  (void)weight->SetData(ge::PtrToPtr<uint16_t, uint8_t>(addr.get()), static_cast<size_t>(count) * sizeof(uint16_t));
+  return SUCCESS;
+}
+
 void TensorAssign::SetGeTensorWeightData(const TensorProto &tensor, const int64_t val_size,
                                          const int64_t count, GeTensorPtr &weight) {
   const tensorflow::DataType data_type = tensor.dtype();
   constexpr int64_t kNumElementOfComplex = 2;
   if (CheckFloatVal(data_type)) {
     (void)GetVal(val_size, tensor.float_val(), count, weight);
+  } else if (CheckComplex32Val(data_type)) {
+    (void)GetComplex32Val(val_size, tensor.icomplex_val(), count * kNumElementOfComplex, weight);
   } else if (CheckComplex64Val(data_type)) {
     (void)GetVal(val_size, tensor.scomplex_val(), count * kNumElementOfComplex, weight, true);
   } else if (CheckSignedFourByte(data_type)) {
@@ -333,7 +374,8 @@ void TensorAssign::SetWeightData(const tensorflow::DataType data_type, const int
   GELOGD("Set data from tensor_content, count = %ld, data_type = %s.",
          count, DataType_Name(data_type).c_str());
   const auto tensor_content_data = tensor_content.data();
-  const bool is_four_byte = CheckSignedFourByte(data_type) || CheckUnsignedFourByte(data_type);
+  const bool is_four_byte =
+      CheckSignedFourByte(data_type) || CheckUnsignedFourByte(data_type) || CheckComplex32Val(data_type);
   const bool is_double_byte = CheckHalfVal(data_type) || CheckDoubleByte(data_type);
   const bool is_eight_byte = CheckSignedEightByte(data_type) || CheckUnsignedEightByte(data_type);
   if (CheckByte(data_type)) {
@@ -417,6 +459,7 @@ Status TensorAssign::SetGeTensor(const TensorProto &tensor, GeTensorPtr &weight)
       {tensorflow::DT_QINT32, tensor.int_val().size()},
       {tensorflow::DT_QUINT8, tensor.int_val().size()},
       {tensorflow::DT_QUINT16, tensor.int_val().size()},
+      {tensorflow::DT_COMPLEX32, tensor.icomplex_val().size()},
       {tensorflow::DT_COMPLEX64, tensor.scomplex_val().size()},
       {tensorflow::DT_COMPLEX128, tensor.dcomplex_val().size()},
       {tensorflow::DT_BFLOAT16, tensor.half_val().size()},
@@ -440,6 +483,7 @@ Status TensorAssign::SetGeTensor(const TensorProto &tensor, GeTensorPtr &weight)
       {tensorflow::DT_QINT32_REF, tensor.int_val().size()},
       {tensorflow::DT_QUINT8_REF, tensor.int_val().size()},
       {tensorflow::DT_QUINT16_REF, tensor.int_val().size()},
+      {tensorflow::DT_COMPLEX32_REF, tensor.icomplex_val().size()},
       {tensorflow::DT_COMPLEX64_REF, tensor.scomplex_val().size()},
       {tensorflow::DT_COMPLEX128_REF, tensor.dcomplex_val().size()},
       {tensorflow::DT_BFLOAT16_REF, tensor.half_val().size()},

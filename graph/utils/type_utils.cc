@@ -197,6 +197,7 @@ const std::map<DataType, std::string> kDataTypeToStringMap = {
     {DT_DUAL, "DT_DUAL"},                      // dual output type
     {DT_DUAL_SUB_INT8, "DT_DUAL_SUB_INT8"},    // dual output int8 type
     {DT_DUAL_SUB_UINT8, "DT_DUAL_SUB_UINT8"},  // dual output uint8 type
+    {DT_COMPLEX32, "DT_COMPLEX32"},            // complex32 type
     {DT_COMPLEX64, "DT_COMPLEX64"},            // complex64 type
     {DT_COMPLEX128, "DT_COMPLEX128"},          // complex128 type
     {DT_QINT8, "DT_QINT8"},                    // qint8 type
@@ -232,6 +233,7 @@ const std::map<std::string, DataType> kStringTodataTypeMap = {
     {"DT_DUAL", DT_DUAL},                      // dual output type
     {"DT_DUAL_SUB_INT8", DT_DUAL_SUB_INT8},    // dual output int8 type
     {"DT_DUAL_SUB_UINT8", DT_DUAL_SUB_UINT8},  // dual output uint8 type
+    {"DT_COMPLEX32", DT_COMPLEX32},            // complex32 type
     {"DT_COMPLEX64", DT_COMPLEX64},            // complex64 type
     {"DT_COMPLEX128", DT_COMPLEX128},          // complex128 type
     {"DT_QINT8", DT_QINT8},                    // qint8 type
