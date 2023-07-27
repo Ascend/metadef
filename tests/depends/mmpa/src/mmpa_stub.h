@@ -69,6 +69,30 @@ class MmpaStubApi {
     }
     return EN_OK;
   }
+
+  virtual INT32 mmGetTimeOfDay(mmTimeval *timeVal, mmTimezone *timeZone)
+  {
+    if (timeVal == nullptr) {
+      return EN_ERR;
+    }
+    return gettimeofday(reinterpret_cast<timeval *>(timeVal), nullptr);
+  }
+
+  virtual INT32 mmGetSystemTime(mmSystemTime_t *sysTime) {
+    if (sysTime == nullptr) {
+      return EN_ERR;
+    }
+    time_t cur_time;
+    time(&cur_time);
+    tm *now_time = localtime(&cur_time);
+    sysTime->wYear = 1900 + now_time->tm_year;
+    sysTime->wMonth = 1+ now_time->tm_mon;
+    sysTime->wDay = now_time->tm_mday;
+    sysTime->wHour = now_time->tm_hour;
+    sysTime->wMinute = now_time->tm_min;
+    sysTime->wSecond = now_time->tm_sec;
+    return EN_OK;
+  }
 };
 
 class MmpaStub {

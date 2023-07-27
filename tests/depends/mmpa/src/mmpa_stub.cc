@@ -214,14 +214,7 @@ INT32 mmRmdir(const CHAR *lp_path_name) {
 }
 
 INT32 mmGetSystemTime(mmSystemTime_t *sysTime) {
-  // Beijing olympics
-  sysTime->wYear = 2008;
-  sysTime->wMonth = 8;
-  sysTime->wDay = 8;
-  sysTime->wHour = 20;
-  sysTime->wMinute = 8;
-  sysTime->wSecond = 0;
-  return 0;
+  return ge::MmpaStub::GetInstance().GetImpl()->mmGetSystemTime(sysTime);
 }
 
 mmTimespec mmGetTickCount() {
@@ -304,7 +297,7 @@ INT32 mmAccess2(const CHAR *pathName, INT32 mode)
 
 INT32 mmGetTimeOfDay(mmTimeval *timeVal, mmTimezone *timeZone)
 {
-  return 0;
+  return ge::MmpaStub::GetInstance().GetImpl()->mmGetTimeOfDay(timeVal, timeZone);
 }
 
 INT32 mmRealPath(const CHAR *path, CHAR *realPath, INT32 realPathLen)

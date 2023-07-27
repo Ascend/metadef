@@ -102,6 +102,7 @@ SET(GRAPH_SOURCE_LIST
     "utils/node_utils_ex.cc"
     "utils/op_desc_utils_ex.cc"
     "parallelism/tensor_parallel_attrs.cc"
+    "utils/screen_printer.cc"
     "${METADEF_DIR}/third_party/transformer/src/axis_util.cc"
     "${METADEF_DIR}/third_party/transformer/src/transfer_shape_according_to_format.cc"
     "${METADEF_DIR}/third_party/transformer/src/expand_dimension.cc"
