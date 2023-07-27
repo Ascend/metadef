@@ -300,13 +300,13 @@ static Status GetComplex32Val(const int64_t val_size, const google::protobuf::Re
                               const int64_t count, GeTensorPtr &weight) {
   // val_size must be even, and complex value should be an integer multiple of 2
   GE_ASSERT_TRUE((val_size % kComplexWidth) == 0, "complex value should be an integer multiple of 2.");
-  const std::unique_ptr<uint16_t[]> addr = ge::ComGraphMakeUnique<uint16_t[]>(count);
+  const std::unique_ptr<uint16_t[]> addr = ge::ComGraphMakeUnique<uint16_t[]>(static_cast<size_t>(count));
   GE_CHECK_NOTNULL(addr);
   // Complex numbers are made up of real and imaginary numbers
   const bool zerosLike = ((count != val_size) && (val_size == 2));
   if (!zerosLike) {
     for (size_t i = 0UL; i < static_cast<size_t>(val_size); i++) {
-      addr[i] = val_vector.Get(static_cast<int32_t>(i));
+      addr[i] = static_cast<uint16_t>(val_vector.Get(static_cast<int32_t>(i)));
     }
     const int64_t value_r = val_size - 1;
     GE_ASSERT_EQ(ge::IntegerChecker<int32_t>::Compat(value_r), true);
@@ -315,13 +315,13 @@ static Status GetComplex32Val(const int64_t val_size, const google::protobuf::Re
     const int64_t value_l = val_size - kComplexWidth;
     GE_ASSERT_EQ(ge::IntegerChecker<int32_t>::Compat(value_l), true);
     for (int64_t i = val_size; i < count; i += kComplexWidth) {
-      addr[static_cast<size_t>(i)] = val_vector.Get(static_cast<int32_t>(value_l));
-      addr[static_cast<size_t>(i) + 1UL] = val_vector.Get(static_cast<int32_t>(value_r));
+      addr[static_cast<size_t>(i)] = static_cast<uint16_t>(val_vector.Get(static_cast<int32_t>(value_l)));
+      addr[static_cast<size_t>(i) + 1UL] = static_cast<uint16_t>(val_vector.Get(static_cast<int32_t>(value_r)));
     }
   } else {
     for (int64_t i = 0; i < count; i += kComplexWidth) {
-      addr[static_cast<size_t>(i)] = val_vector.Get(0);
-      addr[static_cast<size_t>(i) + 1UL] = val_vector.Get(1);
+      addr[static_cast<size_t>(i)] = static_cast<uint16_t>(val_vector.Get(0));
+      addr[static_cast<size_t>(i) + 1UL] = static_cast<uint16_t>(val_vector.Get(1));
     }
   }
   (void)weight->SetData(ge::PtrToPtr<uint16_t, uint8_t>(addr.get()), static_cast<size_t>(count) * sizeof(uint16_t));
