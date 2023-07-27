@@ -34,6 +34,8 @@ public:
                             const ExtAxisValue &ext_axis, gert::Shape &shape);
   static bool TransferShape(const ge::Format &origin_format, const ge::Format &format, const ge::DataType &data_type,
                             const ExtAxisValue &ext_axis, const gert::Shape &origin_shape, gert::Shape &shape);
+  static int64_t GetC0ByDtype(const ge::DataType &data_type);
+  static int64_t GetM0ByDtype(const ge::DataType &data_type);
 
 private:
   static bool TransferShapeByFormat(const ge::Format &primary_format, const AxisValue &axis_value,
@@ -127,6 +129,10 @@ private:
                                 gert::Shape &shape);
 
   static bool GetNYUVShape(gert::Shape &shape);
+
+  static std::array<uint32_t, static_cast<size_t>(ge::DataType::DT_MAX)> m0_list_;
+  static std::array<uint32_t, static_cast<size_t>(ge::DataType::DT_MAX)> k0_list_;
+  static std::array<uint32_t, static_cast<size_t>(ge::DataType::DT_MAX)> n0_list_;
 };
 }
 #endif  // TRANSFORMER_INC_TRANSFER_SHAPE_UTILS_H_

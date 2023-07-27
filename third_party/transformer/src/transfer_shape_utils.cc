@@ -19,6 +19,9 @@
 #include "external/graph/ge_error_codes.h"
 
 namespace transformer {
+std::array<uint32_t, static_cast<size_t>(ge::DataType::DT_MAX)> TransferShapeUtils::m0_list_{};
+std::array<uint32_t, static_cast<size_t>(ge::DataType::DT_MAX)> TransferShapeUtils::k0_list_{};
+std::array<uint32_t, static_cast<size_t>(ge::DataType::DT_MAX)> TransferShapeUtils::n0_list_{};
 namespace {
   const int64_t SHAPE_NUMBER_16 = 16;
   const int64_t SHAPE_NUMBER_32 = 32;
@@ -194,6 +197,20 @@ bool TransferShapeUtils::TransferShape(const ge::Format &origin_format, const ge
   } else {
     return TransferShapeByFormatIndex(origin_primary_format, format, c0, origin_shape, shape);
   }
+}
+
+int64_t TransferShapeUtils::GetC0ByDtype(const ge::DataType &data_type) {
+  if (static_cast<size_t>(data_type) < k0_list_.size()) {
+    return static_cast<int64_t>(k0_list_[static_cast<size_t>(data_type)]);
+  }
+  return SHAPE_NUMBER_16;
+}
+
+int64_t TransferShapeUtils::GetM0ByDtype(const ge::DataType &data_type) {
+  if (static_cast<size_t>(data_type) < m0_list_.size()) {
+    return static_cast<int64_t>(m0_list_[static_cast<size_t>(data_type)]);
+  }
+  return SHAPE_NUMBER_16;
 }
 
 bool TransferShapeUtils::IsNeedTransferShape(const ge::Format &origin_format, const ge::Format &format,
