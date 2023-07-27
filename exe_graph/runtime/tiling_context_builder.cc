@@ -96,7 +96,8 @@ ge::graphStatus TilingContextBuilder::BuildRtTensor(const ge::GeTensorDesc &tens
 
 ge::graphStatus TilingContextBuilder::BuildRTInputTensors(const ge::Operator &op) {
   const auto node = ge::NodeUtilsEx::GetNodeFromOperator(op);
-  const DataDependentInterpreter ddi(const_cast<ge::Node *>(node.get())->shared_from_this(), space_registry_);
+  auto shared_node = const_cast<ge::Node *>(node.get())->shared_from_this();
+  const DataDependentInterpreter ddi(shared_node, space_registry_);
   const auto op_desc = node->GetOpDesc();
   GE_ASSERT_NOTNULL(op_desc);
 
