@@ -63,6 +63,7 @@ message RunningResource {
 message ModelDeployResource {
   string resource_type = 1;
   repeated RunningResource running_resource = 2;
+  bool is_heavy_load = 3;
 }
 
 message ModelDeployInfo {
