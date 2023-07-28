@@ -1026,7 +1026,7 @@ TEST_F(UtestGraphUtils, DumpGEGraphOptionsNotPreRunBeginNoDump) {
 }
 
 TEST_F(UtestGraphUtils, CheckDumpGraphNum) {
-  std::map<std::string, std::string> session_option{{"ge.maxDumpFileNum", "4"}};
+  std::map<std::string, std::string> session_option{{"ge.maxDumpFileNum", "10"}};
   GetThreadLocalContext().SetSessionOption(session_option);
   auto graph_builder0 = ut::GraphBuilder("test_graph0");
   const auto &node0 = graph_builder0.AddNode("data0", DATA, 1, 1);
@@ -2807,5 +2807,60 @@ TEST_F(UtestGraphUtils, LoadGraph_parse_fail) {
   state = GraphUtils::LoadGEGraph(nullptr, com_graph1);
   ASSERT_EQ(state, false);
   system(("rm -f " + file_name).c_str());
+}
+
+TEST_F(UtestGraphUtils, Single_output_2_multi_inputs) {
+  ut::GraphBuilder builder = ut::GraphBuilder("graph");
+  auto data1 = builder.AddNode("Data1", "Data", 0, 1);
+  auto data2 = builder.AddNode("Data2", "Data", 0, 1);
+  auto add_node = builder.AddNode("Add", "Add", 2, 1);
+  auto relu1 = builder.AddNode("Relu1", "Relu", 1, 1);
+  auto relu2 = builder.AddNode("Relu2", "Relu", 1, 1);
+  auto relu3 = builder.AddNode("Relu3", "Relu", 1, 1);
+  auto relu4 = builder.AddNode("Relu4", "Relu", 1, 1);
+  auto relu5 = builder.AddNode("Relu5", "Relu", 1, 1);
+  auto relu6 = builder.AddNode("Relu6", "Relu", 1, 1);
+  auto netoutput = builder.AddNode("Netoutput", "NetOutput", 3, 0);
+  builder.AddDataEdge(data1, 0, add_node, 0);
+  builder.AddDataEdge(data2, 0, add_node, 1);
+  builder.AddDataEdge(add_node, 0, relu1, 0);
+  builder.AddDataEdge(add_node, 0, relu2, 0);
+  builder.AddDataEdge(add_node, 0, relu3, 0);
+  builder.AddDataEdge(relu1, 0, netoutput, 0);
+  builder.AddDataEdge(relu2, 0, netoutput, 0);
+  builder.AddDataEdge(relu3, 0, netoutput, 0);
+  builder.AddControlEdge(add_node, relu4);
+  builder.AddControlEdge(add_node, relu5);
+  builder.AddControlEdge(add_node, relu6);
+  builder.AddControlEdge(relu4, netoutput);
+  builder.AddControlEdge(relu5, netoutput);
+  builder.AddControlEdge(relu6, netoutput);
+  auto graph = builder.GetGraph();
+
+  std::vector<std::string> expected_dfs_names =
+      {"Data1", "Data2", "Add", "Relu6", "Relu5", "Relu4", "Relu3", "Relu2", "Relu1", "Netoutput"};
+  EXPECT_EQ(graph->TopologicalSorting(), GRAPH_SUCCESS);
+  std::vector<std::string> dfs_names;
+  for (auto &node : graph->GetAllNodes()) {
+    dfs_names.push_back(node->GetName());
+  }
+  EXPECT_EQ(dfs_names, expected_dfs_names);
+
+  const char_t *const kDumpGraphLevel = "DUMP_GRAPH_LEVEL";
+  (void)setenv(kDumpGraphLevel, "1", 1);
+  const char_t *const kDumpGeGraph = "DUMP_GE_GRAPH";
+  (void)setenv(kDumpGeGraph, "2", 1);
+
+  GraphUtils::DumpGEGraph(graph, "", true, "./ge_test_graph_single_output_2_multi_inputs.txt");
+  ComputeGraphPtr com_graph1 = std::make_shared<ComputeGraph>("GeTestGraph1");
+  bool state = GraphUtils::LoadGEGraph("./ge_test_graph_single_output_2_multi_inputs.txt", com_graph1);
+  EXPECT_EQ(state, true);
+  EXPECT_EQ(com_graph1->TopologicalSorting(), GRAPH_SUCCESS);
+  dfs_names.clear();
+  for (auto &node : graph->GetAllNodes()) {
+    dfs_names.push_back(node->GetName());
+  }
+  EXPECT_EQ(dfs_names, expected_dfs_names);
+  system("rm -f ./ge_test*.txt");
 }
 }  // namespace ge
