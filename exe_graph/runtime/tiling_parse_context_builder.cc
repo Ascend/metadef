@@ -22,32 +22,10 @@
 #include "graph/def_types.h"
 #include "common/checker.h"
 #include "graph/debug/ge_util.h"
-#include "register/op_impl_space_registry.h"
 
 namespace gert {
-namespace {
-ge::graphStatus FindImplFuncs(const char * const op_type, const gert::OpImplKernelRegistry::OpImplFunctions *&funcs) {
-  const auto space_registry = gert::DefaultOpImplSpaceRegistry::GetInstance().GetDefaultSpaceRegistry();
-  if (space_registry == nullptr) {
-    GELOGE(ge::GRAPH_FAILED, "Invalid space registry!");
-    return ge::GRAPH_FAILED;
-  }
-  funcs = space_registry->GetOpImpl(op_type);
-  if ((funcs == nullptr) || (funcs->tiling == nullptr) || (funcs->tiling_parse == nullptr)) {
-    funcs = space_registry->GetOpImpl("DefaultImpl");
-    GELOGD("funcs/tiling/tiling_parse is null. op type is %s. Try auto tiling", op_type);
-    if ((funcs == nullptr) || (funcs->tiling == nullptr) || (funcs->tiling_parse == nullptr)) {
-      GELOGE(ge::GRAPH_FAILED, "auto funcs/tiling/tiling_parse is null. op type is %s.", op_type);
-      REPORT_CALL_ERROR("E19999", "auto funcs/tiling/tiling_parse is null. op type is %s.", op_type);
-      return ge::GRAPH_FAILED;
-    }
-  }
-  GELOGD("Found rt2 tiling func. op type is %s.", op_type);
-  return ge::GRAPH_SUCCESS;
-}
-}
-TilingParseContextBuilder &TilingParseContextBuilder::CompileInfo(void *compile_info) {
-  compile_info_ = compile_info;
+TilingParseContextBuilder &TilingParseContextBuilder::CompileJson(const ge::char_t *compile_json) {
+  compile_json_ = const_cast<ge::char_t *>(compile_json);
   return *this;
 }
 
@@ -56,9 +34,21 @@ TilingParseContextBuilder &TilingParseContextBuilder::PlatformInfo(void *platfor
   return *this;
 }
 
+TilingParseContextBuilder &TilingParseContextBuilder::CompileInfoCreatorFunc(
+    OpImplKernelRegistry::CompileInfoCreatorFunc create_func) {
+  create_func_ = create_func;
+  return *this;
+}
+
+TilingParseContextBuilder &TilingParseContextBuilder::CompileInfoDeleterFunc(
+    OpImplKernelRegistry::CompileInfoDeleterFunc delete_func) {
+  delete_func_ = delete_func;
+  return *this;
+}
+
 KernelContextHolder TilingParseContextBuilder::Build(const ge::Operator &op) {
   KernelContextHolder holder;
-  if (compile_info_ == nullptr) {
+  if (compile_json_ == nullptr) {
     GELOGE(ge::GRAPH_PARAM_INVALID, "Compile info is nullptr.");
     return holder;
   }
@@ -67,17 +57,13 @@ KernelContextHolder TilingParseContextBuilder::Build(const ge::Operator &op) {
     return holder;
   }
   const auto op_desc = ge::OpDescUtils::GetOpDescFromOperator(op);
-
-  const gert::OpImplKernelRegistry::OpImplFunctions *funcs;
-  if (FindImplFuncs(op_desc->GetType().c_str(), funcs) != ge::GRAPH_SUCCESS) {
-    GELOGE(ge::GRAPH_PARAM_INVALID, "Find op impl funcs failed.");
-    return holder;
-  }
   std::vector<std::pair<void *, gert::Chain::Deleter>> tiling_parse_outputs(1, std::make_pair(nullptr, nullptr));
-  tiling_parse_outputs[0].first = funcs->compile_info_creator();
-  tiling_parse_outputs[0].second = funcs->compile_info_deleter;
+  if (create_func_ != nullptr && delete_func_ != nullptr) {
+    tiling_parse_outputs[0].first = create_func_();
+    tiling_parse_outputs[0].second = delete_func_;
+  }
   return gert::KernelRunContextBuilder()
-      .Inputs({compile_info_})
+      .Inputs({compile_json_})
       .Inputs({platform_info_})
       .Inputs({const_cast<ge::char_t *>(op_desc->GetType().c_str())})
       .Outputs(tiling_parse_outputs)
