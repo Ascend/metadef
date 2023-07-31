@@ -31,7 +31,6 @@
 #include "graph/utils/node_utils_ex.h"
 #include "graph/utils/op_desc_utils_ex.h"
 #include "graph/shape_refiner.h"
-#include "graph/operator_factory_impl.h"
 #include "graph/opsproto_manager.h"
 
 namespace ge {
@@ -93,10 +92,6 @@ graphStatus ShapeRefiner::InferShapeAndType(const NodePtr &node, const bool befo
   return GRAPH_SUCCESS;
 }
 
-Operator OperatorFactoryImpl::CreateOperator(const std::string &operator_name, const std::string &operator_type) {
-  return Operator();
-}
-
 OpsProtoManager *OpsProtoManager::Instance() {
   static OpsProtoManager instance;
   return &instance;
@@ -107,5 +102,14 @@ bool OpsProtoManager::Initialize(const std::map<std::string, std::string> &optio
 }
 
 void OpsProtoManager::Finalize() {
+}
+
+GeTensor::GeTensor() {
+}
+
+TensorType::TensorType(DataType dt) {
+}
+
+TensorType::TensorType(const std::initializer_list<DataType> &initial_types) {
 }
 } // namespace ge
