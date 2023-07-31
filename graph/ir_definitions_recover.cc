@@ -28,12 +28,19 @@
 #include "graph/utils/op_type_utils.h"
 
 namespace {
+using InputIrDefs = std::vector<std::pair<std::string, ge::IrInputType>>;
+using OutputIrDefs = std::vector<std::pair<std::string, ge::IrOutputType>>;
+template<typename IrType>
+using IrDefAppender =
+    std::function<void(const ge::OpDescPtr &op_desc, const std::string &ir_name, const IrType ir_type)>;
+
 struct IrDefinition {
   bool inited;
   bool has_ir_definition;
   std::vector<std::string> attr_names;
   std::map<std::string, ge::AnyValue> attr_value;
-  std::vector<std::pair<std::string, ge::IrInputType>> inputs;
+  InputIrDefs inputs;
+  OutputIrDefs outputs;
 };
 void InitIrDefinitionsIfNeed(const std::string &op_type, IrDefinition &ir_def) {
   if (!ir_def.inited) {
@@ -48,18 +55,11 @@ void InitIrDefinitionsIfNeed(const std::string &op_type, IrDefinition &ir_def) {
     }
     ir_def.attr_names = op_desc->GetIrAttrNames();
     ir_def.inputs = op_desc->GetIrInputs();
+    ir_def.outputs = op_desc->GetIrOutputs();
     ir_def.attr_value = ge::AttrUtils::GetAllAttrs(op_desc);
     ir_def.has_ir_definition = true;
     ir_def.inited = true;
   }
-}
-
-std::string IrInputsToString(const std::vector<std::pair<std::string, ge::IrInputType>> &ir_inputs) {
-  std::ostringstream oss;
-  for (const auto &pair : ir_inputs) {
-    oss << "[" << pair.first << ", " << pair.second << "], ";
-  }
-  return oss.str();
 }
 
 std::string IrAttrNamesToString(const std::vector<std::string> &attr_names) {
@@ -70,37 +70,47 @@ std::string IrAttrNamesToString(const std::vector<std::string> &attr_names) {
   return oss.str();
 }
 
-ge::graphStatus RecoverIrInputs(const ge::NodePtr &node, IrDefinition &ir_def) {
-  const auto ir_inputs_in_node = node->GetOpDesc()->GetIrInputs();
+template<typename IrDef>
+std::string IrDefsToString(const IrDef &ir_defs) {
+  std::ostringstream oss;
+  for (const auto &pair : ir_defs) {
+    oss << "[" << pair.first << ", " << pair.second << "], ";
+  }
+  return oss.str();
+}
+
+template<typename IrDef, typename IrType>
+ge::graphStatus AppendIrDefs(const ge::OpDescPtr &op_desc, const IrDef &ir_ins, const IrDef &ir_defs,
+                             const IrDefAppender<IrType> appender) {
   // 输入个数和顺序校验针对单算子离线流程当前未实现so进om时版本兼容性校验，实现后校验逻辑可去除
   // 当前运行版本中，算子输入个数减少了（相对于导出模型的版本）
-  if (ir_def.inputs.size() < ir_inputs_in_node.size()) {
-    GELOGE(ge::FAILED, "In the current running version, the number of operator[%s][%s] inputs has been reduced, "
-            "ir_def.inputs size[%zu] is less than ir_inputs_in_node size[%zu], ir_def.inputs is [%s], "
-           "ir_inputs_in_node is [%s]", node->GetOpDesc()->GetName().c_str(), node->GetOpDesc()->GetType().c_str(),
-           ir_def.inputs.size(), ir_inputs_in_node.size(), IrInputsToString(ir_def.inputs).c_str(),
-           IrInputsToString(ir_inputs_in_node).c_str());
+  if (ir_defs.size() < ir_ins.size()) {
+    GELOGE(ge::FAILED,
+           "In the current running version, the number of operator[%s][%s] inputs has been reduced, "
+           "ir_def.inputs size[%zu] is less than ir_inputs_in_node size[%zu], ir_def.inputs is [%s], "
+           "ir_inputs_in_node is [%s]",
+           op_desc->GetName().c_str(), op_desc->GetType().c_str(), ir_defs.size(), ir_ins.size(),
+           IrDefsToString<IrDef>(ir_defs).c_str(), IrDefsToString<IrDef>(ir_ins).c_str());
     return ge::FAILED;
   }
   // 算子输入顺序或者输入类型变化了
-  for (size_t i = 0U; i < ir_inputs_in_node.size(); ++i) {
-    if (ir_inputs_in_node[i] != ir_def.inputs[i]) {
+  for (size_t i = 0U; i < ir_ins.size(); ++i) {
+    if (ir_ins[i] != ir_defs[i]) {
       GELOGE(ge::FAILED, "In the current running version, the order or type of operator[%s][%s] inputs may "
-             "have changed, ir_def.inputs[%zu] is [%s, %u], ir_inputs_in_node[%zu] is [%s, %u], "
-             "ir_def.inputs is [%s], ir_inputs_in_node is [%s]", node->GetOpDesc()->GetName().c_str(),
-             node->GetOpDesc()->GetType().c_str(), i, ir_def.inputs[i].first.c_str(), ir_def.inputs[i].second,
-             i, ir_inputs_in_node[i].first.c_str(), ir_inputs_in_node[i].second,
-             IrInputsToString(ir_def.inputs).c_str(), IrInputsToString(ir_inputs_in_node).c_str());
+                         "have changed, ir_def.inputs[%zu] is [%s, %u], ir_inputs_in_node[%zu] is [%s, %u], "
+                         "ir_def.inputs is [%s], ir_inputs_in_node is [%s]", op_desc->GetName().c_str(),
+             op_desc->GetType().c_str(), i, ir_defs[i].first.c_str(), ir_defs[i].second,
+             i, ir_ins[i].first.c_str(), ir_ins[i].second,
+             IrDefsToString<IrDef>(ir_defs).c_str(), IrDefsToString<IrDef>(ir_defs).c_str());
       return ge::FAILED;
     }
   }
   // 当前运行版本中，算子输入个数在后面增加了，需要添加到node中，或者 ir_inputs_in_node 为空，全部拷贝到node中
-  for (size_t i = ir_inputs_in_node.size(); i < ir_def.inputs.size(); ++i) {
-    node->GetOpDesc()->AppendIrInput(ir_def.inputs[i].first, ir_def.inputs[i].second);
+  for (size_t i = ir_ins.size(); i < ir_defs.size(); ++i) {
+    appender(op_desc, ir_defs[i].first, ir_defs[i].second);
     GELOGD("Append ir input:%s for node[%s(%s)]",
-           ir_def.inputs[i].first.c_str(), node->GetName().c_str(), node->GetType().c_str());
+           ir_defs[i].first.c_str(), op_desc->GetName().c_str(), op_desc->GetType().c_str());
   }
-
   return ge::GRAPH_SUCCESS;
 }
 
@@ -156,9 +166,21 @@ ge::graphStatus RecoverNodeIrDefinitions(const ge::NodePtr &node, std::string &o
     GELOGE(ge::FAILED, "recover ir attr names failed.");
     return ge::FAILED;
   }
+
   // ir_inputs
-  if (RecoverIrInputs(node, ir_def) != ge::GRAPH_SUCCESS) {
+  auto input_appender = [](const ge::OpDescPtr &op_desc, const std::string &ir_name,
+                           const ge::IrInputType ir_type) -> void { op_desc->AppendIrInput(ir_name, ir_type); };
+  if (AppendIrDefs<InputIrDefs, ge::IrInputType>(node->GetOpDesc(), node->GetOpDesc()->GetIrInputs(), ir_def.inputs,
+                                                 input_appender) != ge::GRAPH_SUCCESS) {
     GELOGE(ge::FAILED, "recover ir inputs failed.");
+    return ge::FAILED;
+  }
+  // ir_outputs
+  auto output_appender = [](const ge::OpDescPtr &op_desc, const std::string &ir_name,
+                            const ge::IrOutputType ir_type) -> void { op_desc->AppendIrOutput(ir_name, ir_type); };
+  if (AppendIrDefs<OutputIrDefs, ge::IrOutputType>(node->GetOpDesc(), node->GetOpDesc()->GetIrOutputs(), ir_def.outputs,
+                                                   output_appender) != ge::GRAPH_SUCCESS) {
+    GELOGE(ge::FAILED, "recover ir outputs failed.");
     return ge::FAILED;
   }
   // attr

@@ -96,6 +96,8 @@ class OpDescUtils {
                                                      GetConstInputOnRuntimeFun get_const_input_func);
   static bool HasCallbackGetConstInputFunc(const Operator &op);
   static std::map<size_t, std::pair<size_t, size_t>> GetInputIrIndexes2InstanceIndexesPairMap(const OpDescPtr &op_desc);
+  static std::map<size_t, std::pair<size_t, size_t>> GetOutputIrIndexes2InstanceIndexesPairMap(
+      const OpDescPtr &op_desc);
 
   static ge::graphStatus GetInputIrIndexByInstanceIndex(const OpDescPtr &op_desc,
                                                         size_t instance_index, size_t &ir_index);

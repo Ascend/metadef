@@ -124,6 +124,7 @@ TEST_F(IrDefinitionsRecoverUT, RecoverIrDefinitions_empty_success) {
   EXPECT_EQ(ret, ge::GRAPH_SUCCESS);
   EXPECT_EQ(op_desc->GetIrAttrNames().size(), op_desc_origin->GetIrAttrNames().size());
   EXPECT_EQ(op_desc->GetIrInputs().size(), op_desc_origin->GetIrInputs().size());
+  EXPECT_EQ(op_desc->GetIrOutputs().size(), op_desc_origin->GetIrOutputs().size());
 }
 
 TEST_F(IrDefinitionsRecoverUT, RecoverIrDefinitions_partial_success) {
@@ -145,6 +146,7 @@ TEST_F(IrDefinitionsRecoverUT, RecoverIrDefinitions_partial_success) {
   EXPECT_EQ(ret, ge::GRAPH_SUCCESS);
   EXPECT_EQ(op_desc->GetIrAttrNames().size(), op_desc_origin->GetIrAttrNames().size());
   EXPECT_EQ(op_desc->GetIrInputs().size(), op_desc_origin->GetIrInputs().size());
+  EXPECT_EQ(op_desc->GetIrOutputs().size(), op_desc_origin->GetIrOutputs().size());
 }
 
 TEST_F(IrDefinitionsRecoverUT, RecoverIrDefinitions_same_success) {
@@ -168,6 +170,7 @@ TEST_F(IrDefinitionsRecoverUT, RecoverIrDefinitions_same_success) {
   EXPECT_EQ(ret, ge::GRAPH_SUCCESS);
   EXPECT_EQ(op_desc->GetIrAttrNames().size(), op_desc_origin->GetIrAttrNames().size());
   EXPECT_EQ(op_desc->GetIrInputs().size(), op_desc_origin->GetIrInputs().size());
+  EXPECT_EQ(op_desc->GetIrOutputs().size(), op_desc_origin->GetIrOutputs().size());
 }
 
 TEST_F(IrDefinitionsRecoverUT, RecoverIrDefinitions_frameworkop_success) {
@@ -186,6 +189,8 @@ TEST_F(IrDefinitionsRecoverUT, RecoverIrDefinitions_frameworkop_success) {
   EXPECT_EQ(ret, ge::GRAPH_SUCCESS);
   EXPECT_EQ(op_desc->GetIrAttrNames().size(), op_desc_origin->GetIrAttrNames().size());
   EXPECT_EQ(op_desc->GetIrInputs().size(), op_desc_origin->GetIrInputs().size());
+  EXPECT_EQ(op_desc->GetIrOutputs().size(), op_desc_origin->GetIrOutputs().size());
+
 }
 
 TEST_F(IrDefinitionsRecoverUT, RecoverIrDefinitions_op_loss_not_has_default_value) {
@@ -204,4 +209,40 @@ TEST_F(IrDefinitionsRecoverUT, RecoverIrDefinitions_op_loss_not_has_default_valu
   EXPECT_FALSE(ge::AttrUtils::HasAttr(op_desc, "loss_attr"));
   EXPECT_TRUE(ge::AttrUtils::HasAttr(op_desc, "transpose_x1"));
 }
+
+TEST_F(IrDefinitionsRecoverUT, RecoverIrDefinitions_ir_outputs_not_match_failed) {
+  auto op_desc = std::make_shared<ge::OpDesc>("matmul", "MatMulUt");
+  ASSERT_NE(op_desc, nullptr);
+  auto computeGraph = std::make_shared<ge::ComputeGraph>("graph_name");
+  ASSERT_NE(computeGraph, nullptr);
+  ASSERT_NE(computeGraph->AddNode(op_desc), nullptr);
+
+  auto op = ge::OperatorFactory::CreateOperator("MatMulUt", "MatMulUt");
+  auto op_desc_origin = ge::OpDescUtils::GetOpDescFromOperator(op);
+
+  op_desc->impl_->meta_data_.ir_meta_.ir_attr_names_ = op_desc_origin->GetIrAttrNames();
+  op_desc->impl_->meta_data_.ir_meta_.ir_outputs_ = op_desc_origin->GetIrOutputs();
+  ASSERT_FALSE(op_desc->impl_->meta_data_.ir_meta_.ir_outputs_.empty());
+  ASSERT_FALSE(op_desc->impl_->meta_data_.ir_meta_.ir_attr_names_.empty());
+  op_desc->impl_->meta_data_.ir_meta_.ir_outputs_[0].first = "fake";
+  auto ret = RecoverIrDefinitions(computeGraph);
+  EXPECT_NE(ret, ge::GRAPH_SUCCESS);
+  EXPECT_EQ(op_desc->impl_->meta_data_.ir_meta_.ir_outputs_[0].first,  "fake");
+}
+
+TEST_F(IrDefinitionsRecoverUT, RecoverIrDefinitions_ir_outputs_num_check_failed) {
+  auto op_desc = std::make_shared<ge::OpDesc>("matmul", "MatMulUt");
+  ASSERT_NE(op_desc, nullptr);
+  auto computeGraph = std::make_shared<ge::ComputeGraph>("graph_name");
+  ASSERT_NE(computeGraph, nullptr);
+  ASSERT_NE(computeGraph->AddNode(op_desc), nullptr);
+
+  auto op = ge::OperatorFactory::CreateOperator("MatMulUt", "MatMulUt");
+  auto op_desc_origin = ge::OpDescUtils::GetOpDescFromOperator(op);
+  op_desc->impl_->meta_data_.ir_meta_.ir_outputs_.emplace_back(std::pair<std::string, IrOutputType>("fake", kIrOutputRequired));
+  auto ret = RecoverIrDefinitions(computeGraph);
+  EXPECT_NE(ret, ge::GRAPH_SUCCESS);
+  EXPECT_EQ(op_desc->impl_->meta_data_.ir_meta_.ir_outputs_[0].first,  "fake");
+}
+
 } // namespace gert
