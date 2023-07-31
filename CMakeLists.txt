@@ -1,6 +1,5 @@
 cmake_minimum_required(VERSION 3.14)
 project (MetaDef[CXX])
-
 if (NOT DEFINED CMAKE_MODULE_PATH)
     set(CMAKE_MODULE_PATH ${ASCEND_OPENSDK_DIR}/cmake/modules)
 endif()

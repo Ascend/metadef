@@ -19,9 +19,9 @@
 
 #define private public
 #include "graph/parallelism/tensor_parallel_attrs.h"
-#include "ge/ge_api_error_codes.h"
+#include "external/ge_common/ge_api_error_codes.h"
 #undef private
-#include "common/ge_inner_error_codes.h"
+#include "common/ge_common/ge_inner_error_codes.h"
 
 using namespace testing;
 namespace ge {

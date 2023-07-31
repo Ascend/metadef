@@ -16,7 +16,7 @@
 
 #include "graph/utils/ge_ir_utils.h"
 #include <utility>
-#include "framework/common/debug/ge_log.h"
+#include "common/ge_common/debug/ge_log.h"
 #include "graph/detail/model_serialize_imp.h"
 #include "graph/ge_tensor_impl.h"
 #include "graph/node_impl.h"

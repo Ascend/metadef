@@ -16,7 +16,7 @@
 
 #include "graph/utils/node_utils_ex.h"
 
-#include "framework/common/util.h"
+#include "common/ge_common/util.h"
 #include "common/util/trace_manager/trace_manager.h"
 #include "graph/format_refiner.h"
 #include "graph/shape_refiner.h"

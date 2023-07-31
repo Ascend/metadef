@@ -145,7 +145,6 @@ target_link_options(graph_base PRIVATE
 target_link_libraries(graph_base
     PRIVATE
         intf_pub
-        air_headers
         static_mmpa
         -Wl,--no-as-needed
         c_sec
@@ -193,7 +192,6 @@ target_link_options(graph PRIVATE
 target_link_libraries(graph
     PRIVATE
         intf_pub
-        air_headers
         static_mmpa
         -Wl,--no-as-needed
         graph_base
@@ -244,7 +242,6 @@ target_link_options(flow_graph PRIVATE
 target_link_libraries(flow_graph
     PRIVATE
         intf_pub
-        air_headers
         static_mmpa
         -Wl,--no-as-needed
         graph_base
@@ -299,7 +296,6 @@ else()
     target_link_libraries(graph_share
             PRIVATE
             intf_pub
-            air_headers
             static_mmpa
             -Wl,--no-as-needed
             c_sec
@@ -386,7 +382,6 @@ target_compile_options(atc_stub_graph PRIVATE
 target_link_libraries(atc_stub_graph
     PRIVATE
         intf_pub
-        air_headers
         static_mmpa
         -Wl,--no-as-needed
         graph_base
@@ -432,7 +427,6 @@ target_include_directories(fwk_stub_graph PRIVATE
 target_link_libraries(fwk_stub_graph
     PRIVATE
         intf_pub
-        air_headers
         static_mmpa
         -Wl,--no-as-needed
         graph_base

@@ -67,18 +67,28 @@ TEST_F(UtestPluginManager, test_plugin_manager_load) {
   std::vector<std::string> funcChkList;
   const std::string file_name = "libcce.so";
   funcChkList.push_back(file_name);
+  funcChkList.push_back("invalid_func");
 
   system(("touch " + path + file_name).c_str());
 
   EXPECT_EQ(manager.Load("", pathList), SUCCESS);
   EXPECT_EQ(manager.Load(path, {}), SUCCESS);
   EXPECT_EQ(manager.LoadSo(path, {}), SUCCESS);
+  EXPECT_EQ(manager.LoadSo(path, funcChkList), SUCCESS);
 
   path += file_name + "/";
   pathList.push_back(path);
   EXPECT_EQ(manager.LoadSo(path, pathList), SUCCESS);
 
   unlink(path.c_str());
+}
+
+TEST_F(UtestPluginManager, test_plugin_manager_load_so_fail) {
+  PluginManager manager;
+  std::vector<std::string> funcs;
+  const std::string path = "./tests/depends/mmpa/libmmpa.so";
+  funcs.push_back("invalid_func");
+  EXPECT_EQ(manager.LoadSo(path, funcs), SUCCESS);
 }
 
 TEST_F(UtestPluginManager, test_plugin_manager_getopp_plugin_vendors_01) {

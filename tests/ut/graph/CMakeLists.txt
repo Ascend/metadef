@@ -45,7 +45,6 @@ target_link_libraries(ut_graph PRIVATE
     intf_pub -lgcov
     slog_headers
     metadef_headers
-    air_headers
     graph graph_base flow_graph error_manager mmpa
     GTest::gtest GTest::gtest_main ascend_protobuf slog_stub c_sec json mmpa_stub -lrt -ldl
 )

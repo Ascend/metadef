@@ -34,6 +34,10 @@ class MmpaStubApi {
     return dlsym(handle, func_name);
   }
 
+  virtual CHAR *Dlerror() {
+    return dlerror();
+  }
+
   virtual int32_t DlClose(void *handle) {
     return dlclose(handle);
   }

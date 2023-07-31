@@ -20,7 +20,7 @@
 #include "register/op_impl_registry_holder_manager.h"
 #include "register/op_impl_space_registry.h"
 #include "graph/any_value.h"
-#include "common/debug/ge_log.h"
+#include "common/ge_common/debug/ge_log.h"
 
 namespace gert {
 int SuperSystem(const char *cmd, char *retmsg, int msg_len);

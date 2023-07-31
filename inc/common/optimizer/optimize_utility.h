@@ -17,7 +17,7 @@
 #ifndef INC_COMMON_OPTIMIZER_OPTIMIZE_UTILITY_H_
 #define INC_COMMON_OPTIMIZER_OPTIMIZE_UTILITY_H_
 
-#include "common/ge_inner_error_codes.h"
+#include "common/ge_common/ge_inner_error_codes.h"
 #include "graph/compute_graph.h"
 
 namespace ge {

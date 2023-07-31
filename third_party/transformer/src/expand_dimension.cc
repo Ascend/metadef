@@ -23,7 +23,7 @@
 #include "axis_constants.h"
 #include "exe_graph/runtime/expand_dims_type.h"
 #include "external/graph/types.h"
-#include "framework/common/debug/ge_log.h"
+#include "common/ge_common/debug/ge_log.h"
 #include "external/graph/ge_error_codes.h"
 
 namespace transformer {

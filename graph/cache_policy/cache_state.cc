@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 #include "graph/cache_policy/cache_state.h"
-#include "framework/common/debug/ge_log.h"
+#include "common/ge_common/debug/ge_log.h"
 namespace ge {
 CacheItemId CacheState::GetNextCacheItemId() {
   const std::lock_guard<std::mutex> lock(cache_item_mu_);

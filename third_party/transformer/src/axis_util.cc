@@ -16,7 +16,7 @@
 
 #include "axis_util.h"
 #include "axis_constants.h"
-#include "framework/common/debug/ge_log.h"
+#include "common/ge_common/debug/ge_log.h"
 
 namespace transformer {
 const size_t DIM_SIZE_TWO = 2;

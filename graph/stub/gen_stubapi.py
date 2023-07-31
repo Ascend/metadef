@@ -25,7 +25,7 @@ RETURN_STATEMENTS = {
     'graphStatus': '    std::cout << "[ERROR]: stub library libgraph or libge_compiler cannot be used for execution, please check your "\n '
                    '        << "environment variables and compilation options to make sure you use the correct library."\n'
                    '        << std::endl;\n'
-                   '    return ACL_ERROR_COMPILING_STUB_MODE;',
+                   '    return GRAPH_FAILED;',
     'Status': '    return SUCCESS;',
     'Graph': '    return Graph();',
     'Graph&': '    return *this;',

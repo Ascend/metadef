@@ -19,7 +19,7 @@
 #include <google/protobuf/text_format.h>
 #include "external/graph/graph.h"
 #include "graph/utils/attr_utils.h"
-#include "framework/common/debug/ge_log.h"
+#include "common/ge_common/debug/ge_log.h"
 #include "graph/model_serialize.h"
 #include "graph/ge_tensor_impl.h"
 #include "graph/buffer_impl.h"

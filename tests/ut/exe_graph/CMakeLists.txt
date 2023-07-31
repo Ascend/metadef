@@ -24,7 +24,6 @@ target_compile_definitions(ut_exe_graph PRIVATE
 target_link_libraries(ut_exe_graph PRIVATE
         intf_pub
         -Wl,--no-as-needed
-        air_headers
         slog_headers
         platform_stub
         msprof_headers

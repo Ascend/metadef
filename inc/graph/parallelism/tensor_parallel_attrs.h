@@ -22,7 +22,7 @@
 #include <memory>
 #include <string>
 #include <vector>
-#include "ge/ge_api_types.h"
+#include "external/ge_common/ge_api_types.h"
 
 namespace ge {
 namespace tp {

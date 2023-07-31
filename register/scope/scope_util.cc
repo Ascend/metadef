@@ -15,7 +15,7 @@
 */
 
 #include "external/register/scope/scope_fusion_pass_register.h"
-#include "framework/common/string_util.h"
+#include "common/ge_common/string_util.h"
 
 namespace ge {
 std::string ScopeUtil::StringReplaceAll(std::string str, const std::string &old_value, const std::string &new_value) {

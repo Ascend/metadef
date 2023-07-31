@@ -24,7 +24,7 @@
 #include "graph_builder_utils.h"
 #include "graph/debug/ge_op_types.h"
 #include "graph/debug/ge_attr_define.h"
-#include "framework/common/ge_inner_error_codes.h"
+#include "common/ge_common/ge_inner_error_codes.h"
 
 #undef private
 #undef protected

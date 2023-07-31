@@ -17,7 +17,7 @@
 #include "register/tilingdata_base.h"
 #include <cstring>
 #include <securec.h>
-#include "framework/common/debug/ge_log.h"
+#include "common/ge_common/debug/ge_log.h"
 #include "graph/ascend_string.h"
 
 namespace optiling {

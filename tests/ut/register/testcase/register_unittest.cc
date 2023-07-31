@@ -35,7 +35,7 @@
 #include <nlohmann/json.hpp>
 #include <stdlib.h>
 
-#include "framework/common/debug/ge_log.h"
+#include "common/ge_common/debug/ge_log.h"
 #include "register/op_registry.h"
 #include "op_tiling/op_tiling_utils.h"
 #include "register/op_tiling_registry.h"

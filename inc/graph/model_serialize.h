@@ -22,7 +22,7 @@
 #include "graph/buffer.h"
 #include "graph/compute_graph.h"
 #include "graph/model.h"
-#include "external/ge/ge_api_types.h"
+#include "external/ge_common/ge_api_types.h"
 
 namespace ge {
 class ModelSerialize {

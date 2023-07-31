@@ -21,7 +21,7 @@
 #include "graph/utils/graph_utils.h"
 #include "exe_graph/lowering/value_holder.h"
 #include "platform/platform_infos_def.h"
-#include "framework/common/util.h"
+#include "common/ge_common/util.h"
 #include "register/op_impl_space_registry.h"
 #include "register/op_impl_registry.h"
 

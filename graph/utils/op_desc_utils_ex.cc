@@ -16,7 +16,7 @@
 
 #include "graph/utils/op_desc_utils_ex.h"
 
-#include "framework/common/util.h"
+#include "common/ge_common/util.h"
 #include "common/util/trace_manager/trace_manager.h"
 #include "graph/operator_impl.h"
 #include "graph/operator_factory_impl.h"

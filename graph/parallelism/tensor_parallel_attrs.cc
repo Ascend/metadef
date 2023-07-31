@@ -15,7 +15,7 @@
  */
 
 #include "parallelism/tensor_parallel_attrs.h"
-#include "framework/common/util.h"
+#include "common/ge_common/util.h"
 #include "graph/debug/ge_util.h"
 #include "nlohmann/json.hpp"
 #include "parallelism/comm_task_builder.h"
