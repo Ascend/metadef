@@ -57,6 +57,7 @@ KernelContextHolder TilingParseContextBuilder::Build(const ge::Operator &op) {
     return holder;
   }
   const auto op_desc = ge::OpDescUtils::GetOpDescFromOperator(op);
+  GE_CHECK_NOTNULL_EXEC(op_desc, return holder);
   std::vector<std::pair<void *, gert::Chain::Deleter>> tiling_parse_outputs(1, std::make_pair(nullptr, nullptr));
   if (create_func_ != nullptr && delete_func_ != nullptr) {
     tiling_parse_outputs[0].first = create_func_();
