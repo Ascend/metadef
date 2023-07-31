@@ -30,7 +30,7 @@ std::vector<std::string> TestTraceFunc(const gert::KernelContext *) {
 class KernelRegistryImplUT : public testing::Test {};
 TEST_F(KernelRegistryImplUT, RegisterAndFind_Ok_AllFuncRegistered) {
  KernelRegistryImpl registry;
- registry.RegisterKernel("Foo", {{TestFunc, nullptr, nullptr, TestFuncCreator, TestTraceFunc}, ""});
+ registry.RegisterKernel("Foo", {{TestFunc, TestFuncCreator, TestTraceFunc}, ""});
  ASSERT_NE(registry.FindKernelFuncs("Foo"), nullptr);
  ASSERT_EQ(registry.FindKernelFuncs("Foo")->run_func, &TestFunc);
  ASSERT_EQ(registry.FindKernelFuncs("Foo")->outputs_creator_func, &TestFuncCreator);
@@ -38,7 +38,7 @@ TEST_F(KernelRegistryImplUT, RegisterAndFind_Ok_AllFuncRegistered) {
 }
 TEST_F(KernelRegistryImplUT, RegisterAndFind_Ok_OnlyRegisterRunFunc) {
  KernelRegistryImpl registry;
- registry.RegisterKernel("Foo", {{TestFunc, nullptr, nullptr}, ""});
+ registry.RegisterKernel("Foo", {{TestFunc}, ""});
  ASSERT_NE(registry.FindKernelFuncs("Foo"), nullptr);
  ASSERT_EQ(registry.FindKernelFuncs("Foo")->run_func, &TestFunc);
  ASSERT_EQ(registry.FindKernelFuncs("Foo")->outputs_creator_func, nullptr);
@@ -51,13 +51,13 @@ TEST_F(KernelRegistryImplUT, FailedToFindWhenNotRegister) {
 }
 TEST_F(KernelRegistryImplUT, GetAll_Ok) {
  KernelRegistryImpl registry;
- registry.RegisterKernel("Foo", {{TestFunc, nullptr, nullptr}, "memory"});
+ registry.RegisterKernel("Foo", {{TestFunc}, "memory"});
  std::unordered_map<std::string, KernelRegistry::KernelInfo> expect_kernel_infos = {
-     {"Foo", {{TestFunc, nullptr, nullptr, nullptr, nullptr}, "memory"}},
-     {"Bar", {{TestFunc, nullptr, nullptr, TestFuncCreator, TestTraceFunc}, "memory"}}
+     {"Foo", {{TestFunc}, "memory"}},
+     {"Bar", {{TestFunc, TestFuncCreator, TestTraceFunc}, "memory"}}
  };
- registry.RegisterKernel("Foo", {{TestFunc, nullptr, nullptr, nullptr, nullptr}, "memory"});
- registry.RegisterKernel("Bar", {{TestFunc, nullptr, nullptr, TestFuncCreator, TestTraceFunc}, "memory"});
+ registry.RegisterKernel("Foo", {{TestFunc}, "memory"});
+ registry.RegisterKernel("Bar", {{TestFunc, TestFuncCreator, TestTraceFunc}, "memory"});
  ASSERT_EQ(registry.GetAll().size(), expect_kernel_infos.size());
  for (const auto &key_to_infos : registry.GetAll()) {
    ASSERT_TRUE(expect_kernel_infos.count(key_to_infos.first) > 0);

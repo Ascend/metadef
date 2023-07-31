@@ -75,20 +75,10 @@ KernelRegisterV2 &KernelRegisterV2::ConcurrentCriticalSectionKey(const std::stri
   }
   return *this;
 }
-KernelRegisterV2 &KernelRegisterV2::OutputsCreator(KernelRegistry::CreateOutputsFunc func) {
-  GELOGW("The OutputsCreator is no longer supported, use OutputsCreatorFunc instead");
-  (void)func;
-  return *this;
-}
 KernelRegisterV2 &KernelRegisterV2::OutputsCreatorFunc(KernelRegistry::OutputsCreatorFunc func) {
   if (register_data_ != nullptr) {
     register_data_->GetFuncs().outputs_creator_func = func;
   }
-  return *this;
-}
-KernelRegisterV2 &KernelRegisterV2::OutputsInitializer(KernelRegistry::CreateOutputsFunc func) {
-  GELOGW("The OutputsInitializer is no longer supported");
-  (void)func;
   return *this;
 }
 KernelRegisterV2 &KernelRegisterV2::TracePrinter(KernelRegistry::TracePrinter func) {
@@ -97,6 +87,28 @@ KernelRegisterV2 &KernelRegisterV2::TracePrinter(KernelRegistry::TracePrinter fu
   }
   return *this;
 }
+
+KernelRegisterV2 &KernelRegisterV2::ProfilerInfoFillerFunc(KernelRegistry::ProfilerInfoFiller func) {
+  if (register_data_ != nullptr) {
+    register_data_->GetFuncs().profiler_info_filler = func;
+  }
+  return *this;
+}
+
+KernelRegisterV2 &KernelRegisterV2::DataDumpInfoFillerFunc(KernelRegistry::DataDumpInfoFiller func) {
+  if (register_data_ != nullptr) {
+    register_data_->GetFuncs().data_dump_info_filler = func;
+  }
+  return *this;
+}
+
+KernelRegisterV2 &KernelRegisterV2::ExceptionDumpInfoFillerFunc(KernelRegistry::ExceptionDumpInfoFiller func) {
+  if (register_data_ != nullptr) {
+    register_data_->GetFuncs().exception_dump_info_filler = func;
+  }
+  return *this;
+}
+
 KernelRegisterV2::KernelRegisterV2(const KernelRegisterV2 &other) : register_data_(nullptr) {
   const auto register_data = other.register_data_.get();
   if (register_data == nullptr) {

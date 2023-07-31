@@ -23,6 +23,7 @@
 #include "graph/types.h"
 #include "exe_graph/runtime/base_type.h"
 #include "exe_graph/runtime/kernel_context.h"
+#include "exe_graph/runtime/dfx_info_filler.h"
 
 namespace ge {
 class Node;
@@ -38,14 +39,17 @@ class KernelRegistry {
   using KernelFunc = UINT32 (*)(KernelContext *context);
   using OutputsCreatorFunc = UINT32 (*)(const ge::Node *, KernelContext *);
   using TracePrinter = std::vector<std::string> (*)(const KernelContext *);
+  using ProfilerInfoFiller = ge::graphStatus (*)(const KernelContext *, ProfNodeInfoWrapperBasic &);
+  using DataDumpInfoFiller = ge::graphStatus (*)(const KernelContext *, DataDumpInfoWrapperBasic &);
+  using ExceptionDumpInfoFiller = ge::graphStatus (*)(const KernelContext *, ExceptionDumpInfoWrapperBasic &);
 
   struct KernelFuncs {
     KernelFunc run_func;
-    // todo delete after the next synchronization from yellow to blue
-    CreateOutputsFunc outputs_creator; // to be deleted
-    CreateOutputsFunc outputs_initializer; // to be deleted
     OutputsCreatorFunc outputs_creator_func;
     TracePrinter trace_printer;
+    ProfilerInfoFiller profiler_info_filler;
+    DataDumpInfoFiller data_dump_info_filler;
+    ExceptionDumpInfoFiller exception_dump_info_filler;
   };
 
   struct KernelInfo {
@@ -75,12 +79,11 @@ class KernelRegisterV2 {
   KernelRegisterV2 &RunFunc(KernelRegistry::KernelFunc func);
   KernelRegisterV2 &ConcurrentCriticalSectionKey(const std::string &critical_section_key);
 
-  ATTRIBUTED_DEPRECATED(KernelRegisterV2 &OutputsCreatorFunc(KernelRegistry::OutputsCreatorFunc func))
-  KernelRegisterV2 &OutputsCreator(KernelRegistry::CreateOutputsFunc func); // to be deleted
   KernelRegisterV2 &OutputsCreatorFunc(KernelRegistry::OutputsCreatorFunc func);
-  ATTRIBUTED_NOT_SUPPORT()
-  KernelRegisterV2 &OutputsInitializer(KernelRegistry::CreateOutputsFunc func); // to be deleted
   KernelRegisterV2 &TracePrinter(KernelRegistry::TracePrinter func);
+  KernelRegisterV2 &ProfilerInfoFillerFunc(KernelRegistry::ProfilerInfoFiller func);
+  KernelRegisterV2 &DataDumpInfoFillerFunc(KernelRegistry::DataDumpInfoFiller func);
+  KernelRegisterV2 &ExceptionDumpInfoFillerFunc(KernelRegistry::ExceptionDumpInfoFiller func);
 
  private:
   std::unique_ptr<KernelRegisterData> register_data_;
