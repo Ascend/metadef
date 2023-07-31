@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 #include "exe_graph/runtime/runtime_attrs.h"
-#include "framework/common/debug/ge_log.h"
+#include "common/ge_common/debug/ge_log.h"
 #include "runtime_attrs_def.h"
 #include "graph/def_types.h"
 namespace gert {

@@ -22,7 +22,7 @@
 #define protected public
 #include "register/scope/scope_pattern_impl.h"
 #include "register/scope/scope_graph_impl.h"
-#include "framework/common/debug/ge_log.h"
+#include "common/ge_common/debug/ge_log.h"
 #include "graph/types.h"
 #include "inc/external/register/scope/scope_fusion_pass_register.h"
 #undef private

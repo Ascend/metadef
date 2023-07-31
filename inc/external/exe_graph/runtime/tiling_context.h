@@ -20,7 +20,7 @@
 #include "continuous_vector.h"
 #include "extended_kernel_context.h"
 #include "tiling_data.h"
-#include "ge/ge_api_error_codes.h"
+#include "external/ge_common/ge_api_error_codes.h"
 
 namespace fe {
 class PlatFormInfos;

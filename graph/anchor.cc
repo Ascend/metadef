@@ -19,7 +19,7 @@
 #include <cstring>
 #include <sstream>
 #include "debug/ge_util.h"
-#include "framework/common/debug/ge_log.h"
+#include "common/ge_common/debug/ge_log.h"
 #include "graph/node.h"
 #include "common/util/trace_manager/trace_manager.h"
 

@@ -27,8 +27,8 @@
 #include <sys/stat.h>
 
 #include "common/checker.h"
-#include "framework/common/debug/log.h"
-#include "framework/common/util.h"
+#include "common/ge_common/debug/log.h"
+#include "common/ge_common/util.h"
 #include "graph/def_types.h"
 #include "mmpa/mmpa_api.h"
 
@@ -534,7 +534,7 @@ Status PluginManager::LoadSo(const std::string &path, const std::vector<std::str
   std::vector<std::string> path_vec;
   SplitPath(path, path_vec);
   for (const auto &single_path : path_vec) {
-    GE_IF_BOOL_EXEC(single_path.length() >= static_cast<ULONG>(MMPA_MAX_PATH), GELOGE(ACL_ERROR_GE_PLGMGR_PATH_INVALID,
+    GE_IF_BOOL_EXEC(single_path.length() >= static_cast<ULONG>(MMPA_MAX_PATH), GELOGE(PARAM_INVALID,
                     "The shared library file path is too long!");
                     continue);
     // load break when number of loaded so reach maximum
@@ -568,7 +568,7 @@ Status PluginManager::LoadSo(const std::string &path, const std::vector<std::str
       GE_IF_BOOL_EXEC(error == nullptr, error = "");
       REPORT_INNER_ERROR("E19999", "DLOpen SharedLibraryPath failed, path[%s]. Errormessage[%s]!",
                          file_path_dlopen.c_str(), error);
-      GELOGE(ACL_ERROR_GE_PLGMGR_PATH_INVALID,
+      GELOGE(PATH_INVALID,
              "[DLOpen][SharedLibraryPath]Failed, path[%s]. Errormessage[%s]!",
              file_path_dlopen.c_str(), error);
       continue;
@@ -583,7 +583,7 @@ Status PluginManager::LoadSo(const std::string &path, const std::vector<std::str
         GE_IF_BOOL_EXEC(error == nullptr, error = "");
         REPORT_INNER_ERROR("E19999", "[Check][So]%s is skipped since function %s is not existed! errmsg:%s",
                            func_name.c_str(), func_name.c_str(), error);
-        GELOGE(ACL_ERROR_GE_PLGMGR_PATH_INVALID,
+        GELOGE(PARAM_INVALID,
                "[Check][So]%s is skipped since function %s is not existed! errmsg:%s",
                func_name.c_str(), func_name.c_str(), error);
         is_valid = false;

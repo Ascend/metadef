@@ -67,7 +67,7 @@ public:
     } else {
       auto addr = ::ge::ValueToPtr(::ge::PtrToValue(addr_base_) + offset_);
       if (memcpy_s(addr, static_cast<size_t>(max_size_ - offset_), value, size) != EOK) {
-        GELOGE(ACL_ERROR_GE_MEMORY_OPERATE_FAILED, "[Add][TilingData] Memcpy tiling data failed, "
+        GELOGE(ge::GRAPH_FAILED, "[Add][TilingData] Memcpy tiling data failed, "
                "dst size = %zu, src size = %zu.", static_cast<size_t>(max_size_ - offset_), size);
         REPORT_INNER_ERROR("E19999", "[Add][TilingData] Memcpy tiling data failed, dst size = %zu, src size = %zu.",
                            static_cast<size_t>(max_size_ - offset_), size);

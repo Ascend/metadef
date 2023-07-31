@@ -19,7 +19,7 @@
 #include <unordered_map>
 #include <nlohmann/json.hpp>
 #include "graph/ascend_string.h"
-#include "framework/common/debug/ge_log.h"
+#include "common/ge_common/debug/ge_log.h"
 #include "external/register/register_types.h"
 #include "exe_graph/runtime/tiling_context.h"
 

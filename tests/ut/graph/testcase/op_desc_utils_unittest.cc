@@ -30,7 +30,7 @@
 #include "graph/utils/anchor_utils.h"
 #include "test_std_structs.h"
 #include "external/graph/operator_reg.h"
-#include "common/debug/ge_log.h"
+#include "common/ge_common/debug/ge_log.h"
 
 namespace ge {
 class UtestOpDescUtils : public testing::Test {

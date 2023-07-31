@@ -17,7 +17,6 @@ target_link_libraries(exe_graph PRIVATE
     intf_pub
     mmpa_headers
     metadef_headers
-    air_headers
     c_sec
     slog
     $<$<NOT:$<STREQUAL:${TARGET_SYSTEM_NAME},Android>>:-lrt>

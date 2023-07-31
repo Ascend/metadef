@@ -15,8 +15,8 @@
  */
 
 #include "ir_data_type_symbol_store.h"
-#include "framework/common/debug/ge_log.h"
-#include "framework/common/string_util.h"
+#include "common/ge_common/debug/ge_log.h"
+#include "common/ge_common/string_util.h"
 namespace ge {
 namespace {
 bool IsValidDataTypeSymbol(const std::string &symbol) {

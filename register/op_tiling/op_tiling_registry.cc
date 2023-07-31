@@ -15,7 +15,7 @@
  */
 
 #include "register/op_tiling_registry.h"
-#include "framework/common/debug/ge_log.h"
+#include "common/ge_common/debug/ge_log.h"
 
 namespace optiling {
 size_t ByteBufferGetAll(ByteBuffer &buf, ge::char_t *dest, size_t dest_len) {

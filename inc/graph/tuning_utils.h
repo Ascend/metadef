@@ -36,10 +36,10 @@
 #include <graph/utils/graph_utils.h>
 #include <graph/utils/type_utils.h>
 
-#include "framework/common/debug/ge_log.h"
+#include "common/ge_common/debug/ge_log.h"
 #include "utils/attr_utils.h"
 #include "utils/node_utils.h"
-#include "external/ge/ge_api_types.h"
+#include "external/ge_common/ge_api_types.h"
 #include "graph/debug/ge_attr_define.h"
 #include "graph/utils/op_desc_utils.h"
 #include "graph/utils/tensor_utils.h"

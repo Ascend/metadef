@@ -19,7 +19,7 @@
 
 #include <vector>
 #include "external/graph/types.h"
-#include "framework/common/debug/ge_log.h"
+#include "common/ge_common/debug/ge_log.h"
 #include "proto/tensorflow/attr_value.pb.h"
 #include "proto/tensorflow/node_def.pb.h"
 #include "graph/ge_tensor.h"

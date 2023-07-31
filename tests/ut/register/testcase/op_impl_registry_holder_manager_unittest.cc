@@ -17,7 +17,7 @@
 #include "graph/any_value.h"
 #include "graph/utils/file_utils.h"
 #include "common/util/mem_utils.h"
-#include "common/debug/ge_log.h"
+#include "common/ge_common/debug/ge_log.h"
 #include "mmpa/mmpa_api.h"
 #include "tests/depends/mmpa/src/mmpa_stub.h"
 #include <gtest/gtest.h>

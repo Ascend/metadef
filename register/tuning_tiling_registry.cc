@@ -14,7 +14,7 @@
  * limitations under the License.
 */
 #include "register/tuning_tiling_registry.h"
-#include "framework/common/debug/ge_log.h"
+#include "common/ge_common/debug/ge_log.h"
 
 namespace tuningtiling {
 ge::AscendString TuningTilingDef::GetClassName() const {

@@ -17,7 +17,7 @@
 #include "graph/opsproto_manager.h"
 #include <cstdlib>
 #include <functional>
-#include "framework/common/debug/ge_log.h"
+#include "common/ge_common/debug/ge_log.h"
 #include "graph/debug/ge_log.h"
 #include "graph/types.h"
 #include "graph/def_types.h"

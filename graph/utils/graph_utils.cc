@@ -37,7 +37,7 @@
 #include "graph/utils/attr_utils.h"
 #include "graph/utils/dumper/ge_graph_dumper.h"
 #include "graph/debug/ge_op_types.h"
-#include "external/ge/ge_api_types.h"
+#include "external/ge_common/ge_api_types.h"
 #include "graph/debug/ge_attr_define.h"
 #include "graph/utils/op_desc_utils.h"
 #include "graph/utils/tensor_utils.h"

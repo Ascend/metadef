@@ -17,7 +17,7 @@
 #include "exe_graph/lowering/buffer_pool.h"
 
 #include <securec.h>
-#include "framework/common/debug/ge_log.h"
+#include "common/ge_common/debug/ge_log.h"
 #include "graph/utils/math_util.h"
 #include "graph/debug/ge_log.h"
 #include "graph/def_types.h"

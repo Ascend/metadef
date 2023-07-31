@@ -372,7 +372,7 @@ INT32 mmDlclose(VOID *handle)
 
 CHAR *mmDlerror()
 {
-  return "";
+  return ge::MmpaStub::GetInstance().GetImpl()->Dlerror();
 }
 
 INT32 mmDladdr(VOID *addr, mmDlInfo *info)

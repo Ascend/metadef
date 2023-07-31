@@ -18,7 +18,7 @@
 #include "graph/ge_global_options.h"
 #include "graph/ge_local_context.h"
 #include "graph/types.h"
-#include "framework/common/debug/ge_log.h"
+#include "common/ge_common/debug/ge_log.h"
 #include "utils/extern_math_util.h"
 #include "nlohmann/json.hpp"
 

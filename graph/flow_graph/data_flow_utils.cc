@@ -15,7 +15,7 @@
  */
 
 #include "flow_graph/data_flow_utils.h"
-#include "framework/common/debug/ge_log.h"
+#include "common/ge_common/debug/ge_log.h"
 
 namespace ge {
 namespace dflow {

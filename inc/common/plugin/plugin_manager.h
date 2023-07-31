@@ -28,12 +28,12 @@
 #include <unordered_map>
 #include <unordered_set>
 
-#include "framework/common/ge_inner_error_codes.h"
-#include "framework/engine/dnnengine.h"
-#include "framework/common/debug/ge_log.h"
+#include "common/ge_common/ge_inner_error_codes.h"
+#include "common/ge_common/debug/ge_log.h"
 #include "mmpa/mmpa_api.h"
 
 namespace ge {
+class DNNEngine;
 class PluginManager {
  public:
   PluginManager() = default;

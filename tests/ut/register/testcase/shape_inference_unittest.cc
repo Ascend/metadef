@@ -24,7 +24,7 @@
 #include "external/graph/operator_factory.h"
 #include "register/op_impl_space_registry.h"
 #include "register/op_impl_registry_holder_manager.h"
-#include "framework/common/ge_inner_error_codes.h"
+#include "common/ge_common/ge_inner_error_codes.h"
 
 namespace ge{
 REG_OP(Const)

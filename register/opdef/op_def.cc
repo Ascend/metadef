@@ -16,7 +16,7 @@
 
 #include <vector>
 #include "op_def_impl.h"
-#include "framework/common/debug/ge_log.h"
+#include "common/ge_common/debug/ge_log.h"
 #include "register/op_def.h"
 
 namespace ops {

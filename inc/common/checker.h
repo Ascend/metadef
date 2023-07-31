@@ -19,7 +19,7 @@
 #include <securec.h>
 #include <sstream>
 #include "graph/ge_error_codes.h"
-#include "framework/common/debug/ge_log.h"
+#include "common/ge_common/debug/ge_log.h"
 #include "hyper_status.h"
 
 struct ErrorResult {

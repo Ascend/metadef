@@ -96,7 +96,6 @@ target_link_libraries(register
         msprof_headers
         cce_headers
         runtime_headers
-        air_headers
         -Wl,--whole-archive
         op_tiling_o2
         -Wl,--no-whole-archive
@@ -165,7 +164,6 @@ target_link_libraries(register_static PRIVATE
     msprof_headers
     mmpa_headers
     cce_headers
-    air_headers
     runtime_headers
     metadef_headers
 )
@@ -219,7 +217,6 @@ target_link_libraries(op_tiling_o2 PRIVATE
     slog_headers
     mmpa_headers
     metadef_headers
-    air_headers
     ascend_protobuf
     json
     c_sec
@@ -262,7 +259,6 @@ target_link_libraries(rt2_registry_objects
     $<BUILD_INTERFACE:intf_pub>
     c_sec
     slog
-    air_headers
     PUBLIC
     metadef_headers
 )
