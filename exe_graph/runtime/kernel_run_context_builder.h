@@ -48,6 +48,10 @@ public:
     }
   }
 
+  KernelContext *GetKernelContext() {
+    return context_;
+  }
+
   std::unique_ptr<uint8_t[]> context_holder_;
   std::vector<Chain> value_holder_;
   std::unique_ptr<uint8_t[]> compute_node_extend_holder_;

@@ -965,7 +965,8 @@ TEST(UTEST_ge_model_serialize, test_parse_node_false)
     string node_index = "invalid_index";
     string node_name = "name";
     int32_t index = 1;
-    EXPECT_EQ(imp.ParseNodeIndex(node_index, node_name, index), false);
+    int32_t peer_index = -1;
+    EXPECT_EQ(imp.ParseNodeIndex(node_index, node_name, index, peer_index), false);
 }
 
 TEST(UTEST_ge_model_unserialize, test_invalid_Attr)
@@ -1243,7 +1244,7 @@ TEST(UTEST_ge_model_unserialize, HandleNodeNameEdgesSrcNodeIsNull)
     ge::ModelSerializeImp model_impl;
     auto builder = ut::GraphBuilder("test1");
     auto dst_node = builder.AddNode("dst_node", "NetOutput", 1, 0);
-    NodeNameNodeReq node_req("src_node", 1, dst_node, 0, "dst_node");
+    NodeNameNodeReq node_req("src_node", 1, -1, dst_node, 0, "dst_node");
     model_impl.node_input_node_names_.push_back(node_req);
     bool ret = model_impl.HandleNodeNameRef();
     EXPECT_EQ(ret, false);
@@ -1254,7 +1255,7 @@ TEST(UTEST_ge_model_unserialize, HandleNodeNameEdgesSrcAnchorIsNull)
     ge::ModelSerializeImp model_impl;
     auto builder = ut::GraphBuilder("test1");
     auto dst_node = builder.AddNode("dst_node", "NetOutput", 1, 0);
-    NodeNameNodeReq node_req("src_node", 1, dst_node, 0, "dst_node");
+    NodeNameNodeReq node_req("src_node", 1, -1, dst_node, 0, "dst_node");
     model_impl.node_input_node_names_.push_back(node_req);
     model_impl.node_map_.insert(pair<std::string, NodePtr>("src_node", dst_node));
     bool ret = model_impl.HandleNodeNameRef();
@@ -1266,7 +1267,7 @@ TEST(UTEST_ge_model_unserialize, HandleNodeNameControlEdgeSuccess)
     ge::ModelSerializeImp model_impl;
     auto builder = ut::GraphBuilder("test1");
     auto dst_node = builder.AddNode("dst_node", "NetOutput", 1, 0);
-    NodeNameNodeReq node_req("src_node", -1, dst_node, 0, "dst_node");
+    NodeNameNodeReq node_req("src_node", -1, -1, dst_node, 0, "dst_node");
     model_impl.node_input_node_names_.push_back(node_req);
     model_impl.node_map_.insert(pair<std::string, NodePtr>("src_node", dst_node));
     bool ret = model_impl.HandleNodeNameRef();

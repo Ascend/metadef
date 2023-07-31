@@ -57,6 +57,7 @@ class LoweringGlobalData {
   void SetUniqueValueHolder(const std::string &name, const bg::ValueHolderPtr &holder);
   void SetValueHolders(const string &name, const bg::ValueHolderPtr &holder);
   size_t GetValueHoldersSize(const string &name);
+  bg::ValueHolderPtr GetExternalAllocator(const bool from_init, const string &key, const AllocatorDesc &desc);
 
   void SetModelWeightSize(const size_t require_weight_size);
   size_t GetModelWeightSize() const;

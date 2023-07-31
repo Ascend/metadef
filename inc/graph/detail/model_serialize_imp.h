@@ -31,6 +31,13 @@
 
 namespace ge {
 using ComputeGraphPtr = std::shared_ptr<ComputeGraph>;
+using AnchorWithIndex = std::pair<AnchorPtr, int64_t>;
+struct MyCmp {
+  bool operator()(const AnchorWithIndex &anchor1, const AnchorWithIndex &anchor2) const {
+    return anchor1.second < anchor2.second;
+  }
+};
+using DstAnchors = std::set<AnchorWithIndex, MyCmp>;
 
 struct NodeNameGraphReq {
    public:
@@ -46,10 +53,11 @@ struct NodeNameGraphReq {
 
 struct NodeNameNodeReq {
    public:
-    NodeNameNodeReq(const std::string &src_name, const int32_t src_index, const NodePtr dst_node,
-                    const int32_t dst_index, const std::string &dst_name)
+    NodeNameNodeReq(const std::string &src_name, const int32_t src_index, const int32_t src_out_peer_index,
+                    const NodePtr dst_node, const int32_t dst_index, const std::string &dst_name)
         : src_node_name(src_name),
           src_out_index(src_index),
+          src_out_peer_index(src_out_peer_index),
           dst_node(dst_node),
           dst_in_index(dst_index),
           dst_node_name(dst_name) {}
@@ -58,6 +66,7 @@ struct NodeNameNodeReq {
    private:
     std::string src_node_name;
     int32_t src_out_index;
+    int32_t src_out_peer_index;
     NodePtr dst_node;
     int32_t dst_in_index;
     std::string dst_node_name;
@@ -104,7 +113,8 @@ class ModelSerializeImp {
                             google::protobuf::Map<std::string, ge::proto::AttrDef> *op_desc_attr) const;
   bool UnserializeNode(ComputeGraphPtr &graph, proto::OpDef &op_def_proto);
 
-  bool ParseNodeIndex(const std::string &node_index, std::string &node_name, int32_t &index) const;
+  bool ParseNodeIndex(const std::string &node_index, std::string &node_name, int32_t &index,
+                      int32_t &brother_rank_index) const;
 
   void SetProtobufOwner(const ProtoMsgOwner &buffer_proto_buf_onwer) { protobuf_owner_ = buffer_proto_buf_onwer; }
 
@@ -125,6 +135,12 @@ class ModelSerializeImp {
                              std::vector<std::string> &key_in, std::vector<uint32_t> &value_in) const;
   void ExtractMetaDataAttr(proto::OpDef &op_def_proto, std::vector<std::string> &key_out,
                            std::vector<uint32_t> &value_out) const;
+
+  std::string GenDataInputInfo(const OutDataAnchorPtr &src_anchor, const InDataAnchorPtr &dst_anchor) const;
+  std::string GenCtrlInputInfo(const OutControlAnchorPtr &src_anchor, const InControlAnchorPtr &dst_anchor) const;
+  void SaveEdgeInfo(const AnchorPtr &src_anchor, const AnchorPtr &dst_anchor, const int64_t src_out_peer_index,
+                    const int64_t cur_index, std::unordered_map<AnchorPtr, DstAnchors> &edges) const;
+  bool LinkEdges(const std::unordered_map<AnchorPtr, DstAnchors> &edges) const;
 
   std::vector<NodeNameGraphReq> graph_input_node_names_;
   std::vector<NodeNameGraphReq> graph_output_node_names_;

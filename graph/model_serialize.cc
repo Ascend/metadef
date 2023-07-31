@@ -34,23 +34,64 @@
 #include "graph/utils/graph_utils.h"
 #include "debug/ge_op_types.h"
 #include "common/util/mem_utils.h"
+#include "common/checker.h"
 
 namespace {
-  const std::string kTmpWeight = "air_weight/";
+const std::string kTmpWeight = "air_weight/";
+constexpr int32_t kInvalidIndex = -1;
+constexpr int32_t kDecimal = 10;
+constexpr size_t kOldIndexNum = 2U;
+constexpr size_t kNewIndexNum = 3U;
 }
 
 namespace ge {
-bool ModelSerializeImp::ParseNodeIndex(const std::string &node_index,
-                                       std::string &node_name, int32_t &index) const {
-  const auto sep = node_index.rfind(":");
-  if (sep == std::string::npos) {
+bool ModelSerializeImp::ParseNodeIndex(const std::string &node_index, std::string &node_name, int32_t &index,
+                                       int32_t &brother_rank_index) const {
+  const auto split_string = StringUtils::Split(node_index, ':');
+  if (split_string.size() < kOldIndexNum) {
     GELOGW("[Parse][CheckParam] Separator \":\" is not found in node_index.");
     return false;
   }
-  node_name = node_index.substr(0UL, sep);
-  const auto index_str = node_index.substr(sep + 1UL);
-  index = static_cast<int32_t>(std::strtol(index_str.c_str(), nullptr, 10));
+  node_name = split_string[0U];
+  index = static_cast<int32_t>(std::strtol(split_string[1U].c_str(), nullptr, kDecimal));
+  if (split_string.size() == kNewIndexNum) {
+    brother_rank_index = static_cast<int32_t>(std::strtol(split_string[2U].c_str(), nullptr, kDecimal));
+  }
+  GELOGD("node_index: %s, node_name: %s, index: %d, brother_rank_index: %d", node_index.c_str(), node_name.c_str(),
+         index, brother_rank_index);
   return true;
+}
+
+std::string ModelSerializeImp::GenDataInputInfo(const OutDataAnchorPtr &src_anchor,
+                                                const InDataAnchorPtr &dst_anchor) const {
+  std::string data_input_info = src_anchor->GetOwnerNode()->GetName() + ":" + std::to_string(src_anchor->GetIdx());
+  const auto peer_in_data_anchors = src_anchor->GetPeerInDataAnchors();
+  for (size_t i = 0U; i < peer_in_data_anchors.size(); ++i) {
+    if (peer_in_data_anchors.at(i) == dst_anchor) {
+      data_input_info += ":" + std::to_string(i);
+      GELOGD("input_info: %s, src node: %s, out anchor index: %d, peer index: %zu, dst node: %s, in anchor index: %d.",
+             data_input_info.c_str(), src_anchor->GetOwnerNode()->GetName().c_str(), src_anchor->GetIdx(), i,
+             dst_anchor->GetOwnerNode()->GetName().c_str(), dst_anchor->GetIdx());
+      break;
+    }
+  }
+  return data_input_info;
+}
+
+std::string ModelSerializeImp::GenCtrlInputInfo(const OutControlAnchorPtr &src_anchor,
+                                                const InControlAnchorPtr &dst_anchor) const {
+  std::string ctrl_input_info = src_anchor->GetOwnerNode()->GetName() + ":-1";
+  const auto peer_in_ctrl_anchors = src_anchor->GetPeerInControlAnchors();
+  for (size_t i = 0U; i < peer_in_ctrl_anchors.size(); ++i) {
+    if (peer_in_ctrl_anchors.at(i) == dst_anchor) {
+      ctrl_input_info += ":" + std::to_string(i);
+      GELOGD("input_info: %s, src node: %s, out anchor index: %d, peer index: %zu, dst node: %s, in anchor index: %d.",
+             ctrl_input_info.c_str(), src_anchor->GetOwnerNode()->GetName().c_str(), src_anchor->GetIdx(), i,
+             dst_anchor->GetOwnerNode()->GetName().c_str(), dst_anchor->GetIdx());
+      break;
+    }
+  }
+  return ctrl_input_info;
 }
 
 bool ModelSerializeImp::SerializeEdge(const NodePtr &node, proto::OpDef *const op_def_proto) const {
@@ -65,8 +106,7 @@ bool ModelSerializeImp::SerializeEdge(const NodePtr &node, proto::OpDef *const o
     if (in_data_anchor != nullptr) {
       const auto peer_out_anchor = in_data_anchor->GetPeerOutAnchor();
       if ((peer_out_anchor != nullptr) && peer_out_anchor->GetOwnerNode()) {
-        op_def_proto->add_input(peer_out_anchor->GetOwnerNode()->GetName() + ":" +
-                                std::to_string(peer_out_anchor->GetIdx()));
+        op_def_proto->add_input(GenDataInputInfo(peer_out_anchor, in_data_anchor));
       } else {
         op_def_proto->add_input("");
       }
@@ -78,7 +118,7 @@ bool ModelSerializeImp::SerializeEdge(const NodePtr &node, proto::OpDef *const o
     const auto peer_out_anchors = in_control_anchor->GetPeerOutControlAnchors();
     for (const auto &peer_out_anchor : peer_out_anchors) {
       if ((peer_out_anchor != nullptr) && peer_out_anchor->GetOwnerNode()) {
-        op_def_proto->add_input(peer_out_anchor->GetOwnerNode()->GetName() + ":-1");
+        op_def_proto->add_input(GenCtrlInputInfo(peer_out_anchor, in_control_anchor));
       }
     }
   }
@@ -502,8 +542,10 @@ bool ModelSerializeImp::UnserializeNode(ComputeGraphPtr &graph, proto::OpDef &op
   for (const auto &input : op_def_proto.input()) {
     std::string node_name;
     int32_t index = 0;
-    if (ParseNodeIndex(input, node_name, index)) {
-      node_input_node_names_.push_back(NodeNameNodeReq{node_name, index, node, dst_index, op_def_proto.name()});
+    int32_t peer_index = kInvalidIndex;
+    if (ParseNodeIndex(input, node_name, index, peer_index)) {
+      node_input_node_names_.push_back(
+          NodeNameNodeReq{node_name, index, peer_index, node, dst_index, op_def_proto.name()});
     }
     if (index >= 0) {
       dst_index++;
@@ -513,67 +555,67 @@ bool ModelSerializeImp::UnserializeNode(ComputeGraphPtr &graph, proto::OpDef &op
   return true;
 }
 
+void ModelSerializeImp::SaveEdgeInfo(const AnchorPtr &src_anchor, const AnchorPtr &dst_anchor,
+                                     const int64_t src_out_peer_index, const int64_t cur_index,
+                                     std::unordered_map<AnchorPtr, DstAnchors> &edges) const {
+  // old version would be -1
+  if (src_out_peer_index >= 0) {
+    edges[src_anchor].emplace(dst_anchor, src_out_peer_index);
+  } else {
+    edges[src_anchor].emplace(dst_anchor, cur_index);
+  }
+}
+
+bool ModelSerializeImp::LinkEdges(const std::unordered_map<AnchorPtr, DstAnchors> &edges) const {
+  for (const auto &edge : edges) {
+    for (const auto &out_anchor_index : edge.second) {
+      GE_ASSERT_SUCCESS(GraphUtils::AddEdge(edge.first, out_anchor_index.first));
+    }
+  }
+  return true;
+}
+
 bool ModelSerializeImp::HandleNodeNameRef() {
   // Edges
+  std::unordered_map<AnchorPtr, DstAnchors> edges;
+  int64_t cur_index = 0;
   for (auto &item : node_input_node_names_) {
+    ++cur_index;
     const auto src_node_it = node_map_.find(item.src_node_name);
-    if (src_node_it == node_map_.end()) {
-      REPORT_INNER_ERROR("E18888", "cannot find edge node %s", item.src_node_name.c_str());
-      GELOGE(GRAPH_FAILED, "[Check][Param] cannot find edge node %s", item.src_node_name.c_str());
-      return false;
-    }
+    GE_ASSERT_TRUE(src_node_it != node_map_.end());
     GE_IF_BOOL_EXEC((src_node_it->second == nullptr) || (item.dst_node == nullptr), continue);
     if (item.src_out_index >= 0) {
       const auto src_anchor = src_node_it->second->GetOutDataAnchor(item.src_out_index);
       const auto dst_anchor = item.dst_node->GetInDataAnchor(item.dst_in_index);
-      if ((src_anchor == nullptr) || (dst_anchor == nullptr)) {
-        REPORT_CALL_ERROR("E18888", "get Anchor failed %s:%d, %s:%d ", item.src_node_name.c_str(), item.src_out_index,
-                          item.dst_node_name.c_str(), item.dst_in_index);
-        GELOGE(GRAPH_FAILED, "[Get][Anchor] failed %s:%d, %s:%d ", item.src_node_name.c_str(), item.src_out_index,
-               item.dst_node_name.c_str(), item.dst_in_index);
-        return false;
-      }
-      GE_CHK_BOOL_ONLY_LOG((src_anchor->LinkTo(dst_anchor) == GRAPH_SUCCESS), " linkTo failed.");
+      GE_ASSERT_NOTNULL(src_anchor);
+      GE_ASSERT_NOTNULL(dst_anchor);
+      SaveEdgeInfo(src_anchor, dst_anchor, item.src_out_peer_index, cur_index, edges);
     } else {
       // Control edge
       const auto src_anchor = src_node_it->second->GetOutControlAnchor();
       const auto dst_anchor = item.dst_node->GetInControlAnchor();
       if ((src_anchor != nullptr) && (dst_anchor != nullptr)) {
-        GE_CHK_BOOL_ONLY_LOG((src_anchor->LinkTo(dst_anchor) == GRAPH_SUCCESS), " linkTo failed.");
+        SaveEdgeInfo(src_anchor, dst_anchor, item.src_out_peer_index, cur_index, edges);
       }
     }
   }
+  GE_ASSERT_TRUE(LinkEdges(edges));
   // Graph input
   for (auto &item : graph_input_node_names_) {
     const std::map<std::string, ge::NodePtr>::const_iterator node_it = node_map_.find(item.node_name);
-    if (node_it == node_map_.cend()) {
-      REPORT_INNER_ERROR("E18888", "cannot find graph input node %s", item.node_name.c_str());
-      GELOGE(GRAPH_FAILED, "[Check][Param] cannot find graph input node %s", item.node_name.c_str());
-      return false;
-    }
+    GE_ASSERT_TRUE(node_it != node_map_.cend());
     GE_IF_BOOL_EXEC(item.graph == nullptr, continue);
-    const auto ret = item.graph->AddInputNode(node_it->second);
-    if (ret == nullptr) {
-      return false;
-    }
+    GE_ASSERT_NOTNULL(item.graph->AddInputNode(node_it->second));
   }
   // Graph output
   for (auto &item : graph_output_node_names_) {
     const std::map<std::string, ge::NodePtr>::const_iterator node_it = node_map_.find(item.node_name);
-    if (node_it == node_map_.cend()) {
-      REPORT_INNER_ERROR("E18888", "cannot find graph output node %s", item.node_name.c_str());
-      GELOGE(GRAPH_FAILED, "[Check][Param] cannot find graph output node %s", item.node_name.c_str());
-      return false;
-    }
+    GE_ASSERT_TRUE(node_it != node_map_.cend());
 
     GE_IF_BOOL_EXEC(item.graph == nullptr, continue);
     const auto ret = item.graph->AddOutputNodeByIndex(node_it->second, item.index);
     GELOGI("node name:%s, item.index:%d", node_it->second->GetName().c_str(), item.index);
-    if (ret == nullptr) {
-      REPORT_CALL_ERROR("E18888", "add output node to graph:%s failed.", item.graph->GetName().c_str());
-      GELOGE(GRAPH_FAILED, "[Add][OutputNode] to graph:%s failed.", item.graph->GetName().c_str());
-      return false;
-    }
+    GE_ASSERT_NOTNULL(ret);
   }
   node_input_node_names_.clear();
   graph_input_node_names_.clear();
@@ -593,6 +635,9 @@ bool ModelSerializeImp::RebuildOwnership(ComputeGraphPtr &compute_graph,
     for (const NodePtr &node : graph->GetDirectNode()) {
       const OpDescPtr op_desc = node->GetOpDesc();
       for (const std::string &name : op_desc->GetSubgraphInstanceNames()) {
+        if (name.empty()) {
+          continue;
+        }
         const auto it = subgraphs.find(name);
         if (it == subgraphs.end()) {
           REPORT_INNER_ERROR("E18888", "Node:%s, Subgraph:%s not found, num:%zu.",
@@ -677,10 +722,11 @@ bool ModelSerializeImp::UnserializeGraphWithoutEdge(ComputeGraphPtr &graph, prot
   }
 
   // Inputs
+  int32_t peer_index = kInvalidIndex;
   for (const auto &input : graph_proto.input()) {
     std::string node_name;
     int32_t index;
-    if (ParseNodeIndex(input, node_name, index)) {
+    if (ParseNodeIndex(input, node_name, index, peer_index)) {
       graph_input_node_names_.push_back(NodeNameGraphReq{node_name, index, graph});
     }
   }
@@ -688,7 +734,7 @@ bool ModelSerializeImp::UnserializeGraphWithoutEdge(ComputeGraphPtr &graph, prot
   for (const auto &output : graph_proto.output()) {
     std::string node_name;
     int32_t index;
-    if (ParseNodeIndex(output, node_name, index)) {
+    if (ParseNodeIndex(output, node_name, index, peer_index)) {
       graph_output_node_names_.push_back(NodeNameGraphReq{node_name, index, graph});
     }
   }

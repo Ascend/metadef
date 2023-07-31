@@ -19,17 +19,22 @@
 #include "exe_graph/runtime/kernel_context.h"
 #include "graph/operator.h"
 #include "exe_graph/runtime/kernel_run_context_builder.h"
+#include "register/op_impl_kernel_registry.h"
 
 namespace gert {
 class TilingParseContextBuilder {
  public:
-  TilingParseContextBuilder &CompileInfo(void *compile_info);
+  TilingParseContextBuilder &CompileJson(const ge::char_t *compile_json);
   TilingParseContextBuilder &PlatformInfo(void *platform_info);
+  TilingParseContextBuilder &CompileInfoCreatorFunc(OpImplKernelRegistry::CompileInfoCreatorFunc create_func);
+  TilingParseContextBuilder &CompileInfoDeleterFunc(OpImplKernelRegistry::CompileInfoDeleterFunc delete_func);
   KernelContextHolder Build(const ge::Operator &op);
 
  private:
-  void *compile_info_{ nullptr };
+  void *compile_json_{ nullptr };
   void *platform_info_{ nullptr };
+  OpImplKernelRegistry::CompileInfoCreatorFunc create_func_{ nullptr };
+  OpImplKernelRegistry::CompileInfoDeleterFunc delete_func_{ nullptr };
 };
 }  // namespace gert
 #endif // GE_RUNTIME_TILING_PARSE_CONTEXT_BUILDER_H_

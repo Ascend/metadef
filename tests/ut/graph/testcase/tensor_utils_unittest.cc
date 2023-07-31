@@ -612,4 +612,14 @@ TEST_F(ge_test_tensor_utils, CalcTensorMemSizeNYUV) {
   EXPECT_EQ(mem_size, 2 * 3 * 4 * 5 * 4);
   EXPECT_EQ(ret, GRAPH_SUCCESS);
 }
+TEST_F(ge_test_tensor_utils, CalcTensorMemSizeNCL) {
+  vector<int64_t> dims({2, 3, 4});
+  GeShape ge_shape(dims);
+  Format format = FORMAT_NCL;
+  DataType data_type = DT_FLOAT;
+  int64_t mem_size = 0;
+  graphStatus ret = TensorUtils::CalcTensorMemSize(ge_shape, format, data_type, mem_size);
+  EXPECT_EQ(mem_size, 2 * 3 * 4 * 4);
+  EXPECT_EQ(ret, GRAPH_SUCCESS);
+}
 }

@@ -237,7 +237,7 @@ TEST_F(LoweringGlobalDataUT, GetOrCreateAllocator_ExternalAllocatorSet_UseAlways
 
   auto allocator1 = gd.GetOrCreateAllocator({kOnDeviceHbm, AllocatorUsage::kAllocNodeOutput});
   ASSERT_NE(allocator1, nullptr);
-  EXPECT_EQ(allocator1->GetNode()->GetType(), "Init");
+  EXPECT_EQ(allocator1->GetNode()->GetType(), "SelectAllocator");
 
   auto create_allocator_node = init_frame->GetExeGraph()->FindFirstNodeMatchType("CreateAllocator");
   // 外置allocator后，图中就不存在CreateAllocator节点了
