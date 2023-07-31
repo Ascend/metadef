@@ -27,7 +27,8 @@ constexpr const size_t kVectorSize = 24U;
 constexpr const size_t kUnorderedSetSize = 56U;
 constexpr const size_t kMapSize = 48U;
 constexpr const size_t kVirtualTableSize = 8U;
-constexpr const size_t kReservedFieldSize = 40U;
+constexpr const size_t kReservedFieldSize = 24U;
+constexpr const size_t kReservedFieldSize2 = 40U;
 
 constexpr const size_t kOpImplFunctionsSize = 200U;
 constexpr const size_t kOpImplRegistrySize = 88U + kVirtualTableSize;
@@ -52,7 +53,9 @@ TEST_F(AbiCompatibilityForRegisterUT, OpImplFunctions_CheckMemLayoutNotChanged) 
             kPointerSize);
   EXPECT_EQ(reinterpret_cast<uintptr_t>(&f.compile_info_deleter) - reinterpret_cast<uintptr_t>(&f.compile_info_creator),
             kPointerSize);
-  EXPECT_EQ(reinterpret_cast<uintptr_t>(&f.max_tiling_data_size) - reinterpret_cast<uintptr_t>(&f.compile_info_deleter),
+  EXPECT_EQ(reinterpret_cast<uintptr_t>(&f.op_execute_func) - reinterpret_cast<uintptr_t>(&f.compile_info_deleter),
+            kPointerSize);
+  EXPECT_EQ(reinterpret_cast<uintptr_t>(&f.max_tiling_data_size) - reinterpret_cast<uintptr_t>(&f.op_execute_func),
             kPointerSize);
   EXPECT_EQ(reinterpret_cast<uintptr_t>(&f.inputs_dependency) - reinterpret_cast<uintptr_t>(&f.max_tiling_data_size),
             sizeof(size_t));
@@ -60,8 +63,10 @@ TEST_F(AbiCompatibilityForRegisterUT, OpImplFunctions_CheckMemLayoutNotChanged) 
             sizeof(uint64_t));
   EXPECT_EQ(reinterpret_cast<uintptr_t>(&f.unique_private_attrs) - reinterpret_cast<uintptr_t>(&f.private_attrs),
             kVectorSize);
-  EXPECT_EQ(reinterpret_cast<uintptr_t>(&f.reserved_0_) - reinterpret_cast<uintptr_t>(&f.unique_private_attrs),
+  EXPECT_EQ(reinterpret_cast<uintptr_t>(&f.host_inputs) - reinterpret_cast<uintptr_t>(&f.unique_private_attrs),
             kUnorderedSetSize);
+  EXPECT_EQ(reinterpret_cast<uintptr_t>(&f.reserved_0_) - reinterpret_cast<uintptr_t>(&f.host_inputs),
+            sizeof(uint64_t));
   EXPECT_EQ(reinterpret_cast<uintptr_t>(&f.reserved_1_) - reinterpret_cast<uintptr_t>(&f.reserved_0_), 7);
 
   EXPECT_EQ(sizeof(f.reserved_1_), kReservedFieldSize);
@@ -74,6 +79,6 @@ TEST_F(AbiCompatibilityForRegisterUT, OpImplRegistry_CheckMemLayoutNotChanged) {
 
   EXPECT_EQ(reinterpret_cast<uintptr_t>(&r.reserved_) - reinterpret_cast<uintptr_t>(&r.types_to_impl_),
             kMapSize);
-  EXPECT_EQ(sizeof(r.reserved_), kReservedFieldSize);
+  EXPECT_EQ(sizeof(r.reserved_), kReservedFieldSize2);
 }
 }  // namespace gert
