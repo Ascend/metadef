@@ -49,9 +49,7 @@ class KernelRunContextFaker {
   KernelRunContextFaker &KernelIONum(size_t input_num, size_t output_num);
   KernelRunContextFaker &NodeIoNum(size_t input_num, size_t output_num);
   KernelRunContextFaker &IrInputNum(size_t input_num);
-  KernelRunContextFaker &IrOutputNum(size_t input_num);
   KernelRunContextFaker &IrInstanceNum(std::vector<uint32_t> instance_num);
-  KernelRunContextFaker &IrOutputInstanceNum(std::vector<uint32_t> instance_num);
   KernelRunContextFaker &NodeInputTd(int32_t index, ge::DataType dt, ge::Format origin_format,
                                      ge::Format storage_format);
   KernelRunContextFaker &NodeOutputTd(int32_t index, ge::DataType dt, ge::Format origin_format,
@@ -71,7 +69,6 @@ class KernelRunContextFaker {
   size_t node_input_num_;
   size_t node_output_num_;
   std::vector<uint32_t> ir_instance_num_;
-  std::vector<uint32_t> ir_output_instance_num_{};
   std::vector<CompileTimeTensorDesc> node_input_tds_;
   std::vector<CompileTimeTensorDesc> node_output_tds_;
   std::vector<void *> inputs_;

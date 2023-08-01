@@ -28,10 +28,10 @@
 namespace gert {
 namespace bg {
 namespace {
-ge::graphStatus InitIOInstanceInfo(const ge::NodePtr &node, ComputeNodeInfo &compute_node_info) {
-  auto in_ir_index_to_instance_index_pair_map
+ge::graphStatus InitInputInstanceInfo(const ge::NodePtr &node, ComputeNodeInfo &compute_node_info) {
+  auto ir_index_to_instance_index_pair_map
     = ge::OpDescUtils::GetInputIrIndexes2InstanceIndexesPairMap(node->GetOpDesc());
-  if (in_ir_index_to_instance_index_pair_map.empty()) {
+  if (ir_index_to_instance_index_pair_map.empty()) {
     GELOGI("node [%s(%s)] ir_index_to_instance_index_pair_map is empty",
            node->GetName().c_str(), node->GetType().c_str());
     return ge::GRAPH_SUCCESS;
@@ -41,28 +41,10 @@ ge::graphStatus InitIOInstanceInfo(const ge::NodePtr &node, ComputeNodeInfo &com
   for (size_t i = 0; i < ir_inputs.size(); ++i) {
     auto ins_info = compute_node_info.MutableInputInstanceInfo(i);
     GE_ASSERT_NOTNULL(ins_info);
-    size_t instance_num = in_ir_index_to_instance_index_pair_map[i].second;
+    size_t instance_num = ir_index_to_instance_index_pair_map[i].second;
     compute_node_info.MutableInputInstanceInfo(i)->SetInstantiationNum(instance_num);
     compute_node_info.MutableInputInstanceInfo(i)->SetInstanceStart(input_index);
     input_index += instance_num;
-  }
-
-  auto out_ir_index_to_instance_index_pair_map
-      = ge::OpDescUtils::GetOutputIrIndexes2InstanceIndexesPairMap(node->GetOpDesc());
-  if (out_ir_index_to_instance_index_pair_map.empty()) {
-    GELOGI("node [%s(%s)] output ir_index_to_instance_index_pair_map is empty",
-           node->GetName().c_str(), node->GetType().c_str());
-    return ge::GRAPH_SUCCESS;
-  }
-  const auto &ir_outputs = node->GetOpDesc()->GetIrOutputs();
-  size_t output_index = 0;
-  for (size_t i = 0; i < ir_outputs.size(); ++i) {
-    auto ins_info = compute_node_info.MutableOutputInstanceInfo(i);
-    GE_ASSERT_NOTNULL(ins_info);
-    size_t instance_num = out_ir_index_to_instance_index_pair_map[i].second;
-    compute_node_info.MutableOutputInstanceInfo(i)->SetInstantiationNum(instance_num);
-    compute_node_info.MutableOutputInstanceInfo(i)->SetInstanceStart(output_index);
-    output_index += instance_num;
   }
   return ge::GRAPH_SUCCESS;
 }
@@ -148,12 +130,11 @@ std::unique_ptr<uint8_t[]> CreateComputeNodeInfoImpl(const std::unique_ptr<uint8
                                                      BufferPool &buffer_pool,
                                                      size_t &total_size) {
   const auto ir_input_num = node->GetOpDesc()->GetIrInputs().size();
-  const auto ir_output_num = node->GetOpDesc()->GetIrOutputs().size();
   const auto input_num = node->GetInDataNodesAndAnchors().size();
   const auto output_num = node->GetAllOutDataAnchorsSize();
-  GELOGD("node: %s(%s), ir_input_num:%zu, ir_output_num:%zu, input_num:%zu, output_num:%u.", node->GetName().c_str(),
-         node->GetType().c_str(), ir_input_num, ir_output_num, input_num, output_num);
-  GE_ASSERT_SUCCESS(ComputeNodeInfo::CalcSize(ir_input_num, ir_output_num, input_num, output_num, total_size));
+  GELOGD("node: %s(%s), ir_input_num:%zu, input_num:%zu, output_num:%u.",
+         node->GetName().c_str(), node->GetType().c_str(), ir_input_num, input_num, output_num);
+  GE_ASSERT_SUCCESS(ComputeNodeInfo::CalcSize(ir_input_num, input_num, output_num, total_size));
   GE_ASSERT_TRUE(!ge::AddOverflow(total_size, attr_size, total_size));
   auto compute_node_info_holder = ge::ComGraphMakeUnique<uint8_t[]>(total_size);
   GE_ASSERT_NOTNULL(compute_node_info_holder, "Create compute node info holder failed");
@@ -161,11 +142,11 @@ std::unique_ptr<uint8_t[]> CreateComputeNodeInfoImpl(const std::unique_ptr<uint8
   auto node_name = buffer_pool.AddStr(node->GetName().c_str());
   auto node_type = buffer_pool.AddStr(node->GetType().c_str());
   auto compute_node_info = ge::PtrToPtr<uint8_t, ComputeNodeInfo>(compute_node_info_holder.get());
-  compute_node_info->Init(ir_input_num, ir_output_num, input_num, output_num, attr_size,
+  compute_node_info->Init(ir_input_num, input_num, output_num,
                           ge::PtrToPtr<void, ge::char_t>(ge::ValueToPtr(node_name)),
                           ge::PtrToPtr<void, ge::char_t>(ge::ValueToPtr(node_type)));
 
-  auto ret = InitIOInstanceInfo(node, *compute_node_info);
+  auto ret = InitInputInstanceInfo(node, *compute_node_info);
   GE_ASSERT_SUCCESS(ret, "Init input instance info for node:%s failed.", node->GetName().c_str());
 
   ret = InitCompileTimeTD(node, *compute_node_info);
@@ -180,13 +161,8 @@ std::unique_ptr<uint8_t[]> CreateComputeNodeInfoImpl(const std::unique_ptr<uint8
         offset, attr_size);
     return nullptr;
   }
-  const auto outputs_ins_info_size = compute_node_info->GetIrOutputsNum() * sizeof(AnchorInstanceInfo);
-  ret = ge::GeMemcpy(ge::PtrToPtr<RuntimeAttrs, uint8_t>(attr), (total_size - offset - outputs_ins_info_size),
-                     attr_buf.get(), attr_size);
-  GE_ASSERT_SUCCESS(ret, "memcpy_s failed, copy size is %zu, dst size is %zu", attr_size,
-                    (total_size - offset - outputs_ins_info_size));
-  GELOGI("Node %s, compute_node_info attr_size %zu, outputs_ins_info_size:%zu, offset:%zu, total_size:%zu.",
-         node->GetNamePtr(), attr_size, outputs_ins_info_size, offset, total_size);
+  ret = ge::GeMemcpy(ge::PtrToPtr<RuntimeAttrs, uint8_t>(attr), (total_size - offset), attr_buf.get(), attr_size);
+  GE_ASSERT_SUCCESS(ret, "memcpy_s failed, copy size is %zu, dst size is %zu", attr_size, (total_size - offset));
   return compute_node_info_holder;
 }
 }  // namespace

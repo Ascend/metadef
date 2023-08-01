@@ -888,10 +888,9 @@ bool OpDescUtils::HasCallbackGetConstInputFunc(const Operator &op) {
   return (op.operator_impl_->get_const_input_runtime_ != nullptr);
 }
 
-ge::graphStatus IrInputRequiredCall(const OpDescPtr &op_desc, size_t ir_index, size_t start_index, size_t all_ins_num,
+ge::graphStatus IrInputRequiredCall(const OpDescPtr &op_desc, size_t ir_index, size_t start_index,
                                     const std::string &ir_name,
                                     const std::map<uint32_t, std::string> &valid_index_2_names, size_t &instance_num) {
-  (void)all_ins_num;
   const auto max_index = valid_index_2_names.rbegin()->first;
   if (start_index > max_index) {
     GELOGW("Failed to get instance num for node %s, current name %s current index %zu out of range %u",
@@ -916,10 +915,9 @@ ge::graphStatus IrInputRequiredCall(const OpDescPtr &op_desc, size_t ir_index, s
   return ge::SUCCESS;
 }
 
-ge::graphStatus IrInputOptionalCall(const OpDescPtr &op_desc, size_t ir_index, size_t start_index, size_t all_ins_num,
+ge::graphStatus IrInputOptionalCall(const OpDescPtr &op_desc, size_t ir_index, size_t start_index,
                                     const std::string &ir_name,
                                     const std::map<uint32_t, std::string> &valid_index_2_names, size_t &instance_num) {
-  (void)all_ins_num;
   const auto max_index = valid_index_2_names.rbegin()->first;
   // ooooooxxx
   // o : required input
@@ -939,12 +937,13 @@ ge::graphStatus IrInputOptionalCall(const OpDescPtr &op_desc, size_t ir_index, s
   return ge::SUCCESS;
 }
 
-ge::graphStatus IrDynamicCall(const OpDescPtr &op_desc, size_t ir_index, size_t start_index, size_t all_ins_num,
+ge::graphStatus IrInputDynamicCall(const OpDescPtr &op_desc, size_t ir_index, size_t start_index,
                                    const std::string &ir_name,
                                    const std::map<uint32_t, std::string> &valid_index_2_names, size_t &instance_num) {
   size_t dyn_i = 0;
+  const auto node_indegree = op_desc->GetAllInputsSize();
   const auto max_index = valid_index_2_names.rbegin()->first;
-  for (size_t i = start_index; i < all_ins_num; ++i, ++dyn_i) {
+  for (size_t i = start_index; i < node_indegree; ++i, ++dyn_i) {
     if (i > max_index) {
       break;
     }
@@ -959,31 +958,6 @@ ge::graphStatus IrDynamicCall(const OpDescPtr &op_desc, size_t ir_index, size_t 
   return ge::SUCCESS;
 }
 
-ge::graphStatus GetOutputInstanceNum(const OpDescPtr &op_desc, size_t ir_index, size_t start_index,
-                                     const std::map<uint32_t, std::string> &valid_index_2_names, size_t &instance_num) {
-  GE_CHECK_NOTNULL(op_desc);
-  if (valid_index_2_names.empty()) {
-    GELOGD("Node %s has not any outputs, just return", op_desc->GetName().c_str());
-    return ge::SUCCESS;
-  }
-  const auto &ir_outputs = op_desc->GetIrOutputs();
-  const auto ir_type = ir_outputs[ir_index].second;
-  const auto ir_name = ir_outputs[ir_index].first;
-  using GetInstanceCall = std::function<Status(
-      const OpDescPtr &op_desc, const size_t ir_index, const size_t start_index, const size_t all_ins_num,
-      const std::string &ir_name, const std::map<uint32_t, std::string> &valid_index_2_names, size_t &instance_num)>;
-  static std::map<IrOutputType, GetInstanceCall> get_instance_calls = {{kIrOutputRequired, &IrInputRequiredCall},
-                                                                       {kIrOutputDynamic, &IrDynamicCall}};
-  const auto it = get_instance_calls.find(ir_type);
-  if (it != get_instance_calls.end()) {
-    const size_t all_ins_num = op_desc->GetAllOutputsDescSize();
-    return (it->second)(op_desc, ir_index, start_index, all_ins_num, ir_name, valid_index_2_names, instance_num);
-  }
-  GELOGE(ge::FAILED, "Failed to get instance num for node %s, unknown ir output type %d, ir name %s",
-         op_desc->GetName().c_str(), ir_type, ir_name.c_str());
-  return ge::FAILED;
-}
-
 ge::graphStatus OpDescUtils::GetInstanceNum(const OpDescPtr &op_desc, size_t ir_index, size_t start_index,
                                             const std::map<uint32_t, std::string> &valid_index_2_names,
                                             size_t &instance_num) {
@@ -996,15 +970,14 @@ ge::graphStatus OpDescUtils::GetInstanceNum(const OpDescPtr &op_desc, size_t ir_
   const auto ir_type = ir_inputs[ir_index].second;
   const auto ir_name = ir_inputs[ir_index].first;
   using GetInstanceCall = std::function<Status(
-      const OpDescPtr &op_desc, const size_t ir_index, const size_t start_index, const size_t all_ins_num,
-      const std::string &ir_name, const std::map<uint32_t, std::string> &valid_index_2_names, size_t &instance_num)>;
+      const OpDescPtr &op_desc, const size_t ir_index, const size_t start_index, const std::string &ir_name,
+      const std::map<uint32_t, std::string> &valid_index_2_names, size_t &instance_num)>;
   static std::map<IrInputType, GetInstanceCall> get_instance_calls = {{kIrInputRequired, &IrInputRequiredCall},
                                                                       {kIrInputOptional, &IrInputOptionalCall},
-                                                                      {kIrInputDynamic, &IrDynamicCall}};
+                                                                      {kIrInputDynamic, &IrInputDynamicCall}};
   const auto it = get_instance_calls.find(ir_type);
   if (it != get_instance_calls.end()) {
-    const size_t all_ins_num = op_desc->GetAllInputsSize();
-    return (it->second)(op_desc, ir_index, start_index, all_ins_num, ir_name, valid_index_2_names, instance_num);
+    return (it->second)(op_desc, ir_index, start_index, ir_name, valid_index_2_names, instance_num);
   }
   GELOGE(ge::FAILED, "Failed to get instance num for node %s, unknown ir input type %d, ir name %s",
          op_desc->GetName().c_str(), ir_type, ir_name.c_str());
@@ -1042,42 +1015,6 @@ std::map<size_t, std::pair<size_t, size_t>> OpDescUtils::GetInputIrIndexes2Insta
   if (input_index != op_desc->GetInputsSize()) {
     GELOGI("node [%s(%s)] input does not traverse to the end, input_index[%zu], inputs_size[%zu], inputs names:%s",
            op_desc->GetName().c_str(), op_desc->GetType().c_str(), input_index,
-           op_desc->GetInputsSize(), InputsNamesStr(op_desc).c_str());
-  }
-  return ir_index_to_instance_index_pair_map;
-}
-
-std::map<size_t, std::pair<size_t, size_t>> OpDescUtils::GetOutputIrIndexes2InstanceIndexesPairMap(
-    const OpDescPtr &op_desc) {
-  if (op_desc == nullptr) {
-    GELOGE(GRAPH_FAILED, "op_desc is null");
-    return {};
-  }
-  std::map<size_t, std::pair<size_t, size_t>> ir_index_to_instance_index_pair_map;
-  size_t output_index = 0;
-  std::map<uint32_t, std::string> valid_index_2_name;
-  uint32_t j = 0U;
-  for (size_t i = 0U; i < op_desc->GetAllOutputsDescSize(); i++) {
-    if (op_desc->MutableOutputDesc(static_cast<uint32_t>(i)) != nullptr) {
-      const auto valid_name = op_desc->GetOutputNameByIndex(static_cast<uint32_t>(i));
-      (void) valid_index_2_name.emplace(std::make_pair(j, valid_name));
-      j++;
-    }
-  }
-
-  for (size_t i = 0; i < op_desc->GetIrOutputs().size(); ++i) {
-    size_t instance_num = 0;
-    const auto ret = GetOutputInstanceNum(op_desc, i, output_index, valid_index_2_name, instance_num);
-    if (ret != GRAPH_SUCCESS) {
-      GELOGE(ret, "node [%s(%s)] get instance num failed", op_desc->GetName().c_str(), op_desc->GetType().c_str());
-      return {};
-    }
-    ir_index_to_instance_index_pair_map[i] = std::pair<size_t, size_t>(output_index, instance_num);
-    output_index += instance_num;
-  }
-  if (output_index != op_desc->GetAllOutputsDescSize()) {
-    GELOGI("node [%s(%s)] input does not traverse to the end, input_index[%zu], inputs_size[%zu], inputs names:%s",
-           op_desc->GetName().c_str(), op_desc->GetType().c_str(), output_index,
            op_desc->GetInputsSize(), InputsNamesStr(op_desc).c_str());
   }
   return ir_index_to_instance_index_pair_map;

@@ -30,7 +30,6 @@ namespace gert {
 namespace {
 constexpr const size_t kPointerSize = 8U;
 constexpr const size_t kReservedFieldSize = 40U;
-constexpr const size_t kComputeNodeInfoReservedFieldSize = 24U;
 constexpr const size_t kExtendInfoReservedFieldSize = 56U;
 
 constexpr const size_t kShapeSize = 248U;
@@ -166,9 +165,9 @@ TEST_F(AbiCompatibilityForExeGraphUT, ComputeNodeInfo_CheckMemLayoutNotChanged) 
             sizeof(size_t));
   EXPECT_EQ(reinterpret_cast<uintptr_t>(&c->outputs_num_) - reinterpret_cast<uintptr_t>(&c->inputs_num_),
             sizeof(size_t));
-  EXPECT_EQ(reinterpret_cast<uintptr_t>(&c->reserved_) - reinterpret_cast<uintptr_t>(&c->outputs_num_), sizeof(size_t) * 3);
+  EXPECT_EQ(reinterpret_cast<uintptr_t>(&c->reserved_) - reinterpret_cast<uintptr_t>(&c->outputs_num_), sizeof(size_t));
   EXPECT_EQ(reinterpret_cast<uintptr_t>(&c->place_holder) - reinterpret_cast<uintptr_t>(&c->reserved_),
-            kComputeNodeInfoReservedFieldSize);
+            kReservedFieldSize);
 
   free(holder);
 }
