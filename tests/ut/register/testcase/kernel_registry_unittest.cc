@@ -38,19 +38,6 @@ std::vector<std::string> TestTraceFunc2(const gert::KernelContext *) {
 KernelStatus TestFunc2(gert::KernelContext *) {
  return 0;
 }
-
-ge::graphStatus ProfilerInfoFillerTest(const gert::KernelContext *, gert::ProfNodeInfoWrapperBasic &) {
-  return 0;
-}
-
-ge::graphStatus DataDumpInfoFillerTest(const gert::KernelContext *, gert::DataDumpInfoWrapperBasic &) {
-  return 0;
-}
-
-ge::graphStatus ExceptionDumpInfoFillerTest(const gert::KernelContext *, gert::ExceptionDumpInfoWrapperBasic &) {
-  return 0;
-}
-
 class FakeRegistry : public gert::KernelRegistry {
 public:
  const KernelFuncs *FindKernelFuncs(const std::string &kernel_type) const override {
@@ -114,28 +101,19 @@ TEST_F(KernelRegistryTest, RegisterKernel_Success_Register_Multiple) {
  REGISTER_KERNEL(KernelRegistryTest2)
      .RunFunc(TestFunc2)
      .OutputsCreatorFunc(TestFuncCreator2)
-     .TracePrinter(TestTraceFunc2)
-     .ProfilerInfoFillerFunc(ProfilerInfoFillerTest)
-     .DataDumpInfoFillerFunc(DataDumpInfoFillerTest)
-     .ExceptionDumpInfoFillerFunc(ExceptionDumpInfoFillerTest);
+     .TracePrinter(TestTraceFunc2);
 
  auto funcs = gert::KernelRegistry::GetInstance().FindKernelFuncs("KernelRegistryTest1");
  ASSERT_NE(funcs, nullptr);
  EXPECT_EQ(funcs->run_func, &TestFunc1);
  EXPECT_EQ(funcs->outputs_creator_func, &TestFuncCreator);
  EXPECT_EQ(funcs->trace_printer, &TestTraceFunc);
- EXPECT_EQ(funcs->profiler_info_filler, nullptr);
- EXPECT_EQ(funcs->data_dump_info_filler, nullptr);
- EXPECT_EQ(funcs->exception_dump_info_filler, nullptr);
 
  funcs = gert::KernelRegistry::GetInstance().FindKernelFuncs("KernelRegistryTest2");
  ASSERT_NE(funcs, nullptr);
  EXPECT_EQ(funcs->run_func, &TestFunc2);
  EXPECT_EQ(funcs->outputs_creator_func, &TestFuncCreator2);
  EXPECT_EQ(funcs->trace_printer, &TestTraceFunc2);
- EXPECT_EQ(funcs->profiler_info_filler, &ProfilerInfoFillerTest);
- EXPECT_EQ(funcs->data_dump_info_filler, &DataDumpInfoFillerTest);
- EXPECT_EQ(funcs->exception_dump_info_filler, &ExceptionDumpInfoFillerTest);
 }
 TEST_F(KernelRegistryTest, RegisterKernel_RegisterOk_SelfDefinedRegistry) {
  // SetUp 中已经是SelfDefinedRegistry了
@@ -181,6 +159,19 @@ TEST_F(KernelRegistryTest, SelfDefinedRegistry_RecoveryOk) {
  EXPECT_EQ(funcs->run_func, &TestFunc1);
  EXPECT_EQ(funcs->outputs_creator_func, &TestFuncCreator);
  EXPECT_EQ(funcs->trace_printer, &TestTraceFunc);
+}
+TEST_F(KernelRegistryTest, RegisterKernel_NoEffect_RegDeprectedFunc) {
+ // SetUp 中已经是SelfDefinedRegistry了
+ REGISTER_KERNEL(KernelRegistryTest1)
+     .OutputsCreator(TestFuncCreator)
+     .OutputsInitializer(TestFuncCreator);
+ auto funcs = gert::KernelRegistry::GetInstance().FindKernelFuncs("KernelRegistryTest1");
+ ASSERT_NE(funcs, nullptr);
+ ASSERT_NE(funcs->outputs_creator, nullptr);
+ ASSERT_NE(funcs->outputs_initializer, nullptr);
+
+ EXPECT_EQ(funcs->outputs_creator(nullptr, nullptr), ge::GRAPH_SUCCESS);
+ EXPECT_EQ(funcs->outputs_initializer(nullptr, nullptr), ge::GRAPH_SUCCESS);
 }
 TEST_F(KernelRegistryTest, RegisterKernel_RegisterSuccess_OnlyRegisterCriticalSection) {
   REGISTER_KERNEL(KernelRegistryTest1).ConcurrentCriticalSectionKey("memory");

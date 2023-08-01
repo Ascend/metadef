@@ -22,13 +22,17 @@ ge::graphStatus NullCreator(const ge::Node *node, KernelContext *context) {
   (void) context;
   return ge::GRAPH_SUCCESS;
 }
+ge::graphStatus NullDestoryer(const ge::Node *node, KernelContext *context) {
+  (void) node;
+  (void) context;
+  return ge::GRAPH_SUCCESS;
+}
 }  // namespace
 KernelRegisterData::KernelRegisterData(const ge::char_t *kernel_type) : kernel_type_(kernel_type) {
+  funcs_.outputs_creator = NullCreator;
   funcs_.outputs_creator_func = NullCreator;
+  funcs_.outputs_initializer = NullDestoryer;
   funcs_.trace_printer = nullptr;
   critical_section_ = "";
-  funcs_.profiler_info_filler = nullptr;
-  funcs_.data_dump_info_filler = nullptr;
-  funcs_.exception_dump_info_filler = nullptr;
 }
 }  // namespace gert
