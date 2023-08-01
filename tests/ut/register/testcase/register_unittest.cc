@@ -241,6 +241,87 @@ CompileInfoPtr op_parse_stub_v4(const Operator &op, const ge::AscendString &comp
   return info;
 }
 
+
+UINT32 OpTilingStubNewWithNullDesc(gert::TilingContext *kernel_context) {
+  auto tensor_without_data = kernel_context->GetInputTensor(1);
+  EXPECT_EQ(tensor_without_data->GetAddr(), nullptr);
+  EXPECT_EQ(tensor_without_data->GetStorageShape(), gert::Shape({5, 5, 5, 5}));
+  EXPECT_EQ(tensor_without_data->GetOriginShape(), gert::Shape({5, 5, 5, 5}));
+  auto tensor = kernel_context->GetInputTensor(0);
+  EXPECT_EQ(tensor->GetShape().GetStorageShape().GetDimNum(), 4);
+  gert::Shape expect_shape({4, 4, 4, 4});
+  EXPECT_EQ(tensor->GetShape().GetStorageShape(), expect_shape);
+  EXPECT_EQ(tensor->GetDataType(), DT_FLOAT);
+  EXPECT_EQ((tensor->GetData<float>())[3], -std::numeric_limits<float>::infinity());
+  EXPECT_EQ(std::isnan((tensor->GetData<float>())[2]), true);
+  EXPECT_EQ((tensor->GetData<float>())[1], 2.0);
+  EXPECT_EQ((tensor->GetData<float>())[0], std::numeric_limits<float>::infinity());
+  EXPECT_EQ(tensor->GetFormat().GetStorageFormat(), FORMAT_ND);
+  gert::Shape expect_shape2({9, 9, 9, 9});
+  EXPECT_TRUE(kernel_context->GetOutputShape(0)->GetStorageShape() == expect_shape2);
+  auto shape = kernel_context->GetInputShape(1);
+  EXPECT_TRUE(*shape == gert::StorageShape({5, 5, 5, 5}, {5, 5, 5, 5}));
+  auto ci = kernel_context->GetCompileInfo();
+  EXPECT_EQ(reinterpret_cast<const StubCompileInfo *>(ci)->stub_, 1);
+
+  EXPECT_EQ(kernel_context->GetAttrs()->GetAttrNum(), 4);
+  std::vector<float> expect_attr = {std::numeric_limits<float>::infinity(), 2.0,
+                                    std::numeric_limits<float>::quiet_NaN(), -std::numeric_limits<float>::infinity()};
+  for (size_t i = 0UL; i < 4UL; ++i) {
+    if (i == 2U) {
+      EXPECT_EQ(std::isnan(reinterpret_cast<const float *>(
+                               kernel_context->GetAttrs()->GetAttrPointer<gert::ContinuousVector>(0)->GetData())[i]), true);
+      continue;
+    }
+    EXPECT_EQ(reinterpret_cast<const float *>(
+                  kernel_context->GetAttrs()->GetAttrPointer<gert::ContinuousVector>(0)->GetData())[i],
+              expect_attr[i]);
+  }
+  EXPECT_EQ(*kernel_context->GetAttrs()->GetAttrPointer<float>(1), std::numeric_limits<float>::infinity());
+  kernel_context->SetBlockDim(2);
+  kernel_context->SetNeedAtomic(true);
+  kernel_context->SetTilingKey(78);
+  *kernel_context->GetWorkspaceSizes(1) = 12;
+  kernel_context->GetRawTilingData()->Append<uint8_t>(6);
+  kernel_context->GetRawTilingData()->Append<uint8_t>(7);
+  kernel_context->GetRawTilingData()->Append<uint8_t>(8);
+  kernel_context->GetRawTilingData()->Append<uint8_t>(9);
+  kernel_context->GetRawTilingData()->Append<uint8_t>(10);
+  return ge::GRAPH_SUCCESS;
+}
+
+void SupportInfNanWithNullDescInvalidTestCase(const nlohmann::json &input, const nlohmann::json &output,
+                                              const nlohmann::json &attrs) {
+  std::string input_str = input.dump();
+  std::string output_str = output.dump();
+  std::string attrs_str = attrs.dump();
+  const char *op_type = "TestReluV2";
+  const char *cmp_info = "";
+  std::string runinfo(100, 'a');
+  size_t size = 100;
+  const char *cmp_info_hash = "";
+  uint64_t *elapse = nullptr;
+
+  auto space_registry = std::make_shared<gert::OpImplSpaceRegistry>();
+  auto registry_holder = std::make_shared<gert::OpImplRegistryHolder>();
+  gert::OpImplKernelRegistry::OpImplFunctions op_impl_func;
+  op_impl_func.tiling = OpTilingStubNewWithNullDesc;
+  op_impl_func.tiling_parse = OpTilingParseStubNew;
+  op_impl_func.compile_info_creator = CreateCompileInfo;
+  op_impl_func.compile_info_deleter = DeleteCompileInfo;
+  op_impl_func.max_tiling_data_size = 50;
+  registry_holder->AddTypesToImpl(op_type, op_impl_func);
+  space_registry->AddRegistry(registry_holder);
+  gert::DefaultOpImplSpaceRegistry::GetInstance().SetDefaultSpaceRegistry(space_registry);
+
+  EXPECT_EQ(TbeOpTilingPyInterface(op_type, cmp_info, cmp_info_hash, input_str.c_str(), output_str.c_str(),
+                                   attrs_str.c_str(), const_cast<char *>(runinfo.c_str()), size, elapse),
+            0);
+  auto defaultSpaceRegistry = gert::DefaultOpImplSpaceRegistry::GetInstance().GetDefaultSpaceRegistry();
+  defaultSpaceRegistry->merged_types_to_impl_.clear();
+  defaultSpaceRegistry->op_impl_registries_.clear();
+}
+
 REGISTER_OP_TILING_V2(ReluV2, op_tiling_stub_v2);
 REGISTER_OP_TILING_V3(ReluV3, op_tiling_stub_v3, op_parse_stub_v3);
 REGISTER_OP_TILING_V4(ReluV4, op_tiling_stub_v4, op_parse_stub_v4);
@@ -1995,4 +2076,90 @@ TEST_F(UtestRegister, ascendC_py_interface_op_replay_invalid_ret) {
             0);
 
   unsetenv("ENABLE_RUNTIME_V2");
+}
+
+TEST_F(UtestRegister, new_optiling_py_interface_with_null_desc_ok) {
+  const nlohmann::json input = R"([
+{"name": "test_0","dtype": "float", "const_value": [null,2.0,null,null], "const_value_null_desc": ["inf", null, "nan", "-inf"],"shape": [4,4,4,4],"format": "ND"},
+{"name": "test_1","dtype": "float","shape": [5,5,5,5],"ori_shape": [5,5,5,5],"format": "ND","ori_format": "ND"}])"_json;
+  std::string input_str = input.dump();
+  const nlohmann::json output = R"([
+{"name": "y_0","dtype": "int8","shape": [9,9,9,9],"ori_shape" :[9,9,9,9],"format": "ND","ori_format":"ND"}])"_json;
+  std::string output_str = output.dump();
+
+  const nlohmann::json attrs = R"([
+{ "name": "attr_0","dtype": "list_float","value": [null,2.0,null,null],"value_null_desc": ["inf", null, "nan", "-inf"]},
+{ "name": "attr_1","dtype": "float","value": null, "value_null_desc": "inf"},
+{ "name": "attr_2","dtype": "list_float","value": [1, 2, 3, 4]},
+{ "name": "op_para_size", "dtype": "float", "value": 50}])"_json;
+  std::string attrs_str = attrs.dump();
+
+  const char *op_type = "TestReluV2";
+  const char *cmp_info = "";
+  std::string runinfo(100, 'a');
+  size_t size = 100;
+  const char *cmp_info_hash = "";
+  uint64_t *elapse = nullptr;
+
+  auto space_registry = std::make_shared<gert::OpImplSpaceRegistry>();
+  auto registry_holder = std::make_shared<gert::OpImplRegistryHolder>();
+  gert::OpImplKernelRegistry::OpImplFunctions op_impl_func;
+  op_impl_func.tiling = OpTilingStubNewWithNullDesc;
+  op_impl_func.tiling_parse = OpTilingParseStubNew;
+  op_impl_func.compile_info_creator = CreateCompileInfo;
+  op_impl_func.compile_info_deleter = DeleteCompileInfo;
+  op_impl_func.max_tiling_data_size = 50;
+  registry_holder->AddTypesToImpl(op_type, op_impl_func);
+  space_registry->AddRegistry(registry_holder);
+  gert::DefaultOpImplSpaceRegistry::GetInstance().SetDefaultSpaceRegistry(space_registry);
+
+  EXPECT_EQ(TbeOpTilingPyInterface(op_type, cmp_info, cmp_info_hash, input_str.c_str(), output_str.c_str(),
+                                   attrs_str.c_str(), const_cast<char *>(runinfo.c_str()), size, elapse),
+            1);
+  std::string result =
+      "{\"block_dim\":2,\"clear_atomic\":true,\"tiling_data\":\"060708090A\",\"tiling_key\":78,\"workspaces\":[12]}";
+  EXPECT_EQ(result, runinfo.substr(0, 96));
+  auto defaultSpaceRegistry = gert::DefaultOpImplSpaceRegistry::GetInstance().GetDefaultSpaceRegistry();
+  defaultSpaceRegistry->merged_types_to_impl_.clear();
+  defaultSpaceRegistry->op_impl_registries_.clear();
+}
+
+TEST_F(UtestRegister, new_optiling_py_interface_const_value_fail_with_different_size) {
+  // const_value size is different from const_value_null_desc
+  const nlohmann::json input = R"([
+{"name": "test_0","dtype": "float", "const_value": [null,2.0,null,null], "const_value_null_desc": ["inf", null, "nan"],"shape": [4,4,4,4],"format": "ND"}])"_json;
+  SupportInfNanWithNullDescInvalidTestCase(input, nullptr, nullptr);
+}
+
+TEST_F(UtestRegister, new_optiling_py_interface_const_value_fail_with_type_not_support_inf_nan) {
+  // dtype doesn't support inf and nan
+  const nlohmann::json input = R"([
+{"name": "test_0","dtype": "int32", "const_value": [null,2.0,null,null], "const_value_null_desc": ["inf", null, "nan", "-inf"],"shape": [4,4,4,4],"format": "ND"}])"_json;
+  SupportInfNanWithNullDescInvalidTestCase(input, nullptr, nullptr);
+}
+
+TEST_F(UtestRegister, new_optiling_py_interface_attr_fail_with_invalid_null_desc_param) {
+  const nlohmann::json input = R"([
+{"name": "test_0","dtype": "float", "const_value": [null,2.0,null,null], "const_value_null_desc": ["inf", null, "nan", "-inf"],"shape": [4,4,4,4],"format": "ND"},
+{"name": "test_1","dtype": "float","shape": [5,5,5,5],"ori_shape": [5,5,5,5],"format": "ND","ori_format": "ND"}])"_json;
+  const nlohmann::json output = R"([
+{"name": "y_0","dtype": "int8","shape": [9,9,9,9],"ori_shape" :[9,9,9,9],"format": "ND","ori_format":"ND"}])"_json;
+
+  // value_null_desc has invalid param "abc"
+  const nlohmann::json attrs = R"([
+{ "name": "attr_0","dtype": "list_float","value": [null,2.0,null,null],"value_null_desc": ["inf", null, "nan", "abc"]}])"_json;
+  SupportInfNanWithNullDescInvalidTestCase(input, output, attrs);
+}
+
+TEST_F(UtestRegister, new_optiling_py_interface_attr_fail_with_value_not_null_but_has_null_desc) {
+  const nlohmann::json input = R"([
+{"name": "test_0","dtype": "float", "const_value": [null,2.0,null,null], "const_value_null_desc": ["inf", null, "nan", "-inf"],"shape": [4,4,4,4],"format": "ND"},
+{"name": "test_1","dtype": "float","shape": [5,5,5,5],"ori_shape": [5,5,5,5],"format": "ND","ori_format": "ND"}])"_json;
+  const nlohmann::json output = R"([
+{"name": "y_0","dtype": "int8","shape": [9,9,9,9],"ori_shape" :[9,9,9,9],"format": "ND","ori_format":"ND"}])"_json;
+
+  // when attr dtype is float, value is not null, but exist value_null_desc
+  const nlohmann::json attrs = R"([
+{ "name": "attr_0","dtype": "float","value": 2.0, "value_null_desc": null}])"_json;
+  SupportInfNanWithNullDescInvalidTestCase(input, output, attrs);
 }
