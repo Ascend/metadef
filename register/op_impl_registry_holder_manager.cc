@@ -149,7 +149,6 @@ std::unique_ptr<TypesToImpl[]> OpImplRegistryHolder::GetOpImplFunctionsByHandle(
   }
   impl_num = get_impl_num();
   GELOGD("get_impl_num: %zu", impl_num);
-  GE_ASSERT_TRUE((impl_num != 0U), "get impl num is %zu", impl_num);
 
   const auto get_impl_funcs
       = reinterpret_cast<GetImplFunctions>(mmDlsym(const_cast<void *>(handle), "GetOpImplFunctions"));

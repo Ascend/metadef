@@ -136,15 +136,7 @@ int32_t CreateDirectory(const std::string &directory_path) {
   return CreateDir(directory_path);
 }
 
-// delete after air modification
-std::unique_ptr<char[]> GetBinFromFile(std::string &path, uint32_t &data_len) {
-  size_t len = 0U;
-  auto bin = GetBinFromFile(path, len);
-  data_len = static_cast<uint32_t>(len);
-  return bin;
-}
-
-std::unique_ptr<char_t[]> GetBinFromFile(std::string &path, size_t &data_len) {
+std::unique_ptr<char_t[]> GetBinFromFile(std::string &path, uint32_t &data_len) {
   GE_ASSERT_TRUE(!path.empty());
 
   std::ifstream ifs(path, std::ifstream::binary);
@@ -154,7 +146,7 @@ std::unique_ptr<char_t[]> GetBinFromFile(std::string &path, size_t &data_len) {
   }
 
   (void)ifs.seekg(0, std::ifstream::end);
-  const size_t len = static_cast<size_t>(ifs.tellg());
+  const uint32_t len = static_cast<uint32_t>(ifs.tellg());
   (void)ifs.seekg(0, std::ifstream::beg);
   auto bin_data = std::unique_ptr<char_t[]>(new(std::nothrow) char_t[len]);
   if (bin_data == nullptr) {

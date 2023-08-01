@@ -60,7 +60,6 @@ int32_t CreateDir(const std::string &directory_path, uint32_t mode);
 int32_t CreateDirectory(const std::string &directory_path);
 
 std::unique_ptr<char[]> GetBinFromFile(std::string &path, uint32_t &data_len);
-std::unique_ptr<char[]> GetBinFromFile(std::string &path, size_t &data_len);
 
 graphStatus WriteBinToFile(std::string &path, char_t *data, uint32_t &data_len);
 

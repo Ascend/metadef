@@ -159,10 +159,9 @@ DefaultOpImplSpaceRegistry &DefaultOpImplSpaceRegistry::GetInstance() {
 }
 
 ge::graphStatus OpImplSpaceRegistry::LoadSoAndSaveToRegistry(const std::string &so_path) {
-  size_t len = 0U;
+  uint32_t len = 0U;
   const auto so_data = ge::GetBinFromFile(const_cast<std::string &>(so_path), len);
-  GE_ASSERT_NOTNULL(so_data);
-  std::string str_so_data(so_data.get(), so_data.get() + len);
+  std::string str_so_data(so_data.get(), so_data.get()+len);
   if (gert::OpImplRegistryHolderManager::GetInstance().GetOpImplRegistryHolder(str_so_data) != nullptr) {
     GELOGI("So already loaded! so path:%s", so_path.c_str());
     return ge::GRAPH_FAILED;
