@@ -113,8 +113,7 @@ class ModelSerializeImp {
                             google::protobuf::Map<std::string, ge::proto::AttrDef> *op_desc_attr) const;
   bool UnserializeNode(ComputeGraphPtr &graph, proto::OpDef &op_def_proto);
 
-  bool ParseNodeIndex(const std::string &node_index, std::string &node_name, int32_t &index,
-                      int32_t &brother_rank_index) const;
+  bool ParseNodeIndex(const std::string &node_index, std::string &node_name, int32_t &index) const;
 
   void SetProtobufOwner(const ProtoMsgOwner &buffer_proto_buf_onwer) { protobuf_owner_ = buffer_proto_buf_onwer; }
 
@@ -136,8 +135,8 @@ class ModelSerializeImp {
   void ExtractMetaDataAttr(proto::OpDef &op_def_proto, std::vector<std::string> &key_out,
                            std::vector<uint32_t> &value_out) const;
 
-  std::string GenDataInputInfo(const OutDataAnchorPtr &src_anchor, const InDataAnchorPtr &dst_anchor) const;
-  std::string GenCtrlInputInfo(const OutControlAnchorPtr &src_anchor, const InControlAnchorPtr &dst_anchor) const;
+  int64_t GenDataInputInfo(const OutDataAnchorPtr &src_anchor, const InDataAnchorPtr &dst_anchor) const;
+  int64_t GenCtrlInputInfo(const OutControlAnchorPtr &src_anchor, const InControlAnchorPtr &dst_anchor) const;
   void SaveEdgeInfo(const AnchorPtr &src_anchor, const AnchorPtr &dst_anchor, const int64_t src_out_peer_index,
                     const int64_t cur_index, std::unordered_map<AnchorPtr, DstAnchors> &edges) const;
   bool LinkEdges(const std::unordered_map<AnchorPtr, DstAnchors> &edges) const;

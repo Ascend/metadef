@@ -38,60 +38,44 @@
 
 namespace {
 const std::string kTmpWeight = "air_weight/";
-constexpr int32_t kInvalidIndex = -1;
+const std::string kSrcOutPeerIndex = "_src_out_peer_index_for_ge_txt_load";  // only exist in dump file
+constexpr int64_t kInvalidIndex = -1;
 constexpr int32_t kDecimal = 10;
-constexpr size_t kOldIndexNum = 2U;
-constexpr size_t kNewIndexNum = 3U;
 }
 
 namespace ge {
-bool ModelSerializeImp::ParseNodeIndex(const std::string &node_index, std::string &node_name, int32_t &index,
-                                       int32_t &brother_rank_index) const {
-  const auto split_string = StringUtils::Split(node_index, ':');
-  if (split_string.size() < kOldIndexNum) {
+bool ModelSerializeImp::ParseNodeIndex(const std::string &node_index, std::string &node_name, int32_t &index) const {
+  const auto sep = node_index.rfind(":");
+  if (sep == std::string::npos) {
     GELOGW("[Parse][CheckParam] Separator \":\" is not found in node_index.");
     return false;
   }
-  node_name = split_string[0U];
-  index = static_cast<int32_t>(std::strtol(split_string[1U].c_str(), nullptr, kDecimal));
-  if (split_string.size() == kNewIndexNum) {
-    brother_rank_index = static_cast<int32_t>(std::strtol(split_string[2U].c_str(), nullptr, kDecimal));
-  }
-  GELOGD("node_index: %s, node_name: %s, index: %d, brother_rank_index: %d", node_index.c_str(), node_name.c_str(),
-         index, brother_rank_index);
+  node_name = node_index.substr(0UL, sep);
+  const auto index_str = node_index.substr(sep + 1UL);
+  index = static_cast<int32_t>(std::strtol(index_str.c_str(), nullptr, kDecimal));
   return true;
 }
 
-std::string ModelSerializeImp::GenDataInputInfo(const OutDataAnchorPtr &src_anchor,
-                                                const InDataAnchorPtr &dst_anchor) const {
-  std::string data_input_info = src_anchor->GetOwnerNode()->GetName() + ":" + std::to_string(src_anchor->GetIdx());
+int64_t ModelSerializeImp::GenDataInputInfo(const OutDataAnchorPtr &src_anchor,
+                                            const InDataAnchorPtr &dst_anchor) const {
   const auto peer_in_data_anchors = src_anchor->GetPeerInDataAnchors();
   for (size_t i = 0U; i < peer_in_data_anchors.size(); ++i) {
     if (peer_in_data_anchors.at(i) == dst_anchor) {
-      data_input_info += ":" + std::to_string(i);
-      GELOGD("input_info: %s, src node: %s, out anchor index: %d, peer index: %zu, dst node: %s, in anchor index: %d.",
-             data_input_info.c_str(), src_anchor->GetOwnerNode()->GetName().c_str(), src_anchor->GetIdx(), i,
-             dst_anchor->GetOwnerNode()->GetName().c_str(), dst_anchor->GetIdx());
-      break;
+      return static_cast<int64_t>(i);
     }
   }
-  return data_input_info;
+  return kInvalidIndex;
 }
 
-std::string ModelSerializeImp::GenCtrlInputInfo(const OutControlAnchorPtr &src_anchor,
-                                                const InControlAnchorPtr &dst_anchor) const {
-  std::string ctrl_input_info = src_anchor->GetOwnerNode()->GetName() + ":-1";
+int64_t ModelSerializeImp::GenCtrlInputInfo(const OutControlAnchorPtr &src_anchor,
+                                            const InControlAnchorPtr &dst_anchor) const {
   const auto peer_in_ctrl_anchors = src_anchor->GetPeerInControlAnchors();
   for (size_t i = 0U; i < peer_in_ctrl_anchors.size(); ++i) {
     if (peer_in_ctrl_anchors.at(i) == dst_anchor) {
-      ctrl_input_info += ":" + std::to_string(i);
-      GELOGD("input_info: %s, src node: %s, out anchor index: %d, peer index: %zu, dst node: %s, in anchor index: %d.",
-             ctrl_input_info.c_str(), src_anchor->GetOwnerNode()->GetName().c_str(), src_anchor->GetIdx(), i,
-             dst_anchor->GetOwnerNode()->GetName().c_str(), dst_anchor->GetIdx());
-      break;
+      return static_cast<int64_t>(i);
     }
   }
-  return ctrl_input_info;
+  return kInvalidIndex;
 }
 
 bool ModelSerializeImp::SerializeEdge(const NodePtr &node, proto::OpDef *const op_def_proto) const {
@@ -101,14 +85,18 @@ bool ModelSerializeImp::SerializeEdge(const NodePtr &node, proto::OpDef *const o
                    return false, "[Check][Param] op_def_proto is null.");
 
   op_def_proto->clear_input();
+  proto::AttrDef src_out_peer_index;
   // Inputs
   for (const auto &in_data_anchor : node->GetAllInDataAnchors()) {
     if (in_data_anchor != nullptr) {
       const auto peer_out_anchor = in_data_anchor->GetPeerOutAnchor();
       if ((peer_out_anchor != nullptr) && peer_out_anchor->GetOwnerNode()) {
-        op_def_proto->add_input(GenDataInputInfo(peer_out_anchor, in_data_anchor));
+        op_def_proto->add_input(peer_out_anchor->GetOwnerNode()->GetName() + ":" +
+                                std::to_string(peer_out_anchor->GetIdx()));
+        src_out_peer_index.mutable_list()->add_i(GenDataInputInfo(peer_out_anchor, in_data_anchor));
       } else {
         op_def_proto->add_input("");
+        src_out_peer_index.mutable_list()->add_i(kInvalidIndex);
       }
     }
   }
@@ -118,10 +106,13 @@ bool ModelSerializeImp::SerializeEdge(const NodePtr &node, proto::OpDef *const o
     const auto peer_out_anchors = in_control_anchor->GetPeerOutControlAnchors();
     for (const auto &peer_out_anchor : peer_out_anchors) {
       if ((peer_out_anchor != nullptr) && peer_out_anchor->GetOwnerNode()) {
-        op_def_proto->add_input(GenCtrlInputInfo(peer_out_anchor, in_control_anchor));
+        op_def_proto->add_input(peer_out_anchor->GetOwnerNode()->GetName() + ":-1");
+        src_out_peer_index.mutable_list()->add_i(GenCtrlInputInfo(peer_out_anchor, in_control_anchor));
       }
     }
   }
+  auto const op_desc_attr = op_def_proto->mutable_attr();
+  (void)op_desc_attr->insert({kSrcOutPeerIndex, src_out_peer_index});
   return true;
 }
 
@@ -537,19 +528,34 @@ bool ModelSerializeImp::UnserializeNode(ComputeGraphPtr &graph, proto::OpDef &op
                    REPORT_CALL_ERROR("E18888", "add node to graph:%s failed", graph->GetName().c_str());
                    return false, "[Add][Node] to graph:%s failed.", graph->GetName().c_str());
 
+  std::vector<int32_t> src_out_peer_index;
+  if (op_def_proto.attr().count(kSrcOutPeerIndex) > 0UL) {
+    const auto &src_out_peer_index_list = op_def_proto.attr().at(kSrcOutPeerIndex).list();
+    for (const auto &item_i : src_out_peer_index_list.i()) {
+      src_out_peer_index.push_back(static_cast<int32_t>(item_i));
+    }
+    (void)op_def_proto.mutable_attr()->erase(kSrcOutPeerIndex);
+  }
+
   // Inputs
   int32_t dst_index = 0;
+  int32_t cur_index = 0;
+  const size_t input_size = op_def_proto.input().size();
   for (const auto &input : op_def_proto.input()) {
     std::string node_name;
     int32_t index = 0;
-    int32_t peer_index = kInvalidIndex;
-    if (ParseNodeIndex(input, node_name, index, peer_index)) {
+    if (ParseNodeIndex(input, node_name, index)) {
+      int32_t peer_index = static_cast<int32_t>(kInvalidIndex);
+      if (src_out_peer_index.size() == input_size) {
+        peer_index = src_out_peer_index[cur_index];
+      }
       node_input_node_names_.push_back(
           NodeNameNodeReq{node_name, index, peer_index, node, dst_index, op_def_proto.name()});
     }
     if (index >= 0) {
       dst_index++;
     }
+    ++cur_index;
   }
   node_map_[op_def_proto.name()] = node;
   return true;
@@ -722,11 +728,10 @@ bool ModelSerializeImp::UnserializeGraphWithoutEdge(ComputeGraphPtr &graph, prot
   }
 
   // Inputs
-  int32_t peer_index = kInvalidIndex;
   for (const auto &input : graph_proto.input()) {
     std::string node_name;
     int32_t index;
-    if (ParseNodeIndex(input, node_name, index, peer_index)) {
+    if (ParseNodeIndex(input, node_name, index)) {
       graph_input_node_names_.push_back(NodeNameGraphReq{node_name, index, graph});
     }
   }
@@ -734,7 +739,7 @@ bool ModelSerializeImp::UnserializeGraphWithoutEdge(ComputeGraphPtr &graph, prot
   for (const auto &output : graph_proto.output()) {
     std::string node_name;
     int32_t index;
-    if (ParseNodeIndex(output, node_name, index, peer_index)) {
+    if (ParseNodeIndex(output, node_name, index)) {
       graph_output_node_names_.push_back(NodeNameGraphReq{node_name, index, graph});
     }
   }
