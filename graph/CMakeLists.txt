@@ -331,6 +331,7 @@ add_custom_command(
            ${CMAKE_CURRENT_BINARY_DIR}/stub_inference_context.cc
            ${CMAKE_CURRENT_BINARY_DIR}/stub_ascend_string.cc
            ${CMAKE_CURRENT_BINARY_DIR}/stub_gnode.cc
+           ${CMAKE_CURRENT_BINARY_DIR}/stub_tensor.cc
     COMMAND echo "Generating stub files."
             && ${HI_PYTHON} ${CMAKE_CURRENT_LIST_DIR}/stub/gen_stubapi.py ${METADEF_DIR}/inc/external ${CMAKE_CURRENT_BINARY_DIR}
             && mv attr_value.cc stub_attr_value.cc
@@ -340,6 +341,7 @@ add_custom_command(
             && mv inference_context.cc stub_inference_context.cc
             && mv ascend_string.cc stub_ascend_string.cc
             && mv gnode.cc stub_gnode.cc
+            && mv tensor.cc stub_tensor.cc
             &&  echo "Generating stub files end."
 )
 
@@ -351,7 +353,8 @@ add_custom_target(graph_stub
             ${CMAKE_CURRENT_BINARY_DIR}/stub_inference_context.cc
             ${CMAKE_CURRENT_BINARY_DIR}/stub_ascend_string.cc
             ${CMAKE_CURRENT_BINARY_DIR}/stub_gnode.cc
-            ${METADEF_DIR}/stub/operator_stub.cc
+            ${CMAKE_CURRENT_BINARY_DIR}/stub_tensor.cc
+            ${METADEF_DIR}/tests/stub/operator_stub.cc
 )
 
 #############################################################
@@ -364,7 +367,8 @@ add_library(atc_stub_graph SHARED
     stub_attr_value.cc
     stub_ascend_string.cc
     stub_gnode.cc
-    ${METADEF_DIR}/stub/operator_stub.cc
+    stub_tensor.cc
+    ${METADEF_DIR}/tests/stub/operator_stub.cc
 )
 add_dependencies(atc_stub_graph graph_stub)
 
@@ -384,8 +388,6 @@ target_link_libraries(atc_stub_graph
         intf_pub
         static_mmpa
         -Wl,--no-as-needed
-        graph_base
-        c_sec
         json
         -Wl,--as-needed
         $<$<NOT:$<STREQUAL:${TARGET_SYSTEM_NAME},Android>>:-lrt>
@@ -408,7 +410,8 @@ add_library(fwk_stub_graph SHARED
     stub_inference_context.cc
     stub_ascend_string.cc
     stub_gnode.cc
-    ${METADEF_DIR}/stub/operator_stub.cc
+    stub_tensor.cc
+    ${METADEF_DIR}/tests/stub/operator_stub.cc
 )
 
 add_dependencies(fwk_stub_graph graph_stub)
@@ -429,8 +432,6 @@ target_link_libraries(fwk_stub_graph
         intf_pub
         static_mmpa
         -Wl,--no-as-needed
-        graph_base
-        c_sec
         json
         -Wl,--as-needed
         $<$<NOT:$<STREQUAL:${TARGET_SYSTEM_NAME},Android>>:-lrt>
