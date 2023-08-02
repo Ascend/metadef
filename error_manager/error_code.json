@@ -431,6 +431,17 @@
     },
     {
       "errClass": "GE Errors",
+      "errTitle": "Invalid Argument",
+      "ErrCode": "E10042",
+      "ErrMessage": "GE GenerateOfflineModel execute failed.",
+      "Arglist": "",
+      "suggestion": {
+        "Possible Cause": "N/A",
+        "Solution": "N/A"
+      }
+    },
+    {
+      "errClass": "GE Errors",
       "errTitle": "Insufficient Memory",
       "ErrCode": "E10044",
       "ErrMessage": "The available memory is [%s KB], which is less than the required minimum [%s KB].",

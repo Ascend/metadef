@@ -965,8 +965,7 @@ TEST(UTEST_ge_model_serialize, test_parse_node_false)
     string node_index = "invalid_index";
     string node_name = "name";
     int32_t index = 1;
-    int32_t peer_index = -1;
-    EXPECT_EQ(imp.ParseNodeIndex(node_index, node_name, index, peer_index), false);
+    EXPECT_EQ(imp.ParseNodeIndex(node_index, node_name, index), false);
 }
 
 TEST(UTEST_ge_model_unserialize, test_invalid_Attr)

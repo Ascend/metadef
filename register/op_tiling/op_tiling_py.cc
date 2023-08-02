@@ -36,7 +36,7 @@
 #include "graph/utils/math_util.h"
 
 namespace optiling {
-using ParseAttrFunc = std::function<void(ge::OpDescPtr &, const nlohmann::json &, const std::string &)>;
+using ParseAttrFunc = std::function<bool(ge::OpDescPtr &, const nlohmann::json &, const std::string &)>;
 using CopyConstDataFunc = std::function<bool(const nlohmann::json &, const size_t, std::unique_ptr<uint8_t[]> &)>;
 
 class FuncTable {
@@ -118,20 +118,84 @@ bool FindImplFuncs(const ge::char_t *op_type, const gert::OpImplKernelRegistry::
 }
 
 template<typename T>
-void ParseAndSetAttr(ge::OpDescPtr &op_desc, const nlohmann::json &attr, const std::string &attr_name) {
-  const T attr_value = attr["value"].get<T>();
+bool ParseValueNullDesc(const nlohmann::json &value_null_desc, std::vector<T> &data) {
+  GE_ASSERT_TRUE(!value_null_desc.is_null(), "value_null desc is null");
+  std::string null_desc = value_null_desc.get<std::string>();
+  if (std::numeric_limits<T>::has_infinity && std::numeric_limits<T>::has_quiet_NaN) {
+    if (null_desc == "inf") {
+      data.emplace_back(std::numeric_limits<T>::infinity());
+    } else if (null_desc == "-inf") {
+      data.emplace_back(-std::numeric_limits<T>::infinity());
+    } else if (null_desc == "nan") {
+      data.emplace_back(std::numeric_limits<T>::quiet_NaN());
+    } else {
+      GELOGE(ge::GRAPH_PARAM_INVALID, "value_null desc: %s is not supported", null_desc.c_str());
+      return false;
+    }
+  } else {
+    GELOGE(ge::GRAPH_PARAM_INVALID, "this type doesn't support infinity and nan");
+    return false;
+  }
+  return true;
+}
+
+bool ParseAndSetFloatAttr(ge::OpDescPtr &op_desc, const nlohmann::json &attr, const std::string &attr_name) {
+  const auto value = attr["value"];
+  std::vector<float> data;
+  const auto value_null_desc = attr.find("value_null_desc");
+  if (value_null_desc == attr.end()) {
+    data.emplace_back(value.get<float>());
+  } else {
+    if (value.is_null()) {
+      GE_ASSERT_TRUE(ParseValueNullDesc(value_null_desc.value(), data));
+    } else {
+      GELOGE(ge::GRAPH_PARAM_INVALID, "value_null_desc is set, but value is not null");
+      return false;
+    }
+  }
   op_desc->AppendIrAttrName(attr_name);
-  (void)op_desc->SetAttr(attr_name, ge::AnyValue::CreateFrom<T>(attr_value));
+  (void)op_desc->SetAttr(attr_name, ge::AnyValue::CreateFrom<float>(data.front()));
+  return true;
 }
 
 template<typename T>
-void ParseAndSetListAttr(ge::OpDescPtr &op_desc, const nlohmann::json &attr, const std::string &attr_name) {
+bool ParseAndSetAttr(ge::OpDescPtr &op_desc, const nlohmann::json &attr, const std::string &attr_name) {
+  const T attr_value = attr["value"].get<T>();
+  op_desc->AppendIrAttrName(attr_name);
+  (void)op_desc->SetAttr(attr_name, ge::AnyValue::CreateFrom<T>(attr_value));
+  return true;
+}
+
+bool ParseAndSetFloatListAttr(ge::OpDescPtr &op_desc, const nlohmann::json &attr, const std::string &attr_name) {
+  const auto value = attr["value"];
+  std::vector<float> data;
+  const auto value_null_desc =  attr.find("value_null_desc");
+  if (value_null_desc == attr.end()) {
+    data = value.get<std::vector<float>>();
+  } else {
+    GE_ASSERT_TRUE(value.size() == value_null_desc->size(), "value size is not equal to value_null_desc size");
+    for (size_t i = 0U; i < value.size(); ++i) {
+      if (value.at(i).is_null()) {
+        GE_ASSERT_TRUE(ParseValueNullDesc(value_null_desc->at(i), data));
+      } else {
+        data.emplace_back(value.at(i).get<float>());
+      }
+    }
+  }
+  op_desc->AppendIrAttrName(attr_name);
+  (void)op_desc->SetAttr(attr_name, ge::AnyValue::CreateFrom<std::vector<float>>(data));
+  return true;
+}
+
+template<typename T>
+bool ParseAndSetListAttr(ge::OpDescPtr &op_desc, const nlohmann::json &attr, const std::string &attr_name) {
   const std::vector<T> attr_value = attr["value"].get<std::vector<T>>();
   op_desc->AppendIrAttrName(attr_name);
   (void)op_desc->SetAttr(attr_name, ge::AnyValue::CreateFrom<std::vector<T>>(attr_value));
+  return true;
 }
 
-void ParseAndSetListInt64Attr(ge::OpDescPtr &op_desc, const nlohmann::json &attr, const std::string &attr_name) {
+bool ParseAndSetListInt64Attr(ge::OpDescPtr &op_desc, const nlohmann::json &attr, const std::string &attr_name) {
   std::vector<int32_t> attr_value = attr["value"].get<std::vector<int32_t>>();
   std::vector<int64_t> attr_int64_value;
   for (const int32_t &item : attr_value) {
@@ -139,9 +203,10 @@ void ParseAndSetListInt64Attr(ge::OpDescPtr &op_desc, const nlohmann::json &attr
   }
   op_desc->AppendIrAttrName(attr_name);
   (void)op_desc->SetAttr(attr_name, ge::AnyValue::CreateFrom<std::vector<int64_t>>(attr_int64_value));
+  return true;
 }
 
-void ParseAndSetListListAttr(ge::OpDescPtr &op_desc, const nlohmann::json &attr, const std::string &attr_name) {
+bool ParseAndSetListListAttr(ge::OpDescPtr &op_desc, const nlohmann::json &attr, const std::string &attr_name) {
   std::vector<std::vector<int32_t>> attr_value_int32 = attr["value"].get<std::vector<std::vector<int32_t>>>();
   std::vector<std::vector<int64_t>> attr_value_int64;
   std::vector<int64_t> temp_int64_vec;
@@ -155,19 +220,36 @@ void ParseAndSetListListAttr(ge::OpDescPtr &op_desc, const nlohmann::json &attr,
   }
   op_desc->AppendIrAttrName(attr_name);
   (void)op_desc->SetAttr(attr_name, ge::AnyValue::CreateFrom<std::vector<std::vector<int64_t>>>(attr_value_int64));
+  return true;
 }
 
-void ParseAndSetListListInt64Attr(ge::OpDescPtr &op_desc, const nlohmann::json &attr, const std::string &attr_name) {
+bool ParseAndSetListListInt64Attr(ge::OpDescPtr &op_desc, const nlohmann::json &attr, const std::string &attr_name) {
   const std::vector<std::vector<int64_t>> attr_value_int64 = attr["value"].get<std::vector<std::vector<int64_t>>>();
   op_desc->AppendIrAttrName(attr_name);
   (void)op_desc->SetAttr(attr_name, ge::AnyValue::CreateFrom<std::vector<std::vector<int64_t>>>(attr_value_int64));
+  return true;
 }
 
 template<typename T>
 bool GetConstData(const nlohmann::json &json_array, const size_t total_size,
                   std::unique_ptr<uint8_t[]> &tensor_holder) {
-  const std::vector<T> value = json_array.get<std::vector<T>>();
   auto tensor = reinterpret_cast<gert::Tensor *>(tensor_holder.get());
+  std::vector<T> value;
+  const auto const_value = json_array["const_value"];
+  const auto const_value_null_desc = json_array.find("const_value_null_desc");
+  if (const_value_null_desc == json_array.end()) {
+    value = const_value.get<std::vector<T>>();
+  } else {
+    GE_ASSERT_TRUE(const_value.size() == const_value_null_desc->size(),
+                   "const_value size is not equal to const_value_null_desc size");
+    for (size_t i = 0U; i < const_value.size(); ++i) {
+      if (const_value.at(i).is_null()) {
+        GE_ASSERT_TRUE(ParseValueNullDesc(const_value_null_desc->at(i), value));
+      } else {
+        value.emplace_back(const_value.at(i).get<T>());
+      }
+    }
+  }
   if (memcpy_s(tensor->GetData<uint8_t>(), total_size - sizeof(gert::Tensor), value.data(), value.size() * sizeof(T)) !=
       EOK) {
     GELOGE(ge::FAILED, "Call memcpy failed, total value size is %zu.", value.size() * sizeof(T));
@@ -178,7 +260,7 @@ bool GetConstData(const nlohmann::json &json_array, const size_t total_size,
 
 bool GetConstDataWithFloat16(const nlohmann::json &json_array, const size_t total_size,
                              std::unique_ptr<uint8_t[]> &tensor_holder) {
-  std::vector<float> const_value = json_array.get<std::vector<float>>();
+  std::vector<float> const_value = json_array["const_value"].get<std::vector<float>>();
   std::vector<uint16_t> const_data_vec;
   for (size_t i = 0UL; i < const_value.size(); ++i) {
     uint16_t const_data_uint16 = FloatToUint16(const_value[i]);
@@ -195,15 +277,15 @@ bool GetConstDataWithFloat16(const nlohmann::json &json_array, const size_t tota
 
 const std::unordered_map<std::string, ParseAttrFunc> kDtypeToAttrFunc = {
     {"bool", ParseAndSetAttr<bool>},
-    {"float", ParseAndSetAttr<float>},
-    {"float32", ParseAndSetAttr<float>},
+    {"float", ParseAndSetFloatAttr},
+    {"float32", ParseAndSetFloatAttr},
     {"int", ParseAndSetAttr<int64_t>},
     {"int32", ParseAndSetAttr<int64_t>},
     {"int64", ParseAndSetAttr<int64_t>},
     {"str", ParseAndSetAttr<std::string>},
     {"list_bool", ParseAndSetListAttr<bool>},
-    {"list_float", ParseAndSetListAttr<float>},
-    {"list_float32", ParseAndSetListAttr<float>},
+    {"list_float", ParseAndSetFloatListAttr},
+    {"list_float32", ParseAndSetFloatListAttr},
     {"list_int", ParseAndSetListInt64Attr},
     {"list_int32", ParseAndSetListInt64Attr},
     {"list_int64", ParseAndSetListAttr<int64_t>},
@@ -295,7 +377,7 @@ ge::graphStatus ParseConstValue(const nlohmann::json &input, const gert::Storage
     if (tensor_size != 0UL) {
       auto func = kFuncTable.Find(tensor_desc.GetDataType());
       GE_CHECK_NOTNULL(func);
-      if (!func(input["const_value"], total_size, tensor_holder)) {
+      if (!func(input, total_size, tensor_holder)) {
         GELOGE(ge::GRAPH_FAILED, "Make tensor failed.");
         return ge::GRAPH_FAILED;
       }
@@ -492,7 +574,7 @@ ge::graphStatus ParseAttrs(const char *attrs, ge::OpDescPtr &op_desc) {
         GELOGE(ge::GRAPH_FAILED, "Unknown dtype[%s], which is unsupported.", dtype.c_str());
         return ge::GRAPH_FAILED;
       }
-      (iter->second)(op_desc, attr, attr_name);
+      GE_ASSERT_TRUE((iter->second)(op_desc, attr, attr_name));
       GELOGD("Finish to set attr[name: %s] to Operator.", attr_name.c_str());
     }
   }
