@@ -1429,7 +1429,7 @@ graphStatus OpDescImpl::DefaultInferDataType(const OpDescPtr &op_desc) {
 
   ret = InferDataTypeForOutputs(op_desc);
   if (ret != GRAPH_SUCCESS) {
-    GELOGE(ret, "Fail to infer outputs datatype for op %s .", op_desc->GetName().c_str());
+    GELOGW("Fail to infer outputs datatype for op %s .", op_desc->GetName().c_str());
     return ret;
   }
   return GRAPH_SUCCESS;
@@ -1613,7 +1613,7 @@ DataTypeInferStrategy OpDescImpl::GetDataTypeInferStrategy(const string &datatyp
 graphStatus OpDescImpl::InferDataTypeForOutput(const std::string &ir_output, std::vector<DataType> &dst_types) {
   const auto output_symbol = meta_data_.ir_meta_.GetIRDataTypeSymbolStore().GetOutputDataTypeSymbol(ir_output);
   if (output_symbol.empty()) {
-    GELOGE(GRAPH_PARAM_INVALID, "Op %s output %s has no dtype symbol. Please check IR.", this->GetName().c_str(),
+    GELOGW("Op %s output %s has no dtype symbol. Please check IR.", this->GetName().c_str(),
            ir_output.c_str());
     return GRAPH_PARAM_INVALID;
   }

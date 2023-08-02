@@ -481,13 +481,7 @@ graphStatus NodeUtils::GetNodeUnknownShapeStatus(const Node &node, bool &is_unkn
 }
 
 std::string NodeUtils::GetNodeType(const Node &node) {
-  if (node.GetType() != FRAMEWORKOP) {
-    return node.GetType();
-  }
-
-  std::string type;
-  (void) AttrUtils::GetStr(node.GetOpDesc(), ATTR_NAME_FRAMEWORK_ORIGINAL_TYPE, type);
-  return type;
+  return OpDescUtils::GetOpType(node.GetOpDesc());
 }
 
 std::string NodeUtils::GetNodeType(const NodePtr &node) {
