@@ -42,7 +42,14 @@ KernelRunContextFaker &KernelRunContextFaker::IrInstanceNum(std::vector<uint32_t
   ir_instance_num_ = std::move(instance_num);
   return *this;
 }
-
+KernelRunContextFaker &KernelRunContextFaker::IrOutputNum(size_t output_num) {
+  ir_output_instance_num_ = std::vector<uint32_t>(output_num, 1);
+  return *this;
+}
+KernelRunContextFaker &KernelRunContextFaker::IrOutputInstanceNum(std::vector<uint32_t> instance_num) {
+  ir_output_instance_num_ = std::move(instance_num);
+  return *this;
+}
 ge::OpDescPtr KernelRunContextFaker::FakeOp() const {
   auto op_desc = std::make_shared<ge::OpDesc>("node", "node");
   size_t input_index = 0;
@@ -61,16 +68,32 @@ ge::OpDescPtr KernelRunContextFaker::FakeOp() const {
       op_desc->AddInputDesc(prefix + std::to_string(i), td);
     }
   }
-  for (size_t i = 0; i < node_output_num_; ++i) {
-    auto td = ge::GeTensorDesc();
-    if (node_output_tds_.size() > i) {
-      td.SetOriginFormat(node_output_tds_[i].GetOriginFormat());
-      td.SetFormat(node_output_tds_[i].GetStorageFormat());
-      td.SetDataType(node_output_tds_[i].GetDataType());
-      td.SetOriginDataType(node_output_tds_[i].GetDataType());
+  // fill it when not set
+  std::vector<uint32_t> ir_output_instance_num;
+  if (ir_output_instance_num_.empty()) {
+    for (size_t i = 0; i < node_output_num_; ++i) {
+      ir_output_instance_num.emplace_back(1U);
     }
-    op_desc->AddOutputDesc("y" + std::to_string(i), td);
+  } else {
+    ir_output_instance_num = ir_output_instance_num_;
   }
+  size_t output_index = 0;
+  for (size_t ir_index = 0; ir_index < ir_output_instance_num.size(); ++ir_index) {
+    auto ir_ins_num = ir_output_instance_num[ir_index];
+    auto prefix = "y_" + std::to_string(ir_index) + "_";
+    op_desc->AppendIrOutput(prefix, ge::kIrOutputDynamic);
+    for (size_t i = 0; i < ir_ins_num; ++i, ++output_index) {
+      auto td = ge::GeTensorDesc();
+      if (node_output_tds_.size() > output_index) {
+        td.SetOriginFormat(node_output_tds_[output_index].GetOriginFormat());
+        td.SetFormat(node_output_tds_[output_index].GetStorageFormat());
+        td.SetDataType(node_output_tds_[output_index].GetDataType());
+        td.SetOriginDataType(node_output_tds_[output_index].GetDataType());
+      }
+      op_desc->AddOutputDesc(prefix + std::to_string(i), td);
+    }
+  }
+
   for (const auto &attr : attrs_) {
     op_desc->AppendIrAttrName(attr.first);
     op_desc->SetAttr(attr.first, attr.second);

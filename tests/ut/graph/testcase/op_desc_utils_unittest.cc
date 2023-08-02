@@ -156,6 +156,19 @@ ComputeGraphPtr BuildGraph4(size_t dynamic_input_num, bool has_optional_input) {
   op_desc->AppendIrInput("b", kIrInputRequired);
   return graph;
 }
+///     Data
+///       |
+///       | ctrl_edge
+///      noop
+///
+ComputeGraphPtr BuildGraph5() {
+  ut::GraphBuilder builder = ut::GraphBuilder("graph");
+  auto data = builder.AddNode("Data", "Data", 1, 1);
+  auto noop = builder.AddNode("noop", "NoOp", 1, 0);
+
+  builder.AddControlEdge(data, noop);
+  return builder.GetGraph();
+}
 }
 TEST_F(UtestOpDescUtils, SetWeight) {
   auto graph = BuildGraph1();
@@ -889,6 +902,11 @@ TEST_F(UtestOpDescUtils, GetInputIrIndexes2InstanceIndexesPairMap_NullOpDescFail
   ASSERT_TRUE(ir_index_to_instance_index_pair_map.empty());
 }
 
+TEST_F(UtestOpDescUtils, GetOutputIrIndexes2InstanceIndexesPairMap_NullOpDescFailed) {
+  auto ir_index_to_instance_index_pair_map = OpDescUtils::GetOutputIrIndexes2InstanceIndexesPairMap(nullptr);
+  ASSERT_TRUE(ir_index_to_instance_index_pair_map.empty());
+}
+
 void IrIndexAndInstanceIndexCheck(size_t dynamic_input_num, bool has_optional_input) {
   size_t optional_input_num = has_optional_input ? 1U : 0U;
   auto graph = BuildGraph4(dynamic_input_num, has_optional_input);
@@ -1053,5 +1071,23 @@ TEST_F(UtestOpDescUtils, GetInputIrIndexeByInstanceIndexe_ActualInputsIsMoreThan
   dlog_setlevel(GE_MODULE_NAME, old_level, event_level);
   ASSERT_EQ(ret, GRAPH_SUCCESS);
   EXPECT_EQ(ir_index, std::numeric_limits<size_t>::max());
+}
+TEST_F(UtestOpDescUtils, GetOutputIrIndexeByInstanceIndexe_NoOutput_Success) {
+  auto graph = BuildGraph5();
+  auto node_without_outputs = graph->FindNode("noop");
+  auto op_desc = node_without_outputs->GetOpDesc();
+
+  auto ir_index_to_instance_index_pair_map = OpDescUtils::GetOutputIrIndexes2InstanceIndexesPairMap(op_desc);
+  ASSERT_TRUE(ir_index_to_instance_index_pair_map.empty());
+}
+
+TEST_F(UtestOpDescUtils, GetOutputIrIndexeByInstanceIndexe_UnknownOutputIrType_Failed) {
+  auto graph = BuildGraph4(2, false);
+  auto dynamic_op_ut_node = graph->FindNode("dynamic_op_ut");
+  auto op_desc = dynamic_op_ut_node->GetOpDesc();
+  op_desc->AppendIrOutput("y", kIrOutputTypeEnd);// invalid IrType
+
+  auto ir_index_to_instance_index_pair_map = OpDescUtils::GetOutputIrIndexes2InstanceIndexesPairMap(op_desc);
+  ASSERT_TRUE(ir_index_to_instance_index_pair_map.empty());
 }
 }

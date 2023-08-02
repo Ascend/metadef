@@ -26,8 +26,8 @@ void AttrHolder::CopyAttrsFrom(const AttrHolder &holder) {
   MutableAttrMap() = holder.GetAttrMap();
 }
 void AttrHolder::CopyFrom(const AttrHolder &holder) {
-    required_attrs_ = holder.required_attrs_;
-    ext_attrs_ = holder.ext_attrs_;
+  required_attrs_and_type_ = holder.required_attrs_and_type_;
+  ext_attrs_ = holder.ext_attrs_;
 }
 
 graphStatus AttrHolder::SetAttr(const std::string &name, const AnyValue &value) {
@@ -57,10 +57,14 @@ graphStatus AttrHolder::TrySetAttr(const std::string &name, const AnyValue &valu
   return GRAPH_SUCCESS;
 }
 graphStatus AttrHolder::AddRequiredAttr(const std::string &name) {
+  return AddRequiredAttrWithType(name, "");
+}
+
+graphStatus AttrHolder::AddRequiredAttrWithType(const std::string &name, const std::string &type) {
   if (HasAttr(name)) {
     return GRAPH_FAILED;
   }
-  required_attrs_.push_back(name);
+  required_attrs_and_type_.emplace(name, type);
   return GRAPH_SUCCESS;
 }
 
@@ -77,7 +81,7 @@ bool AttrHolder::HasAttr(const std::string &name) const {
   if (GetAttrMap().Exists(name)) {
     return true;
   }
-  return std::find(required_attrs_.begin(), required_attrs_.end(), name) != required_attrs_.end();
+  return required_attrs_and_type_.find(name) != required_attrs_and_type_.end();
 }
 
 graphStatus AttrHolder::DelAttr(const std::string &name) {

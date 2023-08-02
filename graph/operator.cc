@@ -940,29 +940,21 @@ GE_FUNC_HOST_VISIBILITY size_t Operator::GetOutputsSize() const {
 
 // According to op get the attrs name and type
 namespace {
-const std::map<AnyValue::ValueType, std::string> kAttrTypesMap = {
-    {AnyValue::VT_NONE, "VT_STRING"},
-    {AnyValue::VT_STRING, "VT_STRING"},
-    {AnyValue::VT_FLOAT, "VT_FLOAT"},
-    {AnyValue::VT_BOOL, "VT_BOOL"},
-    {AnyValue::VT_INT, "VT_INT"},
-    {AnyValue::VT_TENSOR_DESC, "VT_TENSOR_DESC"},
-    {AnyValue::VT_TENSOR, "VT_TENSOR"},
-    {AnyValue::VT_BYTES, "VT_BYTES"},
-    {AnyValue::VT_GRAPH, "VT_GRAPH"},
-    {AnyValue::VT_NAMED_ATTRS, "VT_NAMED_ATTRS"},
-    {AnyValue::VT_LIST_LIST_INT, "VT_LIST_LIST_INT"},
-    {AnyValue::VT_DATA_TYPE, "VT_DATA_TYPE"},
-    {AnyValue::VT_LIST_STRING, "VT_LIST_STRING"},
-    {AnyValue::VT_LIST_FLOAT, "VT_LIST_FLOAT"},
-    {AnyValue::VT_LIST_BOOL, "VT_LIST_BOOL"},
-    {AnyValue::VT_LIST_INT, "VT_LIST_INT"},
-    {AnyValue::VT_LIST_TENSOR_DESC, "VT_LIST_TENSOR_DESC"},
-    {AnyValue::VT_LIST_TENSOR, "VT_LIST_TENSOR"},
-    {AnyValue::VT_LIST_BYTES, "VT_LIST_BYTES"},
-    {AnyValue::VT_GRAPH, "VT_GRAPH"},
-    {AnyValue::VT_LIST_NAMED_ATTRS, "VT_LIST_NAMED_ATTRS"},
-    {AnyValue::VT_LIST_DATA_TYPE, "VT_LIST_DATA_TYPE"},
+const std::map<std::string, std::string> kIrAttrTypesMap = {
+    {"Int", "VT_INT"},
+    {"Float", "VT_FLOAT"},
+    {"String", "VT_STRING"},
+    {"Bool", "VT_BOOL"},
+    {"Tensor", "VT_TENSOR"},
+    {"NamedAttrs", "VT_NAMED_ATTRS"},
+    {"ListInt", "VT_LIST_INT"},
+    {"ListFloat", "VT_LIST_FLOAT"},
+    {"ListString", "VT_LIST_STRING"},
+    {"ListBool", "VT_LIST_BOOL"},
+    {"ListTensor", "VT_LIST_TENSOR"},
+    {"Bytes", "VT_BYTES"},
+    {"ListListInt", "VT_LIST_LIST_INT"},
+    {"ListNamedAttrs", "VT_LIST_NAMED_ATTRS"},
 };
 } // namespace
 const std::map<std::string, std::string> Operator::GetAllAttrNamesAndTypes() const {
@@ -974,15 +966,10 @@ const std::map<std::string, std::string> Operator::GetAllAttrNamesAndTypes() con
                    REPORT_INNER_ERROR("E18888", "GetOpDescImpl failed, as return nullptr.");
                    return attr_types, "[Get][OpDescImpl] is nullptr.");
   const std::map<std::string, AnyValue> attr_map = operator_impl_->GetOpDescImpl()->GetAllAttrs();
-
   for (const auto &iter : attr_map) {
     const std::string name = iter.first;
     const AnyValue::ValueType type = iter.second.GetValueType();
-
-    const auto iter2 = kAttrTypesMap.find(type);
-    if (iter2 != kAttrTypesMap.end()) {
-      attr_types[name] = iter2->second;
-    }
+    attr_types[name] = AttrUtils::ValueTypeToSerialString(type);
   }
 
   return attr_types;
@@ -999,14 +986,35 @@ graphStatus Operator::GetAllAttrNamesAndTypes(std::map<AscendString, AscendStrin
   for (const auto &iter : attr_map) {
     const std::string name = iter.first;
     const AnyValue::ValueType type = iter.second.GetValueType();
-
-    const auto iter2 = kAttrTypesMap.find(type);
-    if (iter2 != kAttrTypesMap.end()) {
-      const AscendString temp(name.c_str());
-      attr_name_types[temp] = AscendString(iter2->second.c_str());
-    }
+    const AscendString temp(name.c_str());
+    attr_name_types[temp] = AscendString(AttrUtils::ValueTypeToSerialString(type).c_str());
   }
 
+  return GRAPH_SUCCESS;
+}
+
+graphStatus Operator::GetAllIrAttrNamesAndTypes(std::map<AscendString, AscendString> &attr_name_types) const {
+  GE_ASSERT_NOTNULL(operator_impl_);
+  GE_ASSERT_NOTNULL(operator_impl_->GetOpDescImpl());
+  const std::map<std::string, AnyValue> attr_map = operator_impl_->GetOpDescImpl()->GetAllAttrs();
+  const auto &ir_attrs_names = operator_impl_->GetOpDescImpl()->GetIrAttrNames();
+  std::unordered_set<std::string> ir_attrs_name_set(ir_attrs_names.begin(), ir_attrs_names.end());
+  for (const auto &iter : attr_map) {
+    const std::string name = iter.first;
+    const AnyValue::ValueType type = iter.second.GetValueType();
+    // save ir normal attr
+    if (ir_attrs_name_set.find(name) != ir_attrs_name_set.end()) {
+      const AscendString temp(name.c_str());
+      attr_name_types[temp] = AscendString(AttrUtils::ValueTypeToSerialString(type).c_str());
+    }
+  }
+  const auto &required_attrs = operator_impl_->GetOpDescImpl()->GetRequiredAttrWithType();
+  // save ir required attr
+  for (const auto &iter : required_attrs) {
+    const AscendString name(iter.first.c_str());
+    const AscendString type(iter.second.c_str());
+    attr_name_types[name] = type;
+  }
   return GRAPH_SUCCESS;
 }
 
@@ -1257,6 +1265,25 @@ void Operator::RequiredAttrRegister(const char_t *name) {
                    REPORT_INNER_ERROR("E18888", "GetOpDescImpl failed, as return nullptr.");
                    return, "[Get][OpDescImpl] is nullptr.");
   (void)(operator_impl_->GetOpDescImpl()->AddRequiredAttr(name));
+  operator_impl_->GetOpDescImpl()->AppendIrAttrName(name);
+}
+
+void Operator::RequiredAttrWithTypeRegister(const char_t *name, const char_t *type) {
+  if ((name == nullptr) || (operator_impl_ == nullptr) || (operator_impl_->GetOpDescImpl() == nullptr)) {
+    REPORT_INNER_ERROR("E18888", "param is nullptr, check invalid");
+    GELOGE(GRAPH_FAILED, "[Check][Param] param is nullptr.");
+    return;
+  }
+  std::string ir_attr_type;
+  const auto iter = kIrAttrTypesMap.find(type);
+  if (iter != kIrAttrTypesMap.end()) {
+    ir_attr_type = iter->second;
+  } else {
+    GELOGW("[Check][Param] unsupport attr type %s from ir.", type);
+  }
+  (void) (operator_impl_->GetOpDescImpl()->AddRequiredAttrWithType(name, ir_attr_type));
+  GELOGD("Save required attr name %s with type %s to op %s %s", name, ir_attr_type.c_str(),
+         operator_impl_->GetOpDescImpl()->GetNamePtr(), operator_impl_->GetOpDescImpl()->GetTypePtr());
   operator_impl_->GetOpDescImpl()->AppendIrAttrName(name);
 }
 
