@@ -72,7 +72,7 @@ class GE_FUNC_VISIBILITY StringUtils {
     std::vector<std::string, std::allocator<std::string>> elems;
 
     if (str.empty()) {
-      elems.emplace_back("");
+      (void) elems.emplace_back("");
       return elems;
     }
 
@@ -80,12 +80,12 @@ class GE_FUNC_VISIBILITY StringUtils {
     std::string item;
 
     while (getline(ss, item, delim)) {
-      elems.push_back(item);
+      (void) elems.push_back(item);
     }
 
     const auto str_size = str.size();
     if ((str_size > 0U) && (str[str_size - 1U] == delim)) {
-      elems.emplace_back("");
+      (void) elems.emplace_back("");
     }
 
     return elems;
@@ -192,7 +192,7 @@ class GE_FUNC_VISIBILITY StringUtils {
     }
 
     for (size_t i = 1; i < str.size(); i++) {
-      if (!isdigit(str.at(i))) {
+      if (isdigit(str.at(i)) == 0) {
         return false;
       }
     }
