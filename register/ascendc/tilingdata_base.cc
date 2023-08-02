@@ -67,12 +67,6 @@ void TilingDef::InitData() {
     }
 }
 
-StructSizeInfoBase &StructSizeInfoBase::GetInstance()
-{
-  static StructSizeInfoBase instance;
-  return instance;
-}
-
 CTilingDataClassFactory &CTilingDataClassFactory::GetInstance()
 {
   static CTilingDataClassFactory instance;

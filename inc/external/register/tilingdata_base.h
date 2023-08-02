@@ -34,9 +34,16 @@ struct CharPtrCmp {
 
 class StructSizeInfoBase {
 public:
-  static StructSizeInfoBase &GetInstance();
+  static StructSizeInfoBase &GetInstance()
+  {
+    static StructSizeInfoBase instance;
+    return instance;
+  }
   void SetStructSize(const char *structType, const size_t structSize)
   {
+    if (structSizeInfo.find(structType) != structSizeInfo.end()) {
+      return;
+    }
     structSizeInfo[structType] = structSize;
   }
   size_t GetStructSize(const char *structType)
@@ -213,6 +220,7 @@ REGISTER_TILING_DATA_CLASS(MaxPool, MaxPoolTilingData)
     }                                                                                                                  \
     static std::shared_ptr<TilingDef> CreateTilingDataInstance() { return std::make_shared<class_name>(); }            \
   };                                                                                                                   \
+  static class_name g_##op_type##class_name##init;                                                                     \
   static op_type##class_name##Helper g_tilingdata_##op_type##class_name##helper;
 
 #endif  // __INC_REGISTER_ASCENDC_TILINGDATA_BASE_HEADER__
