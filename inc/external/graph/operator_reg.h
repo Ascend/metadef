@@ -338,7 +338,7 @@ class OpReg {
                                                                             \
  private:                                                                   \
   void __required_attr_##x() {                                              \
-    Operator::RequiredAttrRegister(#x);                                     \
+    Operator::RequiredAttrWithTypeRegister(#x, #Type);                      \
     std::string attr_name(#x);                                              \
     (void)OpReg()
 
