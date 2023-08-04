@@ -3875,7 +3875,7 @@
     {
       "errClass": "HostApi Errors",
       "errTitle": "AclNN Parameter Error",
-      "ErrCode": "EZ9901",
+      "ErrCode": "EZ1001",
       "ErrMessage": "%s",
       "Arglist": "message"
     },

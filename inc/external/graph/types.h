@@ -236,6 +236,10 @@ inline bool HasC0Format(int32_t format) {
   return ((static_cast<uint32_t>(format) & 0xf000000U) >> kBitThreeBytes) > 0;
 }
 
+inline int32_t GetC0Format(int32_t format) {
+  return static_cast<int32_t>((static_cast<uint32_t>(format) & 0xf000000U) >> kBitThreeBytes);
+}
+
 inline int64_t GetC0Value(int32_t format) {
   if (!HasC0Format(format)) {
     return -1;
