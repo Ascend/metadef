@@ -54,7 +54,13 @@ HyperStatus::HyperStatus(const HyperStatus &other) : status_{nullptr} {
   *this = other;
 }
 HyperStatus &HyperStatus::operator=(const HyperStatus &other) {
-  delete [] status_;
+  if (this == &other) {
+    return *this;
+  }
+  if (status_ != nullptr) {
+    delete [] status_;
+    status_ = nullptr;
+  }
   if (other.status_ == nullptr) {
     status_ = nullptr;
   } else {
@@ -74,9 +80,11 @@ HyperStatus::HyperStatus(HyperStatus &&other) noexcept {
   other.status_ = nullptr;
 }
 HyperStatus &HyperStatus::operator=(HyperStatus &&other) noexcept {
-  delete [] status_;
-  status_ = other.status_;
-  other.status_ = nullptr;
+  if (this != &other) {
+    delete [] status_;
+    status_ = other.status_;
+    other.status_ = nullptr;
+  }
   return *this;
 }
 HyperStatus HyperStatus::ErrorStatus(const ge::char_t *message, ...) {
