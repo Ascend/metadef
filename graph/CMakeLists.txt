@@ -198,6 +198,7 @@ target_link_libraries(graph
         c_sec
         slog
         json
+        platform
         -Wl,--as-needed
         $<$<NOT:$<STREQUAL:${TARGET_SYSTEM_NAME},Android>>:-lrt>
         -ldl
@@ -301,6 +302,7 @@ else()
             c_sec
             slog
             json
+            platform
             -Wl,--as-needed
             $<$<NOT:$<STREQUAL:${TARGET_SYSTEM_NAME},Android>>:-lrt>
             -ldl
@@ -389,6 +391,7 @@ target_link_libraries(atc_stub_graph
         static_mmpa
         -Wl,--no-as-needed
         json
+        platform
         -Wl,--as-needed
         $<$<NOT:$<STREQUAL:${TARGET_SYSTEM_NAME},Android>>:-lrt>
         -ldl
@@ -433,6 +436,7 @@ target_link_libraries(fwk_stub_graph
         static_mmpa
         -Wl,--no-as-needed
         json
+        platform
         -Wl,--as-needed
         $<$<NOT:$<STREQUAL:${TARGET_SYSTEM_NAME},Android>>:-lrt>
         -ldl

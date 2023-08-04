@@ -15,8 +15,12 @@
  */
 
 #include "transfer_shape_utils.h"
+#include <mutex>
 #include "axis_constants.h"
+#include "common/ge_common/string_util.h"
 #include "external/graph/ge_error_codes.h"
+#include "external/platform/platform_info.h"
+#include "graph/utils/type_utils.h"
 
 namespace transformer {
 std::array<uint32_t, static_cast<size_t>(ge::DataType::DT_MAX)> TransferShapeUtils::m0_list_{};
@@ -24,10 +28,6 @@ std::array<uint32_t, static_cast<size_t>(ge::DataType::DT_MAX)> TransferShapeUti
 std::array<uint32_t, static_cast<size_t>(ge::DataType::DT_MAX)> TransferShapeUtils::n0_list_{};
 namespace {
   const int64_t SHAPE_NUMBER_16 = 16;
-  const int64_t SHAPE_NUMBER_32 = 32;
-  const int64_t SHAPE_NUMBER_64 = 64;
-  const int64_t SHAPE_NUMBER_128 = 128;
-  const int64_t SHAPE_NUMBER_256 = 256;
   const int64_t SHAPE_NUMBER_4 = 4;
   const int64_t NI = 16;
   const int64_t LSTM_NI = 4;
@@ -48,6 +48,11 @@ namespace {
   const size_t DIM_INDEX_TWO = 2;
   const size_t DIM_INDEX_THREE = 3;
   const size_t DIM_INDEX_FOUR = 4;
+  const size_t kM0Index = 0;
+  const size_t kK0Index = 1;
+  const size_t kN0Index = 2;
+  const std::string kPltDtypeMKN = "DtypeMKN";
+  const std::string kPltDefault = "Default";
   const std::map<ge::Format, FormatIndex> kFormatIndexMap = {
           {ge::FORMAT_NCHW, {DIM_INDEX_ZERO, DIM_INDEX_ONE, DIM_INDEX_TWO, DIM_INDEX_THREE, DIM_INDEX_FOUR}},
           {ge::FORMAT_NHWC, {DIM_INDEX_ZERO, DIM_INDEX_THREE, DIM_INDEX_ONE, DIM_INDEX_TWO, DIM_INDEX_FOUR}},
@@ -64,42 +69,6 @@ namespace {
           ge::FORMAT_NCHW,  ge::FORMAT_NHWC,  ge::FORMAT_HWCN,
           ge::FORMAT_CHWN,  ge::FORMAT_NDHWC, ge::FORMAT_NCDHW,
           ge::FORMAT_DHWCN, ge::FORMAT_DHWNC, ge::FORMAT_ND
-  };
-
-  const std::vector<int64_t> kDataTypeAndC0Vec = {
-          SHAPE_NUMBER_16,  // DT_FLOAT = 0,
-          SHAPE_NUMBER_16,  // DT_FLOAT16 = 1,
-          SHAPE_NUMBER_32,  // DT_INT8 = 2,
-          SHAPE_NUMBER_16,  // DT_INT32 = 3,
-          SHAPE_NUMBER_32,  // DT_UINT8 = 4,
-          SHAPE_NUMBER_16,  // None = 5
-          SHAPE_NUMBER_16,  // DT_INT16 = 6,
-          SHAPE_NUMBER_16,  // DT_UINT16 = 7,
-          SHAPE_NUMBER_16,  // DT_UINT32 = 8,
-          SHAPE_NUMBER_16,  // DT_INT64 = 9,
-          SHAPE_NUMBER_16,  // DT_UINT64 = 10,
-          SHAPE_NUMBER_16,  // DT_DOUBLE = 11,
-          SHAPE_NUMBER_16,  // DT_BOOL = 12,
-          SHAPE_NUMBER_16,  // DT_DUAL = 13,
-          SHAPE_NUMBER_16,  // DT_DUAL_SUB_INT8 = 14,
-          SHAPE_NUMBER_16,  // DT_DUAL_SUB_UINT8 = 15,
-          SHAPE_NUMBER_16,  // DT_COMPLEX64 = 16,
-          SHAPE_NUMBER_16,  // DT_COMPLEX128 = 17,
-          SHAPE_NUMBER_16,  // DT_QINT8 = 18,
-          SHAPE_NUMBER_16,  // DT_QINT16 = 19,
-          SHAPE_NUMBER_16,  // DT_QINT32 = 20,
-          SHAPE_NUMBER_16,  // DT_QUINT8 = 21,
-          SHAPE_NUMBER_16,  // DT_QUINT16 = 22,
-          SHAPE_NUMBER_16,  // DT_RESOURCE = 23,
-          SHAPE_NUMBER_16,  // DT_STRING_REF = 24,
-          SHAPE_NUMBER_16,  // DT_DUAL = 25,
-          SHAPE_NUMBER_16,  // DT_VARIANT = 26,
-          SHAPE_NUMBER_16,  // DT_BF16 = 27,
-          SHAPE_NUMBER_16,  // DT_UNDEFINED,
-          SHAPE_NUMBER_64,  // DT_INT4 = 29,
-          SHAPE_NUMBER_256, // DT_UINT1 = 30
-          SHAPE_NUMBER_128, // DT_INT2 = 31
-          SHAPE_NUMBER_128  // DT_UINT2 = 32
   };
 
   inline int64_t GetGreatestCommonDivisor(int64_t x, int64_t y) {
@@ -132,9 +101,60 @@ namespace {
   }
 }
 
+bool TransferShapeUtils::InitPlatformInfo() {
+  static std::once_flag flag;
+  std::call_once(flag, []() {
+    m0_list_.fill(SHAPE_NUMBER_16);
+    k0_list_.fill(SHAPE_NUMBER_16);
+    n0_list_.fill(SHAPE_NUMBER_16);
+    fe::PlatformInfoManager::GeInstance().InitializePlatformInfo();
+    fe::PlatFormInfos platform_infos;
+    fe::OptionalInfos optional_infos;
+    if (fe::PlatformInfoManager::GeInstance().GetPlatformInfoWithOutSocVersion(platform_infos, optional_infos) != 0) {
+      GELOGW("Get platform info failed, use default MKN value.");
+      return false;
+    }
+    std::string default_mkn;
+    if (platform_infos.GetPlatformResWithLock(kPltDtypeMKN, kPltDefault, default_mkn)) {
+      GELOGD("Default MKN value from platform is [%s].", default_mkn.c_str());
+      std::vector<string> infos = ge::StringUtils::Split(default_mkn, ',');
+      if (infos.size() != 3) {
+        return false;
+      }
+      m0_list_.fill(static_cast<uint32_t>(std::atoi(infos[kM0Index].c_str())));
+      k0_list_.fill(static_cast<uint32_t>(std::atoi(infos[kK0Index].c_str())));
+      n0_list_.fill(static_cast<uint32_t>(std::atoi(infos[kN0Index].c_str())));
+    }
+
+    std::map<std::string, std::string> m0_k0_n0_info;
+    platform_infos.GetPlatformResWithLock(kPltDtypeMKN, m0_k0_n0_info);
+    for (auto &item : m0_k0_n0_info) {
+      if (item.first == kPltDefault) {
+        continue;
+      }
+      ge::DataType dtype = ge::TypeUtils::SerialStringToDataType(item.first);
+      if (dtype == ge::DT_UNDEFINED) {
+        continue;
+      }
+      std::vector<string> infos = ge::StringUtils::Split(item.second, ',');
+      if (infos.size() != 3) {
+        continue;
+      }
+      m0_list_[static_cast<size_t>(dtype)] = static_cast<uint32_t>(std::atoi(infos[kM0Index].c_str()));
+      k0_list_[static_cast<size_t>(dtype)] = static_cast<uint32_t>(std::atoi(infos[kK0Index].c_str()));
+      n0_list_[static_cast<size_t>(dtype)] = static_cast<uint32_t>(std::atoi(infos[kN0Index].c_str()));
+    }
+    return true;
+  });
+  return true;
+}
+
 bool TransferShapeUtils::TransferShape(const ge::Format &origin_format, const ge::Format &format,
                                        const ge::DataType &data_type, const ExtAxisValue &ext_axis,
                                        gert::Shape &shape) {
+  if (!InitPlatformInfo()) {
+    GELOGW("Init platform info failed");
+  }
   GELOGD("Original format is %u, new format %u", origin_format, format);
   ge::Format primary_format = static_cast<ge::Format>(GetPrimaryFormat(format));
   ge::Format origin_primary_format = static_cast<ge::Format>(GetPrimaryFormat(origin_format));
@@ -154,16 +174,11 @@ bool TransferShapeUtils::TransferShape(const ge::Format &origin_format, const ge
   }
 
   axis_value[AXIS_C0] = GetC0Value(data_type, format);
+  axis_value[AXIS_M0] = GetM0ByDtype(data_type);
   if (primary_format == ge::FORMAT_FRACTAL_ZN_RNN || primary_format == ge::FORMAT_ND_RNN_BIAS) {
     axis_value[AXIS_INPUT_SIZE] = ext_axis[EXT_INDEX_INPUT_SIZE];
     axis_value[AXIS_HIDEEN_SIZE] = ext_axis[EXT_INDEX_HIDEEN_SIZE];
     axis_value[AXIS_STATE_SIZE] = ext_axis[EXT_INDEX_STATE_SIZE];
-  }
-
-  if (ext_axis[EXT_INDEX_M0_VAL] > 0) {
-    axis_value[AXIS_M0] = ext_axis[EXT_INDEX_M0_VAL];
-  } else {
-    axis_value[AXIS_M0] = SHAPE_NUMBER_16;
   }
 
   if (!IsNeedAxisValue(primary_format, shape.GetDimNum())) {
@@ -180,6 +195,9 @@ bool TransferShapeUtils::TransferShape(const ge::Format &origin_format, const ge
 bool TransferShapeUtils::TransferShape(const ge::Format &origin_format, const ge::Format &format,
                                        const ge::DataType &data_type, const ExtAxisValue &ext_axis,
                                        const gert::Shape &origin_shape, gert::Shape &shape) {
+  if (!InitPlatformInfo()) {
+    GELOGW("Init platform info failed");
+  }
   GELOGD("Tranfer shape from original format[%d] to format [%d].", origin_format, format);
   ge::Format primary_format = static_cast<ge::Format>(GetPrimaryFormat(format));
   ge::Format origin_primary_format = static_cast<ge::Format>(GetPrimaryFormat(origin_format));
@@ -192,8 +210,9 @@ bool TransferShapeUtils::TransferShape(const ge::Format &origin_format, const ge
   }
 
   int64_t c0 = GetC0Value(data_type, format);
+  int64_t m0 = GetM0ByDtype(data_type);
   if (!IsNeedAxisValue(primary_format, origin_shape.GetDimNum())) {
-    return TransferShapeByOriginShape(primary_format, c0, ext_axis, origin_shape, shape);
+    return TransferShapeByOriginShape(primary_format, c0, m0, ext_axis, origin_shape, shape);
   } else {
     return TransferShapeByFormatIndex(origin_primary_format, format, c0, origin_shape, shape);
   }
@@ -255,10 +274,7 @@ int64_t TransferShapeUtils::GetC0Value(const ge::DataType &data_type, const ge::
     return ge::GetC0Value(format);
   }
 
-  if (static_cast<size_t>(data_type) < kDataTypeAndC0Vec.size()) {
-    return kDataTypeAndC0Vec[static_cast<size_t>(data_type)];
-  }
-  return SHAPE_NUMBER_16;
+  return GetC0ByDtype(data_type);
 }
 
 bool TransferShapeUtils::IsNeedAxisValue(const ge::Format &format, const size_t &origin_dim_size) {
@@ -326,13 +342,13 @@ bool TransferShapeUtils::TransferShapeByAxisValue(const ge::Format &primary_form
 }
 
 bool TransferShapeUtils::TransferShapeByOriginShape(const ge::Format &primary_format,
-                                                    const int64_t &c0, const ExtAxisValue &ext_axis,
+                                                    const int64_t &c0, const int64_t &m0, const ExtAxisValue &ext_axis,
                                                     const gert::Shape &origin_shape, gert::Shape &shape) {
   switch (primary_format) {
     case ge::FORMAT_FRACTAL_Z:
       return GetFractalZShape(c0, origin_shape, shape);
     case ge::FORMAT_FRACTAL_NZ:
-      return GetFractalNzShape(ext_axis, c0, origin_shape, shape); // need c0
+      return GetFractalNzShape(c0, m0, origin_shape, shape); // need c0
     case ge::FORMAT_FRACTAL_ZN_RNN:
       return GetFractalZnRnnShape(ext_axis, c0, origin_shape, shape); // need c0, input, hidden, state
     case ge::FORMAT_ND_RNN_BIAS:
@@ -702,7 +718,7 @@ bool TransferShapeUtils::GetC1HWNCoC0Shape(const FormatIndex& format_index, cons
   shape.AppendDim(c0);
   return true;
 }
-bool TransferShapeUtils::GetFractalNzShape(const ExtAxisValue &ext_axis, const int64_t &c0,
+bool TransferShapeUtils::GetFractalNzShape(const int64_t &c0, const int64_t &m0,
                                            const gert::Shape &origin_shape, gert::Shape &shape) {
   size_t dim_size = origin_shape.GetDimNum();
   shape.SetDimNum(0);
@@ -716,12 +732,12 @@ bool TransferShapeUtils::GetFractalNzShape(const ExtAxisValue &ext_axis, const i
    * dim_size - 2 mean the second last value of original vec */
   if (dim_size < DIM_SIZE_TWO) {
     shape.AppendDim(1);
-    shape.AppendDim(DivisionCeiling(origin_shape.GetDim(dim_size - MINUS_VALUE_ONE), ext_axis[EXT_INDEX_M0_VAL]));
+    shape.AppendDim(DivisionCeiling(origin_shape.GetDim(dim_size - MINUS_VALUE_ONE), m0));
   } else {
     shape.AppendDim(DivisionCeiling(origin_shape.GetDim(dim_size - MINUS_VALUE_ONE), c0));
-    shape.AppendDim(DivisionCeiling(origin_shape.GetDim(dim_size - MINUS_VALUE_TWO), ext_axis[EXT_INDEX_M0_VAL]));
+    shape.AppendDim(DivisionCeiling(origin_shape.GetDim(dim_size - MINUS_VALUE_TWO), m0));
   }
-  shape.AppendDim(ext_axis[EXT_INDEX_M0_VAL]);
+  shape.AppendDim(m0);
   shape.AppendDim(c0);
   return true;
 }

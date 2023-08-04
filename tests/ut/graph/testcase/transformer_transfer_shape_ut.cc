@@ -495,6 +495,7 @@ TEST_F(TransformerTransferShapeUT, transfer_shape_from_nd_to_nz) {
   RunTransferShape(ge::FORMAT_ND, ge::FORMAT_FRACTAL_NZ, DT_FLOAT16, true, {-2}, {-2}, true);
   RunTransferShape(ge::FORMAT_NCHW, ge::FORMAT_FRACTAL_NZ, DT_FLOAT16, true, {8, 1000}, {63, 1, 16, 16});
 
+  transformer::TransferShapeUtils::m0_list_.fill(1);
   RunTransferShapeWithExtAxis(nullptr, ge::FORMAT_ND, ge::FORMAT_FRACTAL_NZ, DT_FLOAT16, true, {34}, {1, 34, 1, 16}, 1);
   RunTransferShapeWithExtAxis(nullptr, ge::FORMAT_ND, ge::FORMAT_FRACTAL_NZ, DT_FLOAT16, true, {34, 1}, {1, 34, 1, 16}, 1);
   RunTransferShapeWithExtAxis(nullptr, ge::FORMAT_ND, ge::FORMAT_FRACTAL_NZ, DT_FLOAT, true, {18, 34}, {3, 18, 1, 16}, 1);
@@ -511,6 +512,7 @@ TEST_F(TransformerTransferShapeUT, transfer_shape_from_nd_to_nz) {
   RunTransferShapeWithExtAxis(nullptr, ge::FORMAT_ND, ge::FORMAT_FRACTAL_NZ, DT_INT2, true, {1, 18, 134}, {1, 2, 18, 1, 128}, 1);
   RunTransferShapeWithExtAxis(nullptr, ge::FORMAT_ND, ge::FORMAT_FRACTAL_NZ, DT_INT4, true, {1, 18, 134}, {1, 3, 18, 1, 64}, 1);
   RunTransferShapeWithExtAxis(nullptr, ge::FORMAT_NCHW, ge::FORMAT_FRACTAL_NZ, DT_FLOAT16, true, {8, 1000}, {63, 8, 1, 16}, 1);
+  transformer::TransferShapeUtils::m0_list_.fill(16);
 }
 
 TEST_F(TransformerTransferShapeUT, transfer_shape_from_nd_to_fz) {
