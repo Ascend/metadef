@@ -38,13 +38,6 @@ std::vector<std::string> TestTraceFunc2(const gert::KernelContext *) {
 KernelStatus TestFunc2(gert::KernelContext *) {
  return 0;
 }
-
-ge::graphStatus ProfilingInfoFillerTest(const gert::KernelContext *, gert::ProfilingInfoWrapper &) { return 0; }
-
-ge::graphStatus DataDumpInfoFillerTest(const gert::KernelContext *, gert::DataDumpInfoWrapper &) { return 0; }
-
-ge::graphStatus ExceptionDumpInfoFillerTest(const gert::KernelContext *, gert::ExceptionDumpInfoWrapper &) { return 0; }
-
 class FakeRegistry : public gert::KernelRegistry {
 public:
  const KernelFuncs *FindKernelFuncs(const std::string &kernel_type) const override {
@@ -108,28 +101,19 @@ TEST_F(KernelRegistryTest, RegisterKernel_Success_Register_Multiple) {
  REGISTER_KERNEL(KernelRegistryTest2)
      .RunFunc(TestFunc2)
      .OutputsCreatorFunc(TestFuncCreator2)
-     .TracePrinter(TestTraceFunc2)
-     .ProfilingInfoFiller(ProfilingInfoFillerTest)
-     .DataDumpInfoFiller(DataDumpInfoFillerTest)
-     .ExceptionDumpInfoFiller(ExceptionDumpInfoFillerTest);
+     .TracePrinter(TestTraceFunc2);
 
  auto funcs = gert::KernelRegistry::GetInstance().FindKernelFuncs("KernelRegistryTest1");
  ASSERT_NE(funcs, nullptr);
  EXPECT_EQ(funcs->run_func, &TestFunc1);
  EXPECT_EQ(funcs->outputs_creator_func, &TestFuncCreator);
  EXPECT_EQ(funcs->trace_printer, &TestTraceFunc);
- EXPECT_EQ(funcs->profiling_info_filler, nullptr);
- EXPECT_EQ(funcs->data_dump_info_filler, nullptr);
- EXPECT_EQ(funcs->exception_dump_info_filler, nullptr);
 
  funcs = gert::KernelRegistry::GetInstance().FindKernelFuncs("KernelRegistryTest2");
  ASSERT_NE(funcs, nullptr);
  EXPECT_EQ(funcs->run_func, &TestFunc2);
  EXPECT_EQ(funcs->outputs_creator_func, &TestFuncCreator2);
  EXPECT_EQ(funcs->trace_printer, &TestTraceFunc2);
- EXPECT_EQ(funcs->profiling_info_filler, &ProfilingInfoFillerTest);
- EXPECT_EQ(funcs->data_dump_info_filler, &DataDumpInfoFillerTest);
- EXPECT_EQ(funcs->exception_dump_info_filler, &ExceptionDumpInfoFillerTest);
 }
 TEST_F(KernelRegistryTest, RegisterKernel_RegisterOk_SelfDefinedRegistry) {
  // SetUp 中已经是SelfDefinedRegistry了
