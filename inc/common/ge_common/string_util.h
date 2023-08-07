@@ -93,15 +93,15 @@ class GE_FUNC_VISIBILITY StringUtils {
 
   template<typename Iterator>
   static std::string Join(Iterator begin, Iterator end, const std::string &separator) {
-    static const std::string kEmptySeparator;
-    std::string result;
-    const std::string *sep = &kEmptySeparator;
-    for (Iterator it = begin; it != end; ++it) {
-      (void)result.append(*sep);
-      sep = &separator;
-      (void)result.append(*it);
+    if (begin == end) {
+      return "";
     }
-    return result;
+    std::stringstream str_stream;
+    str_stream << *begin;
+    for (Iterator it = std::next(begin); it != end; ++it) {
+      str_stream << separator << *it;
+    }
+    return str_stream.str();
   }
 
   ///

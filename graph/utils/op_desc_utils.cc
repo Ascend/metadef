@@ -1109,15 +1109,5 @@ ge::graphStatus OpDescUtils::GetInputIrIndexByInstanceIndex(const OpDescPtr &op_
          op_desc->GetName().c_str(), op_desc->GetType().c_str(), instance_index, input_index, ir_index);
   return GRAPH_SUCCESS;
 }
-
-std::string OpDescUtils::GetOpType(const OpDescPtr &op_desc) {
-  if (op_desc->GetType() != FRAMEWORKOP) {
-    return op_desc->GetType();
-  }
-
-  std::string type;
-  (void) AttrUtils::GetStr(op_desc, ATTR_NAME_FRAMEWORK_ORIGINAL_TYPE, type);
-  return type;
-}
 }  // namespace ge
 /*lint +e512 +e737 +e752*/

@@ -104,8 +104,6 @@ class OpDescUtils {
   static ge::graphStatus GetInstanceNum(const OpDescPtr &op_desc, size_t ir_index, size_t start_index,
                                         const std::map<uint32_t, std::string> &valid_index_2_names,
                                         size_t &instance_num);
-  static std::string GetOpType(const OpDescPtr &op_desc);
-
  private:
   static GeTensorPtr MutableWeights(ge::OpDesc& op_desc);
   static GeTensorPtr MutableWeights(const ge::OpDescPtr op_desc);

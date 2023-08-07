@@ -39,9 +39,9 @@ namespace ge
 TEST_F(UtestErrorManager, Init_faild) {
   auto &instance = ErrorManager::GetInstance();
   EXPECT_EQ(instance.Init(""), -1);
-  instance.is_init_ = true;
-  EXPECT_EQ(instance.Init(""), -1);
   EXPECT_EQ(instance.Init(), -1);
+  instance.is_init_ = true;
+  EXPECT_EQ(instance.Init(""), 0);
 }
 
 TEST_F(UtestErrorManager, FormatErrorMessage) {
