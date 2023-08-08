@@ -2218,6 +2218,17 @@ TEST_F(UtestOperater, DynamicInputRegister_Success_InsertStrDynamicInput) {
   EXPECT_EQ(op_desc->GetInputIndexByName("y"), 3);
   EXPECT_EQ(op_desc->GetInputIndexByName("z"), 4);
 }
+TEST_F(UtestOperater, DynamicInputRegister_Success_DuplicateIrInput) {
+  Operator op("Op", "Op");
+  op.InputRegister(std::string("x"));
+  auto op_desc = OpDescUtils::GetOpDescFromOperator(op);
+  ASSERT_NE(op_desc, nullptr);
+  ASSERT_EQ(op_desc->GetIrInputsSize(), 1);
+
+  op.DynamicInputRegister(std::string("x"), 0, true);
+  op_desc = OpDescUtils::GetOpDescFromOperator(op);
+  ASSERT_EQ(op_desc->GetIrInputsSize(), 1);
+}
 TEST_F(UtestOperater, GetDynamicInputNum_Success) {
   Operator op("Op", "Op");
   op.DynamicInputRegister("x", 5);
@@ -2243,6 +2254,19 @@ TEST_F(UtestOperater, DynamicOutputRegister_Success) {
   EXPECT_EQ(op_desc->GetOutputIndexByName("y0"), 2);
   EXPECT_EQ(op_desc->GetOutputIndexByName("y1"), 3);
   EXPECT_EQ(op_desc->GetOutputIndexByName("y2"), 4);
+}
+TEST_F(UtestOperater, DynamicOutputRegister_duplicate_ir_output_Success) {
+  Operator op("Op", "Op");
+  op.DynamicOutputRegister("y", 0, true);
+  auto op_desc = OpDescUtils::GetOpDescFromOperator(op);
+  ASSERT_NE(op_desc, nullptr);
+  ASSERT_EQ(op_desc->GetIrOutputs().size(), 1);
+
+  // register duplicated
+  op.DynamicOutputRegister("y", 0, true);
+  op_desc = OpDescUtils::GetOpDescFromOperator(op);
+  ASSERT_NE(op_desc, nullptr);
+  ASSERT_EQ(op_desc->GetIrOutputs().size(), 1);
 }
 TEST_F(UtestOperater, GetDynamicOutputNum_Success) {
   Operator op("Op", "Op");

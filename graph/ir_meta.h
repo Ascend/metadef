@@ -29,6 +29,24 @@ namespace ge {
  *  IR信息
  */
 class IRMetaData {
+  struct IrInputs {
+    void AppendIrInput(const std::string &name, IrInputType input_type) {
+      if (ir_input_names.insert(name).second) {
+        ir_inputs.emplace_back(name, input_type);
+      }
+    }
+    std::unordered_set<std::string> ir_input_names;
+    std::vector<std::pair<std::string, IrInputType>> ir_inputs;
+  };
+  struct IrOutputs {
+    void AppendIrOutput(const std::string &name, IrOutputType output_type) {
+      if (ir_output_names.insert(name).second) {
+        ir_outputs.emplace_back(name, output_type);
+      }
+    }
+    std::unordered_set<std::string> ir_output_names;
+    std::vector<std::pair<std::string, IrOutputType>> ir_outputs;
+  };
  public:
   explicit IRMetaData(const std::string &op_name) : op_name_(op_name) {};
   IRMetaData() = default;
@@ -70,8 +88,8 @@ class IRMetaData {
  private:
   bool IsOutputSymbolValid(const std::string &output_symbol) const;
   std::string op_name_;
-  std::vector<std::pair<std::string, IrInputType>> ir_inputs_;
-  std::vector<std::pair<std::string, IrOutputType>> ir_outputs_;
+  IrInputs ir_inputs_;
+  IrOutputs ir_outputs_;
   std::vector<std::string> register_input_name_; // todo need to deprecate
   std::set<std::string> optional_input_names_; // todo need to deprecate
   std::vector<std::string> register_output_name_;

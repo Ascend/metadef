@@ -53,13 +53,13 @@ TEST_F(IrDefinitionsRecoverUT, RecoverIrDefinitions_ir_inputs_not_match_failed) 
   auto op_desc_origin = ge::OpDescUtils::GetOpDescFromOperator(op);
 
   op_desc->impl_->meta_data_.ir_meta_.ir_attr_names_ = op_desc_origin->GetIrAttrNames();
-  op_desc->impl_->meta_data_.ir_meta_.ir_inputs_ = op_desc_origin->GetIrInputs();
-  ASSERT_FALSE(op_desc->impl_->meta_data_.ir_meta_.ir_inputs_.empty());
+  op_desc->impl_->meta_data_.ir_meta_.ir_inputs_.ir_inputs = op_desc_origin->GetIrInputs();
+  ASSERT_FALSE(op_desc->impl_->meta_data_.ir_meta_.ir_inputs_.ir_inputs.empty());
   ASSERT_FALSE(op_desc->impl_->meta_data_.ir_meta_.ir_attr_names_.empty());
-  op_desc->impl_->meta_data_.ir_meta_.ir_inputs_[0].first = "fake";
+  op_desc->impl_->meta_data_.ir_meta_.ir_inputs_.ir_inputs[0].first = "fake";
   auto ret = RecoverIrDefinitions(computeGraph);
   EXPECT_NE(ret, ge::GRAPH_SUCCESS);
-  EXPECT_EQ(op_desc->impl_->meta_data_.ir_meta_.ir_inputs_[0].first,  "fake");
+  EXPECT_EQ(op_desc->impl_->meta_data_.ir_meta_.ir_inputs_.ir_inputs[0].first,  "fake");
 }
 
 TEST_F(IrDefinitionsRecoverUT, RecoverIrDefinitions_ir_inputs_num_check_failed) {
@@ -71,10 +71,10 @@ TEST_F(IrDefinitionsRecoverUT, RecoverIrDefinitions_ir_inputs_num_check_failed) 
 
   auto op = ge::OperatorFactory::CreateOperator("MatMulUt", "MatMulUt");
   auto op_desc_origin = ge::OpDescUtils::GetOpDescFromOperator(op);
-  op_desc->impl_->meta_data_.ir_meta_.ir_inputs_.emplace_back(std::pair<std::string, IrInputType>("fake", kIrInputRequired));
+  op_desc->impl_->meta_data_.ir_meta_.ir_inputs_.ir_inputs.emplace_back(std::pair<std::string, IrInputType>("fake", kIrInputRequired));
   auto ret = RecoverIrDefinitions(computeGraph);
   EXPECT_NE(ret, ge::GRAPH_SUCCESS);
-  EXPECT_EQ(op_desc->impl_->meta_data_.ir_meta_.ir_inputs_[0].first,  "fake");
+  EXPECT_EQ(op_desc->impl_->meta_data_.ir_meta_.ir_inputs_.ir_inputs[0].first,  "fake");
 }
 
 TEST_F(IrDefinitionsRecoverUT, RecoverIrDefinitions_ir_attr_name_not_match_failed) {
@@ -221,13 +221,13 @@ TEST_F(IrDefinitionsRecoverUT, RecoverIrDefinitions_ir_outputs_not_match_failed)
   auto op_desc_origin = ge::OpDescUtils::GetOpDescFromOperator(op);
 
   op_desc->impl_->meta_data_.ir_meta_.ir_attr_names_ = op_desc_origin->GetIrAttrNames();
-  op_desc->impl_->meta_data_.ir_meta_.ir_outputs_ = op_desc_origin->GetIrOutputs();
-  ASSERT_FALSE(op_desc->impl_->meta_data_.ir_meta_.ir_outputs_.empty());
+  op_desc->impl_->meta_data_.ir_meta_.ir_outputs_.ir_outputs = op_desc_origin->GetIrOutputs();
+  ASSERT_FALSE(op_desc->impl_->meta_data_.ir_meta_.ir_outputs_.ir_outputs.empty());
   ASSERT_FALSE(op_desc->impl_->meta_data_.ir_meta_.ir_attr_names_.empty());
-  op_desc->impl_->meta_data_.ir_meta_.ir_outputs_[0].first = "fake";
+  op_desc->impl_->meta_data_.ir_meta_.ir_outputs_.ir_outputs[0].first = "fake";
   auto ret = RecoverIrDefinitions(computeGraph);
   EXPECT_NE(ret, ge::GRAPH_SUCCESS);
-  EXPECT_EQ(op_desc->impl_->meta_data_.ir_meta_.ir_outputs_[0].first,  "fake");
+  EXPECT_EQ(op_desc->impl_->meta_data_.ir_meta_.ir_outputs_.ir_outputs[0].first,  "fake");
 }
 
 TEST_F(IrDefinitionsRecoverUT, RecoverIrDefinitions_ir_outputs_num_check_failed) {
@@ -239,10 +239,10 @@ TEST_F(IrDefinitionsRecoverUT, RecoverIrDefinitions_ir_outputs_num_check_failed)
 
   auto op = ge::OperatorFactory::CreateOperator("MatMulUt", "MatMulUt");
   auto op_desc_origin = ge::OpDescUtils::GetOpDescFromOperator(op);
-  op_desc->impl_->meta_data_.ir_meta_.ir_outputs_.emplace_back(std::pair<std::string, IrOutputType>("fake", kIrOutputRequired));
+  op_desc->impl_->meta_data_.ir_meta_.ir_outputs_.ir_outputs.emplace_back(std::pair<std::string, IrOutputType>("fake", kIrOutputRequired));
   auto ret = RecoverIrDefinitions(computeGraph);
   EXPECT_NE(ret, ge::GRAPH_SUCCESS);
-  EXPECT_EQ(op_desc->impl_->meta_data_.ir_meta_.ir_outputs_[0].first,  "fake");
+  EXPECT_EQ(op_desc->impl_->meta_data_.ir_meta_.ir_outputs_.ir_outputs[0].first,  "fake");
 }
 
 } // namespace gert
