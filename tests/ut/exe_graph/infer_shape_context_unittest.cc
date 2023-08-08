@@ -18,6 +18,7 @@
 #include <gtest/gtest.h>
 #include "faker/kernel_run_context_faker.h"
 #include "exe_graph/runtime/storage_shape.h"
+#include "register/kernel_registry.h"
 namespace gert {
 class InferShapeContextUT : public testing::Test {};
 TEST_F(InferShapeContextUT, GetInputShapeOk) {

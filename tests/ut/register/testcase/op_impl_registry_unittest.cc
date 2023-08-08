@@ -88,7 +88,7 @@ TEST_F(OpImplRegistryUT, Register_Success_RegisterAll) {
   EXPECT_EQ(funcs->infer_shape, &TestInferShapeFunc1);
   EXPECT_EQ(funcs->tiling, &TestTilingFunc1);
   EXPECT_EQ(funcs->max_tiling_data_size, 2048);
-  EXPECT_EQ(funcs->tiling_parse, reinterpret_cast<gert::KernelRegistry::KernelFunc>(&TestTilingParseFunc1));
+  EXPECT_EQ(funcs->tiling_parse, reinterpret_cast<gert::OpImplKernelRegistry::KernelFunc>(&TestTilingParseFunc1));
   EXPECT_NE(funcs->compile_info_creator, nullptr);
   EXPECT_NE(funcs->compile_info_deleter, nullptr);
   EXPECT_EQ(funcs->infer_shape_range, &TestInferShapeRangeFunc1);
@@ -155,7 +155,7 @@ TEST_F(OpImplRegistryUT, Register_Success_RegisterMultiple) {
   ASSERT_NE(funcs, nullptr);
   EXPECT_EQ(funcs->infer_shape, &TestInferShapeFunc1);
   EXPECT_EQ(funcs->tiling, &TestTilingFunc1);
-  EXPECT_EQ(funcs->tiling_parse, reinterpret_cast<gert::KernelRegistry::KernelFunc>(&TestTilingParseFunc1));
+  EXPECT_EQ(funcs->tiling_parse, reinterpret_cast<gert::OpImplKernelRegistry::KernelFunc>(&TestTilingParseFunc1));
   EXPECT_NE(funcs->compile_info_creator, nullptr);
   EXPECT_NE(funcs->compile_info_deleter, nullptr);
 
@@ -163,7 +163,7 @@ TEST_F(OpImplRegistryUT, Register_Success_RegisterMultiple) {
   ASSERT_NE(funcs, nullptr);
   EXPECT_EQ(funcs->infer_shape, &TestInferShapeFunc2);
   EXPECT_EQ(funcs->tiling, &TestTilingFunc2);
-  EXPECT_EQ(funcs->tiling_parse, reinterpret_cast<gert::KernelRegistry::KernelFunc>(&TestTilingParseFunc2));
+  EXPECT_EQ(funcs->tiling_parse, reinterpret_cast<gert::OpImplKernelRegistry::KernelFunc>(&TestTilingParseFunc2));
   EXPECT_NE(funcs->compile_info_creator, nullptr);
   EXPECT_NE(funcs->compile_info_deleter, nullptr);
   EXPECT_EQ(funcs->infer_shape_range, &TestInferShapeRangeFunc2);
@@ -204,7 +204,7 @@ TEST_F(OpImplRegistryUT, Register_MergeOk_OneOpMultipleTimes1) {
   EXPECT_EQ(funcs->infer_shape, &TestInferShapeFunc1);
   EXPECT_EQ(funcs->tiling, &TestTilingFunc1);
   EXPECT_EQ(funcs->max_tiling_data_size, 2048);
-  EXPECT_EQ(funcs->tiling_parse, reinterpret_cast<gert::KernelRegistry::KernelFunc>(&TestTilingParseFunc1));
+  EXPECT_EQ(funcs->tiling_parse, reinterpret_cast<gert::OpImplKernelRegistry::KernelFunc>(&TestTilingParseFunc1));
   EXPECT_NE(funcs->compile_info_creator, nullptr);
   EXPECT_NE(funcs->compile_info_deleter, nullptr);
   EXPECT_EQ(funcs->infer_shape_range, &TestInferShapeRangeFunc1);
@@ -267,7 +267,7 @@ TEST_F(OpImplRegistryUT, Register_MergeOk_OneOpMultipleTimes2) {
   EXPECT_EQ(funcs->infer_shape, &TestInferShapeFunc1);
   EXPECT_EQ(funcs->tiling, &TestTilingFunc1);
   EXPECT_EQ(funcs->max_tiling_data_size, 2048);
-  EXPECT_EQ(funcs->tiling_parse, reinterpret_cast<gert::KernelRegistry::KernelFunc>(&TestTilingParseFunc1));
+  EXPECT_EQ(funcs->tiling_parse, reinterpret_cast<gert::OpImplKernelRegistry::KernelFunc>(&TestTilingParseFunc1));
   EXPECT_NE(funcs->compile_info_creator, nullptr);
   EXPECT_NE(funcs->compile_info_deleter, nullptr);
   EXPECT_EQ(funcs->infer_shape_range, &TestInferShapeRangeFunc1);

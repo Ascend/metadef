@@ -217,6 +217,7 @@ if [[ "X$ENABLE_METADEF_UT" = "Xon" || "X$ENABLE_METADEF_COV" = "Xon" ]]; then
         -d ${BUILD_RELATIVE_PATH}/graph/CMakeFiles/flow_graph.dir \
         -d ${BUILD_RELATIVE_PATH}/graph/CMakeFiles/graph_base.dir \
         -d ${BUILD_RELATIVE_PATH}/register/CMakeFiles/register.dir/ \
+        -d ${BUILD_RELATIVE_PATH}/register/CMakeFiles/rt2_registry_objects.dir/ \
         -d ${BUILD_RELATIVE_PATH}/error_manager/CMakeFiles/error_manager.dir/ \
         -d ${BUILD_RELATIVE_PATH}/exe_graph/CMakeFiles/exe_graph.dir/ \
         -d ${BUILD_RELATIVE_PATH}/tests/ut/exe_graph/CMakeFiles/ut_exe_graph.dir \
