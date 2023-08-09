@@ -97,6 +97,28 @@ KernelRegisterV2 &KernelRegisterV2::TracePrinter(KernelRegistry::TracePrinter fu
   }
   return *this;
 }
+
+KernelRegisterV2 &KernelRegisterV2::ProfilingInfoFiller(KernelRegistry::ProfilingInfoFiller func) {
+  if (register_data_ != nullptr) {
+    register_data_->GetFuncs().profiling_info_filler = func;
+  }
+  return *this;
+}
+
+KernelRegisterV2 &KernelRegisterV2::DataDumpInfoFiller(KernelRegistry::DataDumpInfoFiller func) {
+  if (register_data_ != nullptr) {
+    register_data_->GetFuncs().data_dump_info_filler = func;
+  }
+  return *this;
+}
+
+KernelRegisterV2 &KernelRegisterV2::ExceptionDumpInfoFiller(KernelRegistry::ExceptionDumpInfoFiller func) {
+  if (register_data_ != nullptr) {
+    register_data_->GetFuncs().exception_dump_info_filler = func;
+  }
+  return *this;
+}
+
 KernelRegisterV2::KernelRegisterV2(const KernelRegisterV2 &other) : register_data_(nullptr) {
   const auto register_data = other.register_data_.get();
   if (register_data == nullptr) {
