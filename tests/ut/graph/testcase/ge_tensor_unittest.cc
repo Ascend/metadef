@@ -435,3 +435,39 @@ TEST_F(UtestGeTensor, GetOriginFormatFromDescProto_GetFullOriginFormat_Serialize
   GeTensorSerializeUtils::GetOriginFormatFromDescProto(&desc_proto, origin_format_result);
   EXPECT_EQ(origin_format_result, origin_format);
 }
+
+TEST_F(UtestGeTensor, test_tensor_data_invalid) {
+  std::vector<GeTensor> ge_tensor(2U);
+  for (size_t i = 0U; i < ge_tensor.size(); ++i) {
+    const static ge::Tensor::DeleteFunc kDoNothing = [](uint8_t *data) {};
+    ge_tensor[i].SetData(nullptr, 0U, kDoNothing);
+    EXPECT_EQ(ge_tensor[i].IsTensorDataValid(), false);
+  }
+
+  for (size_t i = 0U; i < ge_tensor.size(); ++i) {
+    static const uint8_t tmp[] = {0, 0, 0, 0};
+    ge_tensor[i].SetData(tmp, sizeof(tmp));
+    EXPECT_EQ(ge_tensor[i].IsTensorDataValid(), true);
+  }
+}
+
+TEST_F(UtestGeTensor, test_ge_tensor_desc) {
+  GeTensorDesc a;
+  GeShape shape({1, 2, 3, 4, 16});
+  GeShape ori_shape({1, 32, 3, 4});
+  GeTensorDesc b(shape, FORMAT_NC1HWC0);
+  b.SetOriginShape(ori_shape);
+
+  GeShape ret_ori =  b.GetOriginShape();
+  EXPECT_EQ(ret_ori.GetDimNum(), ori_shape.GetDimNum());
+  for (size_t i = 0U; i < ret_ori.GetDimNum(); ++i) {
+    EXPECT_EQ(ret_ori.GetDim(i), ori_shape.GetDim(i));
+  }
+  GeShape ori_shape2({3, 4});
+  b.MutableOriginShape() = ori_shape2;
+  GeShape ret_ori2 =  b.GetOriginShape();
+  EXPECT_EQ(ret_ori2.GetDimNum(), ori_shape2.GetDimNum());
+  for (size_t i = 0U; i < ret_ori2.GetDimNum(); ++i) {
+    EXPECT_EQ(ret_ori2.GetDim(i), ori_shape2.GetDim(i));
+  }
+}

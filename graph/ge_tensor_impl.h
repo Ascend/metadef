@@ -257,6 +257,7 @@ class TensorDataImpl {
   size_t GetSize() const;
   const uint8_t *GetData() const;
   uint8_t *GetData();
+  bool IsTensorDataValid() const;
 
   void clear();
 
@@ -310,6 +311,7 @@ class GeTensorImpl {
   std::shared_ptr<AlignedPtr> GetAlignedPtr() const;
   const TensorData &GetData() const { return tensor_data_; }
   TensorData &MutableData() { return tensor_data_; }
+  bool IsTensorDataValid() const;
   // zero copy SetData
   void SetData(std::shared_ptr<AlignedPtr> aligned_ptr, const size_t size) {
     tensor_data_.SetData(std::move(aligned_ptr), size);

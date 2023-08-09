@@ -127,6 +127,7 @@ class GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY GeTensorDesc : public AttrH
   graphStatus GetOriginShapeRange(std::vector<std::pair<int64_t, int64_t>> &range) const;
 
   const GeShape &GetOriginShape() const;
+  GeShape &MutableOriginShape();
 
   void SetOriginShape(const GeShape &origin_shape);
   bool IsOriginShapeInitialized() const;
@@ -183,6 +184,7 @@ class GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY GeTensorDesc : public AttrH
   GeTensorDescImplPtr impl_;
 
   GeShape &ShapeReference() const;
+  GeShape &OriginShapeReference() const;
 };
 
 class GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY TensorData {
@@ -208,6 +210,7 @@ class GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY TensorData {
   std::size_t GetSize() const;
   const std::uint8_t *GetData() const;
   std::uint8_t *GetData();
+  bool IsTensorDataValid() const;
 
   const std::shared_ptr<AlignedPtr> &GetAlignedPtr();
 
@@ -250,6 +253,8 @@ class GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY GeTensor {
 
   const TensorData &GetData() const;
   TensorData &MutableData();
+
+  bool IsTensorDataValid() const;
 
   graphStatus SetData(std::vector<uint8_t> &&data);
   graphStatus SetData(const std::vector<uint8_t> &data);
