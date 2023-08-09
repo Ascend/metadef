@@ -19,7 +19,7 @@
 #include <string>
 #include <unordered_set>
 #include "graph/ge_error_codes.h"
-#include "kernel_registry.h"
+#include "exe_graph/runtime/base_type.h"
 #include "exe_graph/runtime/infer_shape_context.h"
 #include "exe_graph/runtime/infer_shape_range_context.h"
 #include "exe_graph/runtime/tiling_context.h"
@@ -41,6 +41,7 @@ struct OpImplKernelRegistry {
   using PrivateAttrSet = std::unordered_set<ge::AscendString>;
   using CompileInfoCreatorFunc = void *(*)();
   using CompileInfoDeleterFunc = void (*)(void *);
+  using KernelFunc = UINT32 (*)(KernelContext *context);
 
   struct OpImplFunctions {
     bool HasDataDependency() const {
@@ -67,7 +68,7 @@ struct OpImplKernelRegistry {
     InferShapeRangeKernelFunc infer_shape_range;
     InferDataTypeKernelFunc infer_datatype;
     TilingKernelFunc tiling;
-    KernelRegistry::KernelFunc tiling_parse;
+    KernelFunc tiling_parse;
     CompileInfoCreatorFunc compile_info_creator;
     CompileInfoDeleterFunc compile_info_deleter;
     size_t max_tiling_data_size = 0;

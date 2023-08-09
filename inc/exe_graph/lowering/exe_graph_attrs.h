@@ -70,5 +70,8 @@ constexpr const ge::char_t *kSpaceRegistry = "SpaceRegistry";
 
 // 打在exe graph上，保存om_path的string
 constexpr const ge::char_t *kOmPath = "OmPath";
+
+// 打在exe graph上，保存外置权重文件目录的string
+constexpr const ge::char_t *kExternalFileConstantDir = "ExternalFileConstantDir";
 }  // namespace gert
 #endif  // AIR_CXX_RUNTIME_V2_METADEF_EXE_GRAPH_EXE_GRAPH_ATTRS_H_

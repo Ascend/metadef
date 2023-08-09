@@ -190,7 +190,7 @@ OpImplRegisterV2::OpImplRegisterV2(const OpImplRegisterV2 &register_data) {
 OpImplRegisterV2::OpImplRegisterV2(OpImplRegisterV2 &&register_data) noexcept {
   RegisterOpImplToRegistry(register_data.impl_.get());
 }
-OpImplRegisterV2 &OpImplRegisterV2::TilingParse(KernelRegistry::KernelFunc tiling_parse_func,
+OpImplRegisterV2 &OpImplRegisterV2::TilingParse(OpImplKernelRegistry::KernelFunc tiling_parse_func,
                                                 OpImplKernelRegistry::CompileInfoCreatorFunc creator_func,
                                                 OpImplKernelRegistry::CompileInfoDeleterFunc deleter_func) {
   if (impl_ != nullptr) {

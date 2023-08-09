@@ -22,7 +22,6 @@
 #include "runtime_attrs.h"
 #include "extended_kernel_context.h"
 #include "graph/inference_context.h"
-#include "register/kernel_registry.h"
 namespace gert {
 /**
  * 在节点输入后的扩展输入的索引，若需要扩展，请新增枚举类型

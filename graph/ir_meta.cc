@@ -26,10 +26,10 @@ const std::vector<std::string> &IRMetaData::GetIrAttrNames() const {
   return ir_attr_names_;
 }
 void IRMetaData::AppendIrInput(std::string name, IrInputType input_type) {
-  ir_inputs_.emplace_back(std::move(name), input_type);
+  ir_inputs_.AppendIrInput(std::move(name), input_type);
 }
 const std::vector<std::pair<std::string, IrInputType>> &IRMetaData::GetIrInputs() const {
-  return ir_inputs_;
+  return ir_inputs_.ir_inputs;
 }
 graphStatus IRMetaData::AddRegisterInputName(const std::string &name) {
   if (register_unique_name_.insert(name).second) {
@@ -109,7 +109,7 @@ std::set<std::string> IRMetaData::GetOptionalInputName() const {
 }
 
 IrInputType IRMetaData::GetIrInputType(const string &name) const {
-  for (const auto &name_2_type : ir_inputs_) {
+  for (const auto &name_2_type : ir_inputs_.ir_inputs) {
     if (name == name_2_type.first) {
       return name_2_type.second;
     }
@@ -118,11 +118,11 @@ IrInputType IRMetaData::GetIrInputType(const string &name) const {
 }
 
 void IRMetaData::AppendIrOutput(std::string name, IrOutputType output_type) {
-  ir_outputs_.emplace_back(std::move(name), output_type);
+  ir_outputs_.AppendIrOutput(std::move(name), output_type);
 }
 
 const std::vector<std::pair<std::string, IrOutputType>> &IRMetaData::GetIrOutputs() const {
-  return ir_outputs_;
+  return ir_outputs_.ir_outputs;
 }
 
 bool IRMetaData::IsOutputSymbolValid(const std::string &output_symbol) const {
@@ -147,7 +147,7 @@ bool IRMetaData::IsOutputSymbolValid(const std::string &output_symbol) const {
 }
 
 graphStatus IRMetaData::VerifyDataTypeSymbol() const {
-  for (const auto &output_2_type : ir_outputs_) {
+  for (const auto &output_2_type : ir_outputs_.ir_outputs) {
     const auto &output_name = output_2_type.first;
     const auto &output_symbol = dtype_symbol_store_.GetOutputDataTypeSymbol(output_name);
     if (output_symbol.empty()) {
