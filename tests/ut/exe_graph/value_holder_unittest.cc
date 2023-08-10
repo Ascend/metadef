@@ -1169,9 +1169,10 @@ TEST_F(ValueHolderUt, ConnectFromAncestor_InnerDataWithGuarderOutside) {
   auto subgraph = sub_frame->GetExeGraph();
   ASSERT_NE(subgraph, nullptr);
   auto innerdata_node = subgraph->FindFirstNodeMatchType("InnerData");
-  bool is_guarder_outside = false;
-  (void) ge::AttrUtils::GetBool(innerdata_node->GetOpDesc(), kNodeWithGuarderOutside, is_guarder_outside);
-  EXPECT_EQ(is_guarder_outside, true);
+  std::string guarder_type_outside;
+  (void) ge::AttrUtils::GetStr(innerdata_node->GetOpDesc(), kNodeWithGuarderOutside, guarder_type_outside);
+  EXPECT_EQ(!guarder_type_outside.empty(), true);
+  EXPECT_EQ(guarder_type_outside, "FreeMemory");
 }
 
 TEST_F(ValueHolderUt, ConnectFromAncestor_InnerDataWithGuarderOutside_In_Subgraph_Nesting) {
@@ -1179,7 +1180,7 @@ TEST_F(ValueHolderUt, ConnectFromAncestor_InnerDataWithGuarderOutside_In_Subgrap
   auto data1 = ValueHolder::CreateFeed(1);
   auto data2 = ValueHolder::CreateFeed(2);
   auto foo = ValueHolder::CreateSingleDataOutput("Foo", {data0});
-  auto data2_guarder = ValueHolder::CreateVoidGuarder("FreeMemory", data2, {});
+  auto data2_guarder = ValueHolder::CreateVoidGuarder("FreeFftsMem", data2, {});
 
   ValueHolder::PushGraphFrame(foo, "Foo");
   auto sub_foo = ValueHolder::CreateSingleDataOutput("SubFoo", {data1});
@@ -1191,9 +1192,10 @@ TEST_F(ValueHolderUt, ConnectFromAncestor_InnerDataWithGuarderOutside_In_Subgrap
   auto sub_sub_graph = sub_sub_frame->GetExeGraph();
 
   auto innerdata_node = sub_sub_graph->FindFirstNodeMatchType("InnerData");
-  bool is_guarder_outside = false;
-  (void) ge::AttrUtils::GetBool(innerdata_node->GetOpDesc(), kNodeWithGuarderOutside, is_guarder_outside);
-  EXPECT_EQ(is_guarder_outside, true);
+  std::string guarder_type_outside;
+  (void) ge::AttrUtils::GetStr(innerdata_node->GetOpDesc(), kNodeWithGuarderOutside, guarder_type_outside);
+  EXPECT_EQ(!guarder_type_outside.empty(), true);
+  EXPECT_EQ(guarder_type_outside, "FreeFftsMem");
 }
 
 /*
