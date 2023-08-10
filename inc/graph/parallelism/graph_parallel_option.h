@@ -65,6 +65,12 @@ struct OptimizerOffloadGraphOption {
   std::string offload_path; // NVME path, reserved
 };
 
+struct EngineParallelOption {
+  bool is_enabled = false;
+  bool is_auto = false;
+  std::string config_path;  // used if is_auto == true
+};
+
 struct GraphParallelOption {
   bool auto_deploy = false;
   std::string opt_level;
@@ -74,6 +80,7 @@ struct GraphParallelOption {
   TensorShardingOption tensor_sharding_option;
   PipelineParallelOption pipeline_parallel_option;
   OptimizerOffloadGraphOption optimizer_offload_option;
+  EngineParallelOption engine_parallel_option;
 };
 }  // namespace ge
 

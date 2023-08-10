@@ -773,6 +773,10 @@ GeShape &GeTensorDesc::ShapeReference() const {
   return impl_->ShapeReference();
 }
 
+GeShape &GeTensorDesc::OriginShapeReference() const {
+  return impl_->OriginShapeReference();
+}
+
 ProtoAttrMap &GeTensorDesc::MutableAttrMap() {
   return impl_->MutableAttrMap();
 }
@@ -880,6 +884,10 @@ graphStatus GeTensorDesc::GetOriginShapeRange(std::vector<std::pair<int64_t, int
 
 const GeShape &GeTensorDesc::GetOriginShape() const {
   return impl_->OriginShapeReference();
+}
+
+GeShape &GeTensorDesc::MutableOriginShape() {
+  return OriginShapeReference();
 }
 
 void GeTensorDesc::SetOriginShape(const GeShape &origin_shape) {
@@ -1099,6 +1107,10 @@ uint8_t *TensorDataImpl::GetData() {
   return aligned_ptr_->MutableGet();
 }
 
+bool TensorDataImpl::IsTensorDataValid() const {
+  return !((length_ == 0UL) && (GetData() == PtrToPtr<uint32_t, uint8_t>(&invalid_data_)));
+}
+
 void TensorDataImpl::clear() {
   aligned_ptr_.reset();
   length_ = 0UL;
@@ -1158,6 +1170,10 @@ const uint8_t *TensorData::GetData() const {
 
 uint8_t *TensorData::GetData() {
   return impl_->GetData();
+}
+
+bool TensorData::IsTensorDataValid() const {
+  return impl_->IsTensorDataValid();
 }
 
 const std::uint8_t *TensorData::data() const { return GetData(); }
@@ -1355,6 +1371,10 @@ void GeTensorImpl::ClearData() {
   tensor_data_.clear();
 }
 
+bool GeTensorImpl::IsTensorDataValid() const {
+  return tensor_data_.IsTensorDataValid();
+}
+
 void GeTensorImpl::Clone(GeTensorImpl &tensor) const {
   if ((tensor.desc_.impl_ != nullptr) && (desc_.impl_ != nullptr)) {
     *(tensor.desc_.impl_) = *(desc_.impl_);
@@ -1506,6 +1526,11 @@ const TensorData &GeTensor::GetData() const {
 TensorData &GeTensor::MutableData() {
   return impl_->MutableData();
 }
+
+bool GeTensor::IsTensorDataValid() const {
+  return impl_->IsTensorDataValid();
+}
+
 // zero copy SetData
 void GeTensor::SetData(std::shared_ptr<AlignedPtr> aligned_ptr, const size_t size) {
   impl_->SetData(std::move(aligned_ptr), size);
