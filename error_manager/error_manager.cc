@@ -210,9 +210,6 @@ ErrorManager &ErrorManager::GetInstance() {
 ///
 int32_t ErrorManager::Init(const std::string path) {
   const std::unique_lock<std::mutex> lck(mutex_);
-  if (is_init_) {
-    return 0;
-  }
   const std::string file_path = path + kErrorCodePath;
   const int32_t ret = ParseJsonFile(file_path);
   if (ret != 0) {
