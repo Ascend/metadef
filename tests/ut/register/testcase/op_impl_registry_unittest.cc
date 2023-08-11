@@ -627,4 +627,22 @@ TEST_F(OpImplRegistryUT, GetOpImplFunctionsERR) {
   auto ret = GetOpImplFunctions(reinterpret_cast<TypesToImpl *>(impl_funcs.get()), 10);
   EXPECT_EQ(ret, ge::GRAPH_FAILED);
 }
+
+TEST_F(OpImplRegistryUT, Retpeat_register_InputsDataDependency_success) {
+  auto funcs = gert::OpImplRegistry::GetInstance().GetOpImpl("TestFoo");
+  ASSERT_EQ(funcs, nullptr);
+
+  IMPL_OP(TestFoo)
+      .InferShape(TestInferShapeFunc1)
+      .InferShapeRange(TestInferShapeRangeFunc1)
+      .InferDataType(TestInferDataTypeFunc)
+      .InputsDataDependency({0, 1})
+      .InputsDataDependency({0, 2, 3});
+  funcs = gert::OpImplRegistry::GetInstance().GetOpImpl("TestFoo");
+  ASSERT_NE(funcs, nullptr);
+  EXPECT_TRUE(funcs->IsInputDataDependency(0));
+  EXPECT_TRUE(funcs->IsInputDataDependency(1));
+  EXPECT_TRUE(funcs->IsInputDataDependency(2));
+  EXPECT_TRUE(funcs->IsInputDataDependency(3));
+}
 }  // namespace gert_test
