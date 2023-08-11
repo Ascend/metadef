@@ -53,3 +53,52 @@ if(NOT TARGET_SYSTEM_NAME STREQUAL "Windows")
         ARCHIVE DESTINATION ${INSTALL_LIBRARY_DIR} OPTIONAL
     )
 endif()
+
+##############################################################
+set(STUB_SRC_LIST
+    ${CMAKE_CURRENT_BINARY_DIR}/stub_error_manager.cc
+)
+
+add_custom_command(
+    OUTPUT ${STUB_SRC_LIST}
+    COMMAND echo "Generating stub files."
+            && ${HI_PYTHON} ${CMAKE_CURRENT_LIST_DIR}/stub/gen_stubapi.py ${METADEF_DIR}/inc/common/util ${CMAKE_CURRENT_BINARY_DIR}
+            && echo "Generating stub files end."
+)
+
+add_custom_target(error_manager_stub DEPENDS ${STUB_SRC_LIST})
+
+############ stub/liberror_manager.so ############
+add_library(stub_error_manager SHARED ${STUB_SRC_LIST})
+
+add_dependencies(stub_error_manager error_manager_stub)
+
+target_include_directories(stub_error_manager PRIVATE
+    ${CMAKE_CURRENT_LIST_DIR}
+    ${METADEF_DIR}/inc/common/util
+)
+
+target_compile_options(stub_error_manager PRIVATE
+    -Wfloat-equal
+    -fno-common
+)
+
+target_link_libraries(stub_error_manager
+    PRIVATE
+        intf_pub
+        c_sec
+        slog
+        json
+    PUBLIC
+        metadef_headers
+)
+
+set_target_properties(stub_error_manager PROPERTIES
+    OUTPUT_NAME error_manager
+    LIBRARY_OUTPUT_DIRECTORY stub
+)
+
+############ install ############
+install(TARGETS stub_error_manager OPTIONAL
+    LIBRARY DESTINATION ${INSTALL_LIBRARY_DIR}/${CMAKE_SYSTEM_PROCESSOR}/stub
+)

@@ -278,7 +278,66 @@ target_link_libraries(rt2_registry_static
     metadef_headers
 )
 
+##############################################################
+set(STUB_SRC_LIST
+    ${CMAKE_CURRENT_BINARY_DIR}/stub_op_def.cc
+    ${CMAKE_CURRENT_BINARY_DIR}/stub_op_def_factory.cc
+    ${CMAKE_CURRENT_BINARY_DIR}/stub_op_impl_registry.cc
+    ${CMAKE_CURRENT_BINARY_DIR}/stub_op_tiling_info.cc
+    ${CMAKE_CURRENT_BINARY_DIR}/stub_op_tiling_registry.cc
+    ${CMAKE_CURRENT_BINARY_DIR}/stub_register.cc
+    ${CMAKE_CURRENT_BINARY_DIR}/stub_tilingdata_base.cc
+    ${CMAKE_CURRENT_BINARY_DIR}/stub_tuning_bank_key_registry.cc
+    ${CMAKE_CURRENT_BINARY_DIR}/stub_tuning_tiling_registry.cc
+)
+
+add_custom_command(
+    OUTPUT ${STUB_SRC_LIST}
+    COMMAND echo "Generating stub files."
+            && ${HI_PYTHON} ${CMAKE_CURRENT_LIST_DIR}/stub/gen_stubapi.py ${METADEF_DIR}/inc/external ${CMAKE_CURRENT_BINARY_DIR}
+            && echo "Generating stub files end."
+)
+
+add_custom_target(register_stub DEPENDS ${STUB_SRC_LIST})
+
+############ stub/libregister.so ############
+add_library(stub_register SHARED ${STUB_SRC_LIST})
+
+add_dependencies(stub_register register_stub metadef_protos)
+
+target_include_directories(stub_register PRIVATE
+    ${CMAKE_CURRENT_LIST_DIR}
+    ${CMAKE_BINARY_DIR}
+    ${CMAKE_BINARY_DIR}/proto/metadef_protos
+)
+
+target_compile_options(stub_register PRIVATE
+    -Wfloat-equal
+    -fno-common
+)
+
+target_link_libraries(stub_register
+    PRIVATE
+        intf_pub
+        air_headers
+        ascend_protobuf
+        c_sec
+        slog
+        json
+    PUBLIC
+        metadef_headers
+)
+
+set_target_properties(stub_register PROPERTIES
+    OUTPUT_NAME register
+    LIBRARY_OUTPUT_DIRECTORY stub
+)
+
 ############ install ############
 install(TARGETS register_static
     ARCHIVE DESTINATION ${INSTALL_LIBRARY_DIR} OPTIONAL
+)
+
+install(TARGETS stub_register OPTIONAL
+    LIBRARY DESTINATION ${INSTALL_LIBRARY_DIR}/${CMAKE_SYSTEM_PROCESSOR}/stub
 )
