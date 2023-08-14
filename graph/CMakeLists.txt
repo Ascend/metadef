@@ -325,37 +325,26 @@ else()
 endif()
 
 ##############################################################
+set(STUB_SRC_LIST
+    ${CMAKE_CURRENT_BINARY_DIR}/stub_ascend_string.cc
+    ${CMAKE_CURRENT_BINARY_DIR}/stub_attr_value.cc
+    ${CMAKE_CURRENT_BINARY_DIR}/stub_gnode.cc
+    ${CMAKE_CURRENT_BINARY_DIR}/stub_graph.cc
+    ${CMAKE_CURRENT_BINARY_DIR}/stub_inference_context.cc
+    ${CMAKE_CURRENT_BINARY_DIR}/stub_operator.cc
+    ${CMAKE_CURRENT_BINARY_DIR}/stub_operator_factory.cc
+    ${CMAKE_CURRENT_BINARY_DIR}/stub_tensor.cc
+)
+
 add_custom_command(
-    OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/stub_attr_value.cc
-           ${CMAKE_CURRENT_BINARY_DIR}/stub_graph.cc
-           ${CMAKE_CURRENT_BINARY_DIR}/stub_operator.cc
-           ${CMAKE_CURRENT_BINARY_DIR}/stub_operator_factory.cc
-           ${CMAKE_CURRENT_BINARY_DIR}/stub_inference_context.cc
-           ${CMAKE_CURRENT_BINARY_DIR}/stub_ascend_string.cc
-           ${CMAKE_CURRENT_BINARY_DIR}/stub_gnode.cc
-           ${CMAKE_CURRENT_BINARY_DIR}/stub_tensor.cc
+    OUTPUT ${STUB_SRC_LIST}
     COMMAND echo "Generating stub files."
             && ${HI_PYTHON} ${CMAKE_CURRENT_LIST_DIR}/stub/gen_stubapi.py ${METADEF_DIR}/inc/external ${CMAKE_CURRENT_BINARY_DIR}
-            && mv attr_value.cc stub_attr_value.cc
-            && mv graph.cc stub_graph.cc
-            && mv operator.cc stub_operator.cc
-            && mv operator_factory.cc stub_operator_factory.cc
-            && mv inference_context.cc stub_inference_context.cc
-            && mv ascend_string.cc stub_ascend_string.cc
-            && mv gnode.cc stub_gnode.cc
-            && mv tensor.cc stub_tensor.cc
-            &&  echo "Generating stub files end."
+            && echo "Generating stub files end."
 )
 
 add_custom_target(graph_stub
-    DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/stub_attr_value.cc
-            ${CMAKE_CURRENT_BINARY_DIR}/stub_graph.cc
-            ${CMAKE_CURRENT_BINARY_DIR}/stub_operator.cc
-            ${CMAKE_CURRENT_BINARY_DIR}/stub_operator_factory.cc
-            ${CMAKE_CURRENT_BINARY_DIR}/stub_inference_context.cc
-            ${CMAKE_CURRENT_BINARY_DIR}/stub_ascend_string.cc
-            ${CMAKE_CURRENT_BINARY_DIR}/stub_gnode.cc
-            ${CMAKE_CURRENT_BINARY_DIR}/stub_tensor.cc
+    DEPENDS ${STUB_SRC_LIST}
             ${METADEF_DIR}/tests/stub/operator_stub.cc
 )
 
@@ -363,15 +352,10 @@ add_custom_target(graph_stub
 
 ############ stub/libgraph.so ############
 add_library(atc_stub_graph SHARED
-    stub_graph.cc
-    stub_operator.cc
-    stub_operator_factory.cc
-    stub_attr_value.cc
-    stub_ascend_string.cc
-    stub_gnode.cc
-    stub_tensor.cc
+    ${STUB_SRC_LIST}
     ${METADEF_DIR}/tests/stub/operator_stub.cc
 )
+
 add_dependencies(atc_stub_graph graph_stub)
 
 target_include_directories(atc_stub_graph PRIVATE
@@ -406,14 +390,7 @@ set_target_properties(atc_stub_graph PROPERTIES
 
 ############ fwk_stub/libgraph.so ############
 add_library(fwk_stub_graph SHARED
-    stub_graph.cc
-    stub_operator.cc
-    stub_operator_factory.cc
-    stub_attr_value.cc
-    stub_inference_context.cc
-    stub_ascend_string.cc
-    stub_gnode.cc
-    stub_tensor.cc
+    ${STUB_SRC_LIST}
     ${METADEF_DIR}/tests/stub/operator_stub.cc
 )
 

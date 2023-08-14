@@ -14,43 +14,128 @@ import logging
     generate stub func body by return type
 """
 RETURN_STATEMENTS = {
-    'graphStatus':
-        '    std::cout << "[ERROR]: stub library libgraph cannot be used for execution, please check your "\n'
+    'ge::graphStatus':
+        '    std::cout << "[ERROR]: stub library libregister cannot be used for execution, please check your "\n'
         '        << "environment variables and compilation options to make sure you use the correct library."\n'
         '        << std::endl;\n'
         '    return ge::GRAPH_FAILED;',
-    'Graph': '    return Graph();',
-    'Graph&': '    return *this;',
-    'Format': '    return Format();',
-    'Shape': '    return Shape();',
-    'Shape&': '    return *this;',
-    'TensorDesc': '    return TensorDesc();',
-    'TensorDesc&': '    return *this;',
-    'Tensor': '    return Tensor();',
-    'Operator': '    return Operator();',
-    'Operator&': '    return *this;',
-    'GNode': '    return GNode();',
-    'GraphPtr': '    return nullptr;',
-    'Placement': '    return static_cast<Placement>(0);',
+    'Status': '    return SUCCESS;',
+    'ge::AscendString': '    return ge::AscendString();',
+    'ge::AscendString&': '    static ge::AscendString str;\n'
+                         '    return str;',
+    'OpDef': '    return OpDef("default");',
+    'OpDef&': '    return *this;',
+    'ByteBuffer&': '    return buf;',
+    'ByteBuffer& OpRunInfo::GetAllTilingData': '    static ByteBuffer buf;\n'
+                                               '    return buf;',
+    'CTilingDataClassFactory&': '    return *this;',
+    'CTilingDataClassFactory& CTilingDataClassFactory::GetInstance': '    static CTilingDataClassFactory instance;\n'
+                                                                     '    return instance;',
+    'FrameworkRegistry&': '    static FrameworkRegistry instance;\n'
+                          '    return instance;',
+    'ItemFindStatus': '    return ItemFindStatus::ITEM_NOEXIST;',
+    'KernelRegisterV2&': '    return *this;',
+    'KernelRegistry&': '    std::shared_ptr<KernelRegistry> g_user_defined_registry = nullptr;\n'
+                       '    return *g_user_defined_registry;',
+    'OpAICoreConfig&': '    return *this;',
+    'OpAICoreDef&': '    return *this;',
+    'OpAICoreDef& OpDef::AICore': '    return this->impl_->op_aicore;',
+    'OpAttrDef&': '    return *this;',
+    'OpAttrDef& OpDef::Attr': '    return this->GetOrCreateAttr(name);',
+    'OpAttrDef& OpDef::AddAttr': '    return this->impl_->attrs.back();',
+    'OpAttrDef& OpDef::GetOrCreateAttr': '    OpAttrDef attr(name);\n'
+                                         '    return this->AddAttr(attr);',
+    'OpCompileInfo&': '    return *this;',
+    'OpImplRegister&': '    return *this;',
+    'OpImplRegisterV2&': '    return *this;',
+    'OpImplRegistry&': '    static OpImplRegistry instance;\n'
+                       '    return instance;',
+    'OpParamDef& OpParamDef::': '    return *this;',
+    'OpParamDef& OpAICoreConfig::Input': '    return this->impl_->op_params.Input(name);',
+    'OpParamDef& OpAICoreConfig::Output': '    return this->impl_->op_params.Output(name);',
+    'OpParamDef& OpDef::Input': '    return this->impl_->op_params.Input(name);',
+    'OpParamDef& OpDef::Output': '    return this->impl_->op_params.Output(name);',
+    'OpRegistrationData&': '    return *this;',
+    'OpRunInfo&': '    return *this;',
+    'Option': '    return this->impl_->param_type;',
+    'OpImplRegistry::PrivateAttrList&': '    static OpImplRegistry::PrivateAttrList emptyPrivateAttr;\n'
+                                        '    return emptyPrivateAttr;',
+    'OpImplKernelRegistry::PrivateAttrList&': '    static OpImplKernelRegistry::PrivateAttrList emptyPrivateAttr;\n'
+                                              '    return emptyPrivateAttr;',
+    'StructSizeInfoBase&': '    return *this;',
+    'StructSizeInfoBase& StructSizeInfoBase::GetInstance': '    static StructSizeInfoBase instance;\n'
+                                                           '    return instance;',
+    'domi::FrameworkType': '    return domi::FrameworkType::FRAMEWORK_RESERVED;',
+    'domi::ImplyType': '    return domi::ImplyType::BUILDIN;',
+    'gert::OpImplKernelRegistry::TilingKernelFunc&': '    return this->impl_->tiling_func;',
+    'std::vector<ge::DataType>&': '    return this->impl_->types;',
+    'std::vector<ge::Format>&': '    return this->impl_->formats;',
+    'AutoMappingSubgraphIOIndexFunc': '    return nullptr;',
+    'optiling::OP_CHECK_FUNC& OpAICoreDef::GetCheckSupport': '    return this->impl_->op_chk_support;',
+    'optiling::OP_CHECK_FUNC& OpAICoreDef::GetOpSelectFormat': '    return this->impl_->op_sel_format;',
+    'optiling::OP_CHECK_FUNC& OpAICoreDef::GetOpSupportInfo': '    return this->impl_->op_get_support;',
+    'optiling::OP_CHECK_FUNC& OpAICoreDef::GetOpSpecInfo': '    return this->impl_->op_get_spec;',
+    'optiling::PARAM_GENERALIZE_FUNC& OpAICoreDef::GetParamGeneralize': '    return this->impl_->op_generlize_func;',
+    'gert::OpImplKernelRegistry::InferShapeKernelFunc&': '    return this->impl_->infer_shape;',
+    'gert::OpImplKernelRegistry::InferShapeRangeKernelFunc&': '    return this->impl_->infer_shape_range;',
+    'gert::OpImplKernelRegistry::InferDataTypeKernelFunc& OpDef::GetInferDataType':
+        '    return this->impl_->infer_data_type;',
+    'OpImplKernelRegistry::OpImplFunctions& OpImplRegistry::CreateOrGetOpImpl': '    return types_to_impl_[op_type];',
+    'OpTilingFunc& OpTilingFuncInfo::GetOpTilingFunc': '    return this->tiling_func_;',
+    'OpTilingFuncV2& OpTilingFuncInfo::GetOpTilingFuncV2': '    return this->tiling_func_v2_;',
+    'OpTilingFuncV3& OpTilingFuncInfo::GetOpTilingFuncV3': '    return this->tiling_func_v3_;',
+    'OpParseFuncV3& OpTilingFuncInfo::GetOpParseFuncV3': '    return this->parse_func_v3_;',
+    'OpTilingFuncV4& OpTilingFuncInfo::GetOpTilingFuncV4': '    return this->tiling_func_v4_;',
+    'OpParseFuncV4& OpTilingFuncInfo::GetOpParseFuncV4': '    return this->parse_func_v4_;',
+    'ParseParamFunc': '    return nullptr;',
+    'ParseParamByOpFunc OpRegistrationData::GetParseParamByOperatorFn': '    return nullptr;',
+    'FusionParseParamFunc OpRegistrationData::GetFusionParseParamFn': '    return nullptr;',
+    'FusionParseParamByOpFunc OpRegistrationData::GetFusionParseParamByOpFn': '    return nullptr;',
+    'ParseSubgraphFunc OpRegistrationData::GetParseSubgraphPostFn': '    return nullptr;',
+    'ParseOpToGraphFunc OpRegistrationData::GetParseOpToGraphFn': '    return nullptr;',
+    'OpBankKeyConvertFun& OpBankKeyFuncInfo::GetBankKeyConvertFunc': '    return convert_func_;',
+    'OpBankParseFun& OpBankKeyFuncInfo::GetBankKeyParseFunc': '    return parse_func_;',
+    'OpBankLoadFun& OpBankKeyFuncInfo::GetBankKeyLoadFunc': '    return load_func_;',
     'Ptr': '    return nullptr;',
     'std::string': '    return "";',
     'std::string&': '    static std::string s;\n'
                     '    return s;',
-    'DataType': '    return DT_FLOAT;',
-    'InferenceContextPtr': '    return nullptr;',
-    'SubgraphBuilder': '    return nullptr;',
-    'OperatorImplPtr': '    return nullptr;',
-    'OutHandler': '    return nullptr;',
+    'int': '    return 0;',
     'std::vector<std::string>': '    return {};',
-    'std::vector<std::string>&': '    static std::vector<std::string> vec;\n'
-                                 '    return vec;',
     'std::vector<int64_t>': '    return {};',
-    'std::vector<std::vector<ShapeAndType>>&': '    static std::vector<std::vector<ShapeAndType>> vec;\n'
-                                               '    return vec;',
+    'std::vector<int64_t>&': '    static std::vector<int64_t> vec;\n'
+                             '    return vec;',
+    'std::vector<OpParamDef>& OpAICoreConfig::GetInputs': '    return this->impl_->op_params.GetInputs();',
+    'std::vector<OpParamDef>& OpAICoreConfig::GetOutputs': '    return this->impl_->op_params.GetOutputs();',
+    'std::vector<OpParamDef>& OpDef::GetInputs': '    return this->impl_->op_params.GetInputs();',
+    'std::vector<OpParamDef>& OpDef::GetOutputs': '    return this->impl_->op_params.GetOutputs();',
+    'std::vector<OpAttrDef>& OpDef::GetAttrs': '    return this->impl_->attrs;',
+    'std::vector<ge::AscendString>&': '    static std::vector<ge::AscendString> ops_list;\n'
+                                      '    return ops_list;',
     'std::map': '    return {};',
-    'std::pair<GNodePtr, int32_t>': '    static std::pair<GNodePtr, int32_t> gnode_idx = {nullptr, 0xFF};\n'
-                                    '    return gnode_idx;',
-    'std::shared_ptr<const Node>': '    return nullptr;',
+    'std::map<ge::AscendString, ge::AscendString>& OpAICoreConfig::GetCfgInfo': '    return this->impl_->cfg_info;',
+    'std::map<ge::AscendString, OpAICoreConfig>& OpAICoreDef::GetAICoreConfigs':
+        '    return this->impl_->aicore_configs;',
+    'std::map<OpImplKernelRegistry::OpType, OpImplKernelRegistry::OpImplFunctions>&':
+        '    static std::map<OpImplKernelRegistry::OpType, OpImplKernelRegistry::OpImplFunctions> m;\n'
+        '    return m;',
+    'std::map<ge::AscendString, TuningTilingDefConstructor>& TuningTilingClassFactory::RegisterInfo':
+        '    static std::map<ge::AscendString, TuningTilingDefConstructor> instance;\n'
+        '    return instance;',
+    'std::unordered_map<std::string, OpTilingFunc>& OpTilingRegistryInterf::RegisteredOpInterf':
+        '    static std::unordered_map<std::string, OpTilingFunc> interf;\n'
+        '    return interf;',
+    'std::unordered_map<std::string, OpTilingFuncV2>& OpTilingRegistryInterf_V2::RegisteredOpInterf':
+        '    static std::unordered_map<std::string, OpTilingFuncV2> interf;\n'
+        '    return interf;',
+    'std::unordered_map<std::string, OpTilingFuncInfo>& OpTilingFuncRegistry::RegisteredOpFuncInfo':
+        '    static std::unordered_map<std::string, OpTilingFuncInfo> op_func_map;\n'
+        '    return op_func_map;',
+    'std::unordered_map<ge::AscendString, OpBankKeyFuncInfo>& OpBankKeyFuncRegistry::RegisteredOpFuncInfo':
+        '    static std::unordered_map<ge::AscendString, OpBankKeyFuncInfo> op_func_map;\n'
+        '    return op_func_map;',
+    'std::shared_ptr<TilingDef>': '    return nullptr;',
+    'std::shared_ptr<TuningTilingDef>': '    return nullptr;',
     'int32_t': '    return 0;',
     'uint32_t': '    return 0;',
     'int64_t': '    return 0;',
@@ -66,18 +151,17 @@ RETURN_STATEMENTS = {
     when DEBUG on
 """
 white_list_for_debug = [
-    "ascend_string.h",
-    "attr_value.h",
-    "ge_api.h",
-    "ge_ir_build.h",
-    "gnode.h",
-    "graph.h",
-    "inference_context.h",
-    "operator.h",
-    "operator_factory.h",
-    "tensor.h",
+    "op_def.h",
+    "op_def_factory.h",
+    "op_impl_registry.h",
+    "op_tiling_info.h",
+    "op_tiling_registry.h",
+    "register.h",
+    "tilingdata_base.h",
+    "tuning_bank_key_registry.h",
+    "tuning_tiling_registry.h",
 ]
-include_dir_key_words = ["graph"]
+include_dir_key_words = ["register"]
 
 """
     this attr is used for symbol table visible
@@ -126,10 +210,28 @@ def file_endswith_white_list_suffix(file):
 """
 # pattern function
 pattern_func = re.compile(r"""(^[\s]*)([a-zA-Z~_].*[)](?!.*{).*)(;.*)\n$""", re.VERBOSE | re.MULTILINE | re.DOTALL)
+# pattern virtual function
+pattern_virtual_func = re.compile(r"""^[ ]*
+                                       virtual
+                                       [ ]+
+                                       (?:const[ ]+)?
+                                       [:\w]+
+                                       [ &*]+
+                                       [:\w]+
+                                       \(
+                                         [^()]*
+                                       \)
+                                       [ ]+
+                                       (?:const[ ]+)?
+                                       =[ ]+0;$""", re.VERBOSE)
 # pattern comment
 pattern_comment = re.compile(r'^\s*//')
 pattern_comment_2_start = re.compile(r'^\s*/[*]')
 pattern_comment_2_end = re.compile(r'[*]/\s*$')
+# pattern visibility
+pattern_visibility = re.compile(r'(FMK_FUNC_HOST_VISIBILITY|FMK_FUNC_DEV_VISIBILITY) *')
+# pattern override
+pattern_override = re.compile(r' +override\b')
 # pattern define
 pattern_define = re.compile(r'^\s*#define')
 pattern_define_return = re.compile(r'\\\s*$')
@@ -214,6 +316,17 @@ class H2CC(object):
         self.func_list_exist = []
 
     def __del__(self):
+        if self.output_file.endswith('/stub_register.cc'):
+            impl = """
+namespace domi {
+class FMK_FUNC_HOST_VISIBILITY FMK_FUNC_DEV_VISIBILITY FrameworkRegistryImpl {
+ public:
+  void AddAutoMappingSubgraphIOIndexFunc(const domi::FrameworkType framework, AutoMappingSubgraphIOIndexFunc fun) {}
+  AutoMappingSubgraphIOIndexFunc GetAutoMappingSubgraphIOIndexFunc(const domi::FrameworkType framework) { return nullptr; }
+};
+}  // namespace domi
+"""
+            self.output_fd.write(impl)
         self.input_fd.close()
         self.output_fd.close()
         del self.stack
@@ -235,6 +348,9 @@ class H2CC(object):
             while pattern_blank_line.search(self.input_content[self.line_index]) or pattern_define_return.search(
                     self.input_content[self.line_index]):
                 self.line_index += 1
+            self.line_index += 1
+        # skip virtual function
+        while pattern_virtual_func.search(self.input_content[self.line_index]):
             self.line_index += 1
 
     def write_inc_content(self):
@@ -260,6 +376,12 @@ class H2CC(object):
             template_string = self.handle_template()
             # match class
             line = self.input_content[self.line_index]
+            # handle visibility keywords
+            if pattern_visibility.search(line):
+                line = pattern_visibility.sub('', line)
+            # handle override keywords
+            if pattern_override.search(line):
+                line = pattern_override.sub('', line)
             match_class = pattern_class.search(line)
             match_start = pattern_start.search(line)
             handle_class_result = self.handle_class(template_string, line, match_start, match_class)
@@ -323,7 +445,10 @@ class H2CC(object):
             if space_match:
                 line2 = re.sub('^' + space_match.group(1), '', line2)
             line += line2
-            while self.line_index < len(self.input_content) and (not re.search('[)]', line2)):
+            while self.line_index < len(self.input_content):
+                if re.search('[)]', line2) \
+                    and not re.search(r'std::function<.+?> &input,', line2):
+                    break
                 self.line_index += 1
                 line2 = self.input_content[self.line_index]
                 line2 = re.sub('^' + space_match.group(1), '', line2)
@@ -496,6 +621,12 @@ class H2CC(object):
         template_line = re.sub(r'\s*=.*', '', template_line)
         line = template_line + template_string + line
         func_name = re.search(r'^.*\)', line, re.MULTILINE | re.DOTALL).group()
+        line = re.sub(r'\b(KernelInfo)\b', r'KernelRegistry::\1', line)
+        line = re.sub(r'\b(KernelFuncs)\b', r'KernelRegistry::\1', line)
+        line = re.sub(r'\b(OpImplFunctions)\b', r'OpImplKernelRegistry::\1', line)
+        line = re.sub(r'\b(OpType)\b', r'OpImplKernelRegistry::\1', line)
+        line = re.sub(r'\b(PrivateAttrList &OpImplKernelRegistry::)', r'OpImplKernelRegistry::\1', line)
+        line = re.sub(r'\b(PrivateAttrList &OpImplRegistry::)', r'OpImplRegistry::\1', line)
         logging.info("line[%s]", line)
         logging.info("func_name[%s]", func_name)
         return line, func_name
@@ -551,6 +682,8 @@ class H2CC(object):
     @staticmethod
     def implement_function(func):
         function_def = ''
+        if func.strip() == 'OpImplRegister::OpImplRegister(const ge::char_t *op_type)':
+            function_def += '    : functions_(OpImplRegistry::GetInstance().CreateOrGetOpImpl(op_type))\n'
         function_def += '{\n'
 
         return_statements = H2CC.get_return_statements(func)
@@ -603,6 +736,9 @@ def collect_header_files(path):
             include_str = '#include "{}"\n'.format(file_path[path.rindex('/') + 1:])
             shared_includes_content.append(include_str)
     # for acl error code
+    shared_includes_content.append('#include "register/kernel_register_data.h"\n')
+    shared_includes_content.append('#include "register/opdef/op_def_impl.h"\n')
+    shared_includes_content.append('#include "register/op_impl_register_v2_impl.h"\n')
     shared_includes_content.append('#include <iostream>\n')
     return header_files, shared_includes_content
 

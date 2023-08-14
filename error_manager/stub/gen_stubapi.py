@@ -14,49 +14,15 @@ import logging
     generate stub func body by return type
 """
 RETURN_STATEMENTS = {
-    'graphStatus':
-        '    std::cout << "[ERROR]: stub library libgraph cannot be used for execution, please check your "\n'
-        '        << "environment variables and compilation options to make sure you use the correct library."\n'
-        '        << std::endl;\n'
-        '    return ge::GRAPH_FAILED;',
-    'Graph': '    return Graph();',
-    'Graph&': '    return *this;',
-    'Format': '    return Format();',
-    'Shape': '    return Shape();',
-    'Shape&': '    return *this;',
-    'TensorDesc': '    return TensorDesc();',
-    'TensorDesc&': '    return *this;',
-    'Tensor': '    return Tensor();',
-    'Operator': '    return Operator();',
-    'Operator&': '    return *this;',
-    'GNode': '    return GNode();',
-    'GraphPtr': '    return nullptr;',
-    'Placement': '    return static_cast<Placement>(0);',
-    'Ptr': '    return nullptr;',
+    'ErrorManager&': '    static ErrorManager instance;\n'
+                     '    return instance;',
+    'error_message::Context&': '    return error_context_;',
     'std::string': '    return "";',
     'std::string&': '    static std::string s;\n'
                     '    return s;',
-    'DataType': '    return DT_FLOAT;',
-    'InferenceContextPtr': '    return nullptr;',
-    'SubgraphBuilder': '    return nullptr;',
-    'OperatorImplPtr': '    return nullptr;',
-    'OutHandler': '    return nullptr;',
-    'std::vector<std::string>': '    return {};',
-    'std::vector<std::string>&': '    static std::vector<std::string> vec;\n'
-                                 '    return vec;',
-    'std::vector<int64_t>': '    return {};',
-    'std::vector<std::vector<ShapeAndType>>&': '    static std::vector<std::vector<ShapeAndType>> vec;\n'
-                                               '    return vec;',
-    'std::map': '    return {};',
-    'std::pair<GNodePtr, int32_t>': '    static std::pair<GNodePtr, int32_t> gnode_idx = {nullptr, 0xFF};\n'
-                                    '    return gnode_idx;',
-    'std::shared_ptr<const Node>': '    return nullptr;',
+    'std::vector<ErrorManager::ErrorItem>&': '    static std::vector<ErrorManager::ErrorItem> item;\n'
+                                             '    return item;',
     'int32_t': '    return 0;',
-    'uint32_t': '    return 0;',
-    'int64_t': '    return 0;',
-    'uint64_t': '    return 0;',
-    'size_t': '    return 0;',
-    'float': '    return 0.0f;',
     'bool': '    return false;',
 }
 
@@ -65,19 +31,8 @@ RETURN_STATEMENTS = {
     determines which header files to generate cc files from
     when DEBUG on
 """
-white_list_for_debug = [
-    "ascend_string.h",
-    "attr_value.h",
-    "ge_api.h",
-    "ge_ir_build.h",
-    "gnode.h",
-    "graph.h",
-    "inference_context.h",
-    "operator.h",
-    "operator_factory.h",
-    "tensor.h",
-]
-include_dir_key_words = ["graph"]
+white_list_for_debug = ["error_manager.h"]
+include_dir_key_words = ["error_manager"]
 
 """
     this attr is used for symbol table visible
@@ -133,6 +88,9 @@ pattern_comment_2_end = re.compile(r'[*]/\s*$')
 # pattern define
 pattern_define = re.compile(r'^\s*#define')
 pattern_define_return = re.compile(r'\\\s*$')
+# pattern format_error_message
+pattern_format_error_message = re.compile(r'^int32_t FormatErrorMessage')
+pattern_format_error_message_return = re.compile(r'__attribute__')
 # blank line
 pattern_blank_line = re.compile(r'^\s*$')
 # virtual,explicit,friend,static
@@ -236,6 +194,10 @@ class H2CC(object):
                     self.input_content[self.line_index]):
                 self.line_index += 1
             self.line_index += 1
+        # skip FormatErrorMessage with __attribute__
+        if pattern_format_error_message.search(self.input_content[self.line_index]) and \
+           pattern_format_error_message_return.search(self.input_content[self.line_index + 1]):
+            self.line_index += 2
 
     def write_inc_content(self):
         for shared_include_content in self.shared_includes_content:
@@ -496,6 +458,7 @@ class H2CC(object):
         template_line = re.sub(r'\s*=.*', '', template_line)
         line = template_line + template_string + line
         func_name = re.search(r'^.*\)', line, re.MULTILINE | re.DOTALL).group()
+        line = re.sub(r'std::vector<ErrorItem>', 'std::vector<ErrorManager::ErrorItem>', line)
         logging.info("line[%s]", line)
         logging.info("func_name[%s]", func_name)
         return line, func_name

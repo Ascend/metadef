@@ -14,50 +14,13 @@ import logging
     generate stub func body by return type
 """
 RETURN_STATEMENTS = {
-    'graphStatus':
-        '    std::cout << "[ERROR]: stub library libgraph cannot be used for execution, please check your "\n'
+    'ge::graphStatus':
+        '    std::cout << "[ERROR]: stub library libexe_graph cannot be used for execution, please check your "\n'
         '        << "environment variables and compilation options to make sure you use the correct library."\n'
         '        << std::endl;\n'
         '    return ge::GRAPH_FAILED;',
-    'Graph': '    return Graph();',
-    'Graph&': '    return *this;',
-    'Format': '    return Format();',
-    'Shape': '    return Shape();',
-    'Shape&': '    return *this;',
-    'TensorDesc': '    return TensorDesc();',
-    'TensorDesc&': '    return *this;',
-    'Tensor': '    return Tensor();',
-    'Operator': '    return Operator();',
-    'Operator&': '    return *this;',
-    'GNode': '    return GNode();',
-    'GraphPtr': '    return nullptr;',
-    'Placement': '    return static_cast<Placement>(0);',
     'Ptr': '    return nullptr;',
-    'std::string': '    return "";',
-    'std::string&': '    static std::string s;\n'
-                    '    return s;',
-    'DataType': '    return DT_FLOAT;',
-    'InferenceContextPtr': '    return nullptr;',
-    'SubgraphBuilder': '    return nullptr;',
-    'OperatorImplPtr': '    return nullptr;',
-    'OutHandler': '    return nullptr;',
-    'std::vector<std::string>': '    return {};',
-    'std::vector<std::string>&': '    static std::vector<std::string> vec;\n'
-                                 '    return vec;',
-    'std::vector<int64_t>': '    return {};',
-    'std::vector<std::vector<ShapeAndType>>&': '    static std::vector<std::vector<ShapeAndType>> vec;\n'
-                                               '    return vec;',
-    'std::map': '    return {};',
-    'std::pair<GNodePtr, int32_t>': '    static std::pair<GNodePtr, int32_t> gnode_idx = {nullptr, 0xFF};\n'
-                                    '    return gnode_idx;',
-    'std::shared_ptr<const Node>': '    return nullptr;',
-    'int32_t': '    return 0;',
-    'uint32_t': '    return 0;',
-    'int64_t': '    return 0;',
-    'uint64_t': '    return 0;',
     'size_t': '    return 0;',
-    'float': '    return 0.0f;',
-    'bool': '    return false;',
 }
 
 """
@@ -66,18 +29,11 @@ RETURN_STATEMENTS = {
     when DEBUG on
 """
 white_list_for_debug = [
-    "ascend_string.h",
-    "attr_value.h",
-    "ge_api.h",
-    "ge_ir_build.h",
-    "gnode.h",
-    "graph.h",
-    "inference_context.h",
-    "operator.h",
-    "operator_factory.h",
-    "tensor.h",
+    "compute_node_info.h",
+    "runtime_attrs.h",
+    "tiling_data.h",
 ]
-include_dir_key_words = ["graph"]
+include_dir_key_words = ["exe_graph"]
 
 """
     this attr is used for symbol table visible
@@ -133,6 +89,9 @@ pattern_comment_2_end = re.compile(r'[*]/\s*$')
 # pattern define
 pattern_define = re.compile(r'^\s*#define')
 pattern_define_return = re.compile(r'\\\s*$')
+# pattern static_assert
+pattern_static_assert = re.compile(r'^\s*static_assert')
+pattern_static_assert_return = re.compile(r'\);\s*$')
 # blank line
 pattern_blank_line = re.compile(r'^\s*$')
 # virtual,explicit,friend,static
@@ -234,6 +193,11 @@ class H2CC(object):
         if pattern_define.search(self.input_content[self.line_index]):
             while pattern_blank_line.search(self.input_content[self.line_index]) or pattern_define_return.search(
                     self.input_content[self.line_index]):
+                self.line_index += 1
+            self.line_index += 1
+        # skip static_assert
+        if pattern_static_assert.search(self.input_content[self.line_index]):
+            while not pattern_static_assert_return.search(self.input_content[self.line_index]):
                 self.line_index += 1
             self.line_index += 1
 
