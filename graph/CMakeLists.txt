@@ -92,7 +92,6 @@ SET(GRAPH_SOURCE_LIST
     "runtime_inference_context.cc"
     "shape_refiner.cc"
     "ir_definitions_recover.cc"
-    "debug/graph_debug.cc"
     "opsproto/opsproto_manager.cc"
     "utils/op_desc_utils.cc"
     "utils/tuning_utils.cc"
