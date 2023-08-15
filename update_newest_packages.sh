@@ -14,37 +14,70 @@
 # limitations under the License.
 # ============================================================================
 
-if [ x$1 = x ]; then
-  echo "usage: $0 <dst-path>"
-  exit 1
-fi
-
 set -e
 set -u
 
-local_dir=$(realpath $1)
+prefix=""
+NO_CA_CHECK=""
 
-newest_dir=$(curl -s https://ascend-repo.obs.cn-east-2.myhuaweicloud.com/CANN_daily_y2b/common/libs.txt)
+usage() {
+  echo "Usage:"
+  echo "    bash update_newest_packages.sh [-k] [-d <path>]"
+  echo "Description:"
+  echo "    -k, Allow insecure server connections when using SSL."
+  echo "    -d <dir_name>, Extract files into dir_name."
+}
+
+checkopts(){
+  while getopts 'd:k' opt; do
+    case "${opt}" in
+      k)
+        NO_CA_CHECK="-k"
+        ;;
+      d)
+        prefix="$OPTARG"
+        ;;
+      *)
+        echo "Undefined option: ${opt}"
+        usage
+        exit 1
+    esac
+  done
+}
+
+checkopts "$@"
+
+if [[ -z "$prefix" ]]
+then
+  echo "Invalid path: Please check \${prefix}"
+  usage
+  exit 1
+fi
+
+local_dir=$(realpath ${prefix})
+
+newest_dir=$(curl -s ${NO_CA_CHECK} https://ascend-repo.obs.cn-east-2.myhuaweicloud.com/CANN_daily_y2b/common/libs.txt)
 newest_dir=$(echo ${newest_dir%*/})
+echo "${newest_dir%*/}"
 filename=ai_cann_x86.tar.gz
 newest_file=${newest_dir}/${filename}
-echo "newest file URL: ${newest_file}"
+echo "Newest file URL: ${newest_file}"
 
 local_newest_dir=$(echo "${newest_dir}" | awk -F "/" '{print $NF}')
 local_newest_path="${local_dir}/$(echo "${newest_dir}" | awk -F "/" '{print $NF}')"
-echo "local newest dir ${local_newest_path}"
+echo "Local newest dir: ${local_newest_path}"
 
 if [ -d ${local_newest_path} ]; then
-    echo "The newest package already exists,no need to update"
+    echo "The newest package already exists, no need to update"
     echo "Newest package: ${local_newest_path}"
     exit 0
 fi
 
 echo "Download the newest file from ${newest_file} to ${local_newest_path}/${filename}..."
 mkdir -p ${local_newest_path} && cd ${local_newest_path}
-curl -o ${filename} ${newest_file}
+curl ${NO_CA_CHECK} -o ${filename} ${newest_file}
 
-echo "untar..."
+echo "Extracting..."
 tar -xf ${filename}
 mv ai_cann_x86/*opensdk* ./
 rm -rf ai_cann_x86
@@ -55,6 +88,6 @@ rm -rf latest
 ln -s ${local_newest_dir} latest
 
 
-echo "updated successfully!"
-echo "when you build in metadef: set cmake option -DASCEND_OPENSDK_DIR=${local_dir}/latest/opensdk/opensdk/"
+echo "Updated successfully!"
+echo "When you build in metadef: set cmake option -DASCEND_OPENSDK_DIR=${local_dir}/latest/opensdk/opensdk/"
 echo "When you build in air: set env variable ASCEND_CUSTOM_PATH=${local_dir}/latest"
