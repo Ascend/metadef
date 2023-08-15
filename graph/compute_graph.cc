@@ -1144,6 +1144,126 @@ graphStatus ComputeGraphImpl::TopologicalSorting(const ComputeGraphPtr &const_gr
   return GRAPH_SUCCESS;
 }
 
+bool InputIsLongLifeTimeNode(const NodePtr& node) {
+  bool match = false;
+  for (const auto &in_data_anchor : node->GetAllInDataAnchors()) {
+    if (in_data_anchor == nullptr) {
+      continue;
+    }
+    const auto &peer_out_anchor = in_data_anchor->GetPeerOutAnchor();
+    if (peer_out_anchor == nullptr) {
+      continue;
+    }
+    const auto &peer_node = peer_out_anchor->GetOwnerNode();
+    if (peer_node == nullptr) {
+      continue;
+    }
+    if ((!NodeUtils::IsConst(*peer_node)) && (peer_node->GetType() != VARIABLE)
+        && (peer_node->GetType() != VARIABLEV2)) {
+      return false;
+    } else {
+      match = true;
+    }
+    GELOGD("Node:%s peer:%s type :%s", node->GetName().c_str(), peer_node->GetName().c_str(),
+           peer_node->GetType().c_str());
+  }
+  return match;
+}
+
+///  variable  const
+///      \    /
+///   first node
+///       |
+///   middle node
+///       |
+///   last node
+///     /  |
+/// node1  node2
+graphStatus GetOutNodeIndex(std::vector<NodePtr> &nodes, size_t &index, size_t &out_count) {
+  if (nodes.empty()) {
+    return GRAPH_FAILED;
+  }
+
+  // first node's inputs muse be long life time
+  if ((nodes.size() == 1U) && (!InputIsLongLifeTimeNode(nodes.front()))) {
+    return GRAPH_FAILED;
+  }
+
+  const auto &node = nodes.back();
+  auto op_desc = node->GetOpDesc();
+  GE_CHECK_NOTNULL(op_desc);
+  // middle node must be single input
+  if ((nodes.size() != 1U) && (node->GetAllInDataAnchorsSize() != 1U)) {
+    return GRAPH_FAILED;
+  }
+
+  int64_t min_index = 0;
+  Node *delay_node = nullptr;
+  for (const auto &out_node : node->GetOutAllNodes()) {
+    out_count++;
+    GE_CHECK_NOTNULL(out_node);
+    auto out_node_desc = out_node->GetOpDescBarePtr();
+    GE_CHECK_NOTNULL(out_node_desc);
+    GELOGD("Node:%s id:%ld peer node:%s id:%ld", node->GetName().c_str(), op_desc->GetId(),
+           out_node_desc->GetName().c_str(), out_node_desc->GetId());
+    if ((min_index == 0) || (out_node_desc->GetId() < min_index)) {
+      min_index = out_node_desc->GetId();
+      delay_node = out_node.get();
+    }
+  }
+
+  if (delay_node != nullptr) {
+    index = min_index;
+    GELOGD("Node:%s id:%ld delay to:%s id:%ld", node->GetName().c_str(), op_desc->GetId(),
+           delay_node->GetName().c_str(), index);
+    return GRAPH_SUCCESS;
+  }
+  return GRAPH_FAILED;
+}
+
+void DelayTopoSort(std::vector<NodePtr> &nodes) {
+  // pair.first:  this node can be delay or not
+  // pair.second: delayed nodes to this node
+  std::vector<std::pair<bool, std::vector<NodePtr>>> delay_nodes;
+  delay_nodes.resize(nodes.size());
+
+  // set init index
+  for (size_t i = 0U; i < delay_nodes.size(); ++i) {
+    nodes[i]->GetOpDescBarePtr()->SetId(static_cast<int64_t>(i));
+    delay_nodes[i].first = true;
+    delay_nodes[i].second.emplace_back(nodes[i]);
+  }
+
+  // move delayed node to fit node
+  size_t delay_node_count = 0U;
+  for (size_t i = 0U; i < delay_nodes.size(); ++i) {
+    size_t delay_to_index = 0U;
+    size_t out_count = 0U;
+    if (delay_nodes[i].first
+        && (GetOutNodeIndex(delay_nodes[i].second, delay_to_index, out_count) == GRAPH_SUCCESS)
+        && (delay_to_index < delay_nodes.size()) && (delay_to_index > (i + 1U))) {
+      delay_nodes[delay_to_index].second.insert(delay_nodes[delay_to_index].second.begin(),
+                                                delay_nodes[i].second.begin(),
+                                                delay_nodes[i].second.end());
+      if (out_count > 1U) {
+        // last node can not be delay
+        delay_nodes[delay_to_index].first = false;
+      }
+      delay_nodes[i].second.clear();
+      delay_node_count++;
+    }
+  }
+  if (delay_node_count > 0U) {
+    nodes.clear();
+    for (size_t i = 0U; i < delay_nodes.size(); ++i) {
+      if (!delay_nodes[i].second.empty()) {
+        nodes.insert(nodes.end(), delay_nodes[i].second.begin(), delay_nodes[i].second.end());
+      }
+    }
+  }
+  GELOGI("Delay %zu nodes.", delay_node_count);
+}
+
 graphStatus ComputeGraphImpl::TopologicalSortingGraph(const ConstComputeGraphPtr &compute_graph,
                                                       const bool dfs_reverse) {
   using TopoSortingStrategy =
@@ -1183,6 +1303,9 @@ graphStatus ComputeGraphImpl::TopologicalSortingGraph(const ConstComputeGraphPtr
   }
 
   ClearNodeList();
+  if (IsMemoryPriority()) {
+    DelayTopoSort(node_vec);
+  }
   for (size_t i = 0UL; i < node_vec.size(); i++) {
     const NodePtr node = node_vec[i];   // [node: should not be null]
     node->GetOpDescBarePtr()->SetId(static_cast<int64_t>(i));  // [node->GetOpDescBarePtr(): should not be null]
