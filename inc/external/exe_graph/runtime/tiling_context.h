@@ -141,7 +141,6 @@ class TilingContext : public ExtendedKernelContext {
    * outputs[3]: tiling-data
    * outputs[4]: workspace sizes
    * outputs[5]: tiling condition
-   * outputs[6]: schedule mode
    */
   enum TilingOutputIndex : uint32_t {
     kOutputTilingKey,
@@ -150,7 +149,6 @@ class TilingContext : public ExtendedKernelContext {
     kOutputTilingData,
     kOutputWorkspace,
     kOutputTilingCond,
-    kOutputScheduleMode,
     // add new output definitions here
     kOutputNum
   };
@@ -176,31 +174,6 @@ class TilingContext : public ExtendedKernelContext {
     const auto p = GetOutputPointer<uint64_t>(kOutputTilingKey);
     if (p == nullptr) {
       return std::numeric_limits<uint64_t>::max();
-    }
-    return *p;
-  }
-
-  /**
-   * 设置schedule_mode
-   * @param schedule_mode schedule_mode
-   * @return 成功时返回ge::GRAPH_SUCCESS
-   */
-  ge::graphStatus SetScheduleMode(const uint32_t schedule_mode) {
-    const auto p = GetOutputPointer<uint32_t>(kOutputScheduleMode);
-    if (p == nullptr) {
-      return ge::GRAPH_FAILED;
-    }
-    *p = schedule_mode;
-    return ge::GRAPH_SUCCESS;
-  }
-  /**
-   * 获取设置schedule_mode
-   * @return 设置schedule_mode，获取失败时
-   */
-  uint32_t GetScheduleMode() const {
-    const auto p = GetOutputPointer<uint32_t>(kOutputScheduleMode);
-    if (p == nullptr) {
-      return 0U;
     }
     return *p;
   }
