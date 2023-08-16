@@ -130,4 +130,51 @@ TEST_F(InferShapeContextUT, GetInferenceContextPtrOK) {
             kernel_func);
   EXPECT_EQ(infer_shape_ctx->GetInferenceContextPtr(), inference_ctx.get());
 }
+
+TEST_F(InferShapeContextUT, GetOptionalInputTensorFailed_NotSetOptionalInput) {
+  gert::StorageShape in_shape1 = {{8, 3, 224, 224}, {8, 1, 224, 224, 16}};
+  auto infer_shape_func_addr = reinterpret_cast<void *>(0x11);
+
+  auto context_holder = KernelRunContextFaker()
+                            .IrInputNum(2)
+                            .IrInstanceNum({1, 0})
+                            .KernelIONum(2, 0)
+                            .NodeIoNum(1, 0)
+                            .Inputs({&in_shape1, infer_shape_func_addr})
+                            .Build();
+  auto context = context_holder.GetContext<InferShapeContext>();
+  ASSERT_NE(context, nullptr);
+
+  ASSERT_NE(context->GetInputShape(0), nullptr);
+  EXPECT_EQ(*context->GetInputShape(0), in_shape1.GetOriginShape());
+
+  EXPECT_EQ(context->GetOptionalInputTensor(1), nullptr);
+  EXPECT_NE(context->GetInputTensor(1), nullptr);
+}
+
+TEST_F(InferShapeContextUT, GetOptionalInputTensorOK_SetOptionalInput) {
+gert::StorageShape in_shape1 = {{8, 3, 224, 224}, {8, 1, 224, 224, 16}};
+gert::Tensor in_tensor_2 = {{{1, 16, 256}, {1, 16, 256}},                // shape
+                            {ge::FORMAT_ND, ge::FORMAT_FRACTAL_NZ, {}},  // format
+                            kOnDeviceHbm,                                // placement
+                            ge::DT_FLOAT16,                              // data type
+                            (void *) 0xabc};
+auto infer_shape_func_addr = reinterpret_cast<void *>(0x11);
+
+auto context_holder = KernelRunContextFaker()
+    .IrInputNum(2)
+    .IrInstanceNum({1, 1})
+    .KernelIONum(3, 0)
+    .NodeIoNum(2, 0)
+    .Inputs({&in_shape1, &in_tensor_2, infer_shape_func_addr})
+    .Build();
+auto context = context_holder.GetContext<InferShapeContext>();
+ASSERT_NE(context, nullptr);
+
+ASSERT_NE(context->GetInputShape(0), nullptr);
+EXPECT_EQ(*context->GetInputShape(0), in_shape1.GetOriginShape());
+
+EXPECT_NE(context->GetOptionalInputTensor(1), nullptr);
+EXPECT_NE(context->GetInputTensor(2), nullptr);
+}
 }  // namespace gert
