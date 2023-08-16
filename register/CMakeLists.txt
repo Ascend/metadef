@@ -8,6 +8,7 @@ set(SRC_LIST
     "graph_optimizer/fusion_common/fusion_pass_desc.cc"
     "graph_optimizer/fusion_common/fusion_turbo_utils.cc"
     "graph_optimizer/fusion_common/fusion_turbo.cc"
+    "graph_optimizer/fusion_common/unknown_shape_utils.cc"
     "graph_optimizer/graph_fusion/graph_fusion_pass_base.cc"
     "graph_optimizer/graph_fusion/connection_matrix.cc"
     "graph_optimizer/graph_fusion/fusion_pass_registry.cc"

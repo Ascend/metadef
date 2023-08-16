@@ -39,7 +39,7 @@ public:
     * @brief Register the notification function
     * @param notify_fn [IN] Callback notification function.
     */
-    void RegNotify(const NotifyFn notify_fn);
+    void RegNotify(const NotifyFn notifyFn) const;
 
     /*
     * @ingroup OpInfoRecord
@@ -47,7 +47,7 @@ public:
     * @retval true: The switch is enabled.
     * @retval false: The switch is disablesd.
     */
-    bool GetSwitchState();
+    bool GetSwitchState() const;
 
     /*
     * @ingroup OpInfoRecord
@@ -56,7 +56,7 @@ public:
     * @param ctx [IN] Operator context information
     * @param opt [IN] Operator compile option
     */
-    void ExeOptInfoStat(const gert::TilingContext *ctx, const OpCompilerOption &opt);
+    void ExeOptInfoStat(const gert::TilingContext *ctx, const OpCompilerOption &opt) const;
 
 private:
     OpInfoRecordRegister() {}

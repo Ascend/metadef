@@ -41,4 +41,20 @@ TEST_F(FFTSNodeRegistryUnittest, CalculaterRegisterSuccess_Test) {
   FFTS_REGISTER_NODE_CALCULATER("RegisterSuccess2", TestFftsCalcFunc);
   EXPECT_EQ(gert::FFTSNodeCalculaterRegistry::GetInstance().FindNodeCalculater("RegisterSuccess2"), TestFftsCalcFunc);
 }
+
+TEST_F(FFTSNodeRegistryUnittest, SkipCtxRecord_Test) {
+  gert::SkipCtxRecord skip_record;
+  uint32_t ctx_id = 0;
+  uint32_t ctx_type = 1;
+  EXPECT_EQ(skip_record.SetSkipCtx(ctx_id, ctx_type), false);
+  skip_record.Init();
+  skip_record.SetSkipCtx(1, 2);
+  skip_record.SetSkipCtx(2, 3);
+  EXPECT_EQ(skip_record.GetCtxNum(), 2);
+  skip_record.GetSkipCtx(1, ctx_id, ctx_type);
+  EXPECT_EQ(ctx_id, 2);
+  EXPECT_EQ(ctx_type, 3);
+  skip_record.ClearRecord();
+  EXPECT_EQ(skip_record.GetCtxNum(), 0);
+}
 }
