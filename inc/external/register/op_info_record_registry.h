@@ -22,9 +22,9 @@
 
 namespace OpInfoRecord {
 struct OpCompilerOption {
-    OpCompilerOption(const std::string &impl_mode_v, bool deterministic_v = true) :
+    explicit OpCompilerOption(const std::string &impl_mode_v, bool deterministic_v = true) :
         impl_mode(impl_mode_v), deterministic(deterministic_v) {}
-    OpCompilerOption(const char *impl_mode_v, bool deterministic_v = true) :
+    explicit OpCompilerOption(const char *impl_mode_v, bool deterministic_v = true) :
         impl_mode(impl_mode_v), deterministic(deterministic_v) {}
     std::string impl_mode;
     bool deterministic;
@@ -59,8 +59,8 @@ public:
     void ExeOptInfoStat(const gert::TilingContext *ctx, const OpCompilerOption &opt) const;
 
 private:
-    OpInfoRecordRegister() {}
-    ~OpInfoRecordRegister() {}
+    OpInfoRecordRegister() = default;
+    ~OpInfoRecordRegister() = default;
     OpInfoRecordRegister(const OpInfoRecordRegister &) = delete;
     OpInfoRecordRegister &operator=(const OpInfoRecordRegister &) = delete;
 };  // class OpInfoRecordRegister
