@@ -83,6 +83,7 @@ message KernelDef {
     bytes kernel_ext_info = 18;
     uint32 kernel_ext_info_size = 19;
     repeated ArgsInfo args_info = 20;
+    uint32 schedule_mode = 21;
 }
 
 message KernelDefWithHandle {
@@ -97,6 +98,7 @@ message KernelDefWithHandle {
     string original_kernel_key = 16;
     string node_info = 17;
     repeated ArgsInfo args_info = 18;
+    uint32 schedule_mode = 19;
 }
 
 message KernelContext {

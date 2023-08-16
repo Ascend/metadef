@@ -177,6 +177,7 @@ class TilingContext : public ExtendedKernelContext {
     }
     return *p;
   }
+
   /**
    * 设置block dim
    * @param block_dim block dim

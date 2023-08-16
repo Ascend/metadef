@@ -358,12 +358,14 @@ USED_BY_JSON void from_json(const Json &j, BroadcastReshardTask &broadcast_task_
 USED_BY_JSON void to_json(Json &j, const SliceReshardTask &task_info) {
   j = Json();
   j["task_type"] = kCommTaskTypeSlice;
+  j["axes"] = task_info.axes;
   j["offsets"] = task_info.offsets;
   j["size"] = task_info.sizes;
   j["device_index"] = task_info.device_index;
 }
 
 USED_BY_JSON void from_json(const Json &j, SliceReshardTask &task_info) {
+  TryGetValue(j, "axes", task_info.axes);
   GetValue(j, "offsets", task_info.offsets);
   GetValue(j, "size", task_info.sizes);
   TryGetValue(j, "device_index", task_info.device_index);
@@ -425,6 +427,16 @@ USED_BY_JSON void to_json(Json &j, const TransposeReshardTask &task_info) {
 
 USED_BY_JSON void from_json(const Json &j, TransposeReshardTask &task_info) {
   GetValue(j, "perm", task_info.perm);
+}
+
+USED_BY_JSON void to_json(Json &j, const ReshapeReshardTask &task_info) {
+  j = Json();
+  j["task_type"] = kCommTaskTypeReshape;
+  j["shape"] = task_info.shape;
+}
+
+USED_BY_JSON void from_json(const Json &j, ReshapeReshardTask &task_info) {
+  GetValue(j, "shape", task_info.shape);
 }
 
 USED_BY_JSON void to_json(Json &j, const ModifyValueReshardTask &task_info) {
@@ -651,6 +663,9 @@ void CommTaskBuilder::InitCommTaskBuilders() {
   builders_[kCommTaskTypeModifyValue] = [](const Json &j, CommTask &comm_task) {
     comm_task.modify_value_reshard_task = CreateReshardTaskInfo<ModifyValueReshardTask>(j);
   };
+  builders_[kCommTaskTypeReshape] = [](const Json &j, CommTask &comm_task) {
+    comm_task.reshape_reshard_task = CreateReshardTaskInfo<ReshapeReshardTask>(j);
+  };
 }
 
 template<typename T>
@@ -702,6 +717,9 @@ void CommTaskBuilder::InitJsonConverters() {
   };
   json_converters_[kCommTaskTypeModifyValue] = [](const CommTask &comm_task, nlohmann::json &j) {
     return ConvertToJson(comm_task.modify_value_reshard_task.get(), j);
+  };
+  json_converters_[kCommTaskTypeReshape] = [](const CommTask &comm_task, nlohmann::json &j) {
+    return ConvertToJson(comm_task.reshape_reshard_task.get(), j);
   };
 }
 

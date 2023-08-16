@@ -36,11 +36,20 @@ public:
             addr_base_(nullptr),
             max_size_(0),
             offset_(0),
-            tiling_cond_(-1) {}
+            tiling_cond_(-1),
+            schedule_mode_(0U) {}
 
   void SetBlockDim(const uint32_t &block_dim) { block_dim_ = block_dim; }
 
   uint32_t GetBlockDim() const { return block_dim_; }
+
+  void SetScheduleMode(const uint32_t schedule_mode) {
+    schedule_mode_ = schedule_mode;
+  }
+
+  uint32_t GetScheduleMode() const {
+    return schedule_mode_;
+  }
 
   void AddWorkspace(const int64_t &workspace) { workspaces_.push_back(workspace); }
 
@@ -132,6 +141,7 @@ private:
   uint64_t max_size_;
   uint64_t offset_;
   int32_t tiling_cond_;
+  uint32_t schedule_mode_;
 };
 
 OpRunInfo::OpRunInfo() {
@@ -174,6 +184,14 @@ OpRunInfo &OpRunInfo::operator=(OpRunInfo &&runinfo) {
 
 void OpRunInfo::SetBlockDim(const uint32_t &block_dim) {
   impl_->SetBlockDim(block_dim);
+}
+
+void OpRunInfo::SetScheduleMode(const uint32_t schedule_mode) {
+  impl_->SetScheduleMode(schedule_mode);
+}
+
+uint32_t OpRunInfo::GetScheduleMode() const {
+  return impl_->GetScheduleMode();
 }
 
 uint32_t OpRunInfo::GetBlockDim() const {

@@ -33,6 +33,7 @@ constexpr const char_t *kCommTaskTypeSlice = "Slice";
 constexpr const char_t *kCommTaskTypeSliceByAxis = "SliceByAxis";
 constexpr const char_t *kCommTaskTypeSplit = "Split";
 constexpr const char_t *kCommTaskTypeTranspose = "Transpose";
+constexpr const char_t *kCommTaskTypeReshape = "Reshape";
 constexpr const char_t *kCommTaskTypeHcomAllGather = "HcomAllGather";
 constexpr const char_t *kCommTaskTypeHcomAllReduce = "HcomAllReduce";
 constexpr const char_t *kCommTaskTypeHcomAllReduceMean = "HcomAllReduceMean";
@@ -168,6 +169,7 @@ struct BroadcastReshardTask {
 
 // local reshardings
 struct SliceReshardTask {
+  std::vector<int64_t> axes;
   std::vector<int64_t> offsets;
   std::vector<int64_t> sizes;
   DeviceIndex device_index;
@@ -200,6 +202,10 @@ struct TransposeReshardTask {
   std::vector<int32_t> perm;
 };
 
+struct ReshapeReshardTask {
+  std::vector<int64_t> shape;
+};
+
 struct ModifyValueReshardTask {
   std::string op_type;  // mul, div
   std::vector<int64_t> value;
@@ -226,6 +232,7 @@ struct CommTask {
   std::shared_ptr<TransposeReshardTask> transpose_reshard_task;
   std::shared_ptr<ModifyValueReshardTask> modify_value_reshard_task;
   std::shared_ptr<LocalReduceReshardTask> local_reduce_reshard_task;
+  std::shared_ptr<ReshapeReshardTask> reshape_reshard_task;
 };
 
 struct CommStepInput {

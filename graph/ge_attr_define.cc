@@ -1444,4 +1444,6 @@ const std::string ATTR_NAME_OP_RUN_INFO = "op_run_info";
 
 // for local reduce
 const std::string REDUCE_OP_ATTR_KEEP_DIMS = "keep_dims";
+
+const std::string LOGIC_STREAM_ID = "_logic_stream_id";
 }  // namespace ge

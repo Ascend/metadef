@@ -132,6 +132,76 @@ ge::ComputeGraphPtr BuildNormalGraph(const std::string &name) {
   builder.AddControlEdge(node6, netoutput);
   return builder.GetGraph();
 }
+
+/*
+ *         variable      data
+ *          /     \        |
+ *       node1  node2     node3
+ *         |       |       |
+ *         |       |     node4
+ *          \      |      /
+ *                node5
+ */
+ge::ComputeGraphPtr BuildDelayTopoGraph(const std::string &name) {
+  auto builder = ge::ut::GraphBuilder(name);
+  const auto &variable = builder.AddNode("variable", ge::VARIABLE, 0, 2);
+  const auto &node1 = builder.AddNode("node1", "node1", 1, 1);
+  const auto &node2 = builder.AddNode("node2", "node2", 1, 1);
+  const auto &node3 = builder.AddNode("node3", "node3", 1, 1);
+  const auto &node4 = builder.AddNode("node4", "node4", 1, 1);
+  const auto &node5 = builder.AddNode("node5", "node5", 3, 0);
+  const auto &data = builder.AddNode("data", "DATA", 0, 1);
+
+  builder.AddDataEdge(variable, 0, node1, 0);
+  builder.AddDataEdge(variable, 1, node2, 0);
+  builder.AddDataEdge(node1, 0, node5, 0);
+  builder.AddDataEdge(node2, 0, node5, 1);
+  builder.AddDataEdge(data, 0, node3, 0);
+  builder.AddDataEdge(node3, 0, node4, 0);
+  builder.AddDataEdge(node4, 0, node5, 2);
+
+  builder.AddControlEdge(node2, node3);
+  return builder.GetGraph();
+}
+
+/*
+ *  constant const variable      data
+ *          \  |  /     \        |
+ *           node1    node2     node3
+ *              |        |       |
+ *              |        |     node4
+ *               \       |      /
+ *                     node5
+ */
+ge::ComputeGraphPtr BuildDelayTopoGraphMultiInput(const std::string &name, bool all_is_log_life = true) {
+  auto builder = ge::ut::GraphBuilder(name);
+  const auto &constant = builder.AddNode("const", ge::CONSTANT, 0, 1);
+  auto type = ge::CONSTANTOP;
+  if (!all_is_log_life) {
+    type = "test";
+  }
+  const auto &constantop = builder.AddNode("constant", type, 0, 1);
+  const auto &variable = builder.AddNode("variable", ge::VARIABLE, 0, 2);
+  const auto &node1 = builder.AddNode("node1", "node1", 3, 1);
+  const auto &node2 = builder.AddNode("node2", "node2", 1, 1);
+  const auto &node3 = builder.AddNode("node3", "node3", 1, 1);
+  const auto &node4 = builder.AddNode("node4", "node4", 1, 1);
+  const auto &node5 = builder.AddNode("node5", "node5", 3, 0);
+  const auto &data = builder.AddNode("data", "DATA", 0, 1);
+
+  builder.AddDataEdge(constant, 0, node1, 0);
+  builder.AddDataEdge(constantop, 0, node1, 1);
+  builder.AddDataEdge(variable, 0, node1, 2);
+  builder.AddDataEdge(variable, 1, node2, 0);
+  builder.AddDataEdge(node1, 0, node5, 0);
+  builder.AddDataEdge(node2, 0, node5, 1);
+  builder.AddDataEdge(data, 0, node3, 0);
+  builder.AddDataEdge(node3, 0, node4, 0);
+  builder.AddDataEdge(node4, 0, node5, 2);
+
+  builder.AddControlEdge(node2, node3);
+  return builder.GetGraph();
+}
 }
 
 namespace ge
@@ -838,5 +908,74 @@ TEST_F(UtestComputeGraph, DFSPOSTORDERTopologicalSorting_ringing_fail) {
   options_map["ge.exec.memoryOptimizationPolicy"] = "MemoryPriority";
   GetThreadLocalContext().SetGraphOption(options_map);
   EXPECT_NE(graph->TopologicalSorting(), GRAPH_SUCCESS);
+}
+
+TEST_F(UtestComputeGraph, DelayTopologicalSorting) {
+  auto graph = BuildDelayTopoGraph("test_delay_topo_graph");
+  std::map<std::string, std::string> options_map;
+  options_map["ge.topoSortingMode"] = "2";
+  options_map["ge.exec.memoryOptimizationPolicy"] = "MemoryPriority";
+  GetThreadLocalContext().SetGraphOption(options_map);
+  EXPECT_EQ(graph->TopologicalSorting(), GRAPH_SUCCESS);
+  std::vector<std::string> expected_dfs_names = {"variable", "data", "node2", "node3", "node4", "node1", "node5"};
+  std::vector<std::string> dfs_names;
+  const auto &graph_dfs_topo = graph->GetAllNodes();
+  for (auto &node : graph_dfs_topo) {
+    dfs_names.push_back(node->GetName());
+  }
+
+  EXPECT_EQ(dfs_names, expected_dfs_names);
+}
+
+TEST_F(UtestComputeGraph, NoDelayTopologicalSorting) {
+  auto graph = BuildDelayTopoGraph("test_delay_topo_graph");
+  std::map<std::string, std::string> options_map;
+  options_map["ge.topoSortingMode"] = "2";
+  GetThreadLocalContext().SetGraphOption(options_map);
+  EXPECT_EQ(graph->TopologicalSorting(), GRAPH_SUCCESS);
+  std::vector<std::string> expected_dfs_names = {"variable", "node1", "node2", "data", "node3", "node4", "node5"};
+  std::vector<std::string> dfs_names;
+  const auto &graph_dfs_topo = graph->GetAllNodes();
+  for (auto &node : graph_dfs_topo) {
+    dfs_names.push_back(node->GetName());
+  }
+
+  EXPECT_EQ(dfs_names, expected_dfs_names);
+}
+
+TEST_F(UtestComputeGraph, DelayTopologicalSortingMultiInput) {
+  auto graph = BuildDelayTopoGraphMultiInput("test_delay_topo_graph");
+  std::map<std::string, std::string> options_map;
+  options_map["ge.topoSortingMode"] = "2";
+  options_map["ge.exec.memoryOptimizationPolicy"] = "MemoryPriority";
+  GetThreadLocalContext().SetGraphOption(options_map);
+  EXPECT_EQ(graph->TopologicalSorting(), GRAPH_SUCCESS);
+  std::vector<std::string> expected_dfs_names =
+      {"const", "constant", "variable", "data", "node2", "node3", "node4", "node1", "node5"};
+  std::vector<std::string> dfs_names;
+  const auto &graph_dfs_topo = graph->GetAllNodes();
+  for (auto &node : graph_dfs_topo) {
+    dfs_names.push_back(node->GetName());
+  }
+
+  EXPECT_EQ(dfs_names, expected_dfs_names);
+}
+
+TEST_F(UtestComputeGraph, NoDelayTopologicalSortingMultiInput) {
+  auto graph = BuildDelayTopoGraphMultiInput("test_delay_topo_graph", false);
+  std::map<std::string, std::string> options_map;
+  options_map["ge.topoSortingMode"] = "2";
+  options_map["ge.exec.memoryOptimizationPolicy"] = "MemoryPriority";
+  GetThreadLocalContext().SetGraphOption(options_map);
+  EXPECT_EQ(graph->TopologicalSorting(), GRAPH_SUCCESS);
+  std::vector<std::string> expected_dfs_names =
+    {"const", "constant", "variable", "node1", "data", "node2", "node3", "node4", "node5"};
+  std::vector<std::string> dfs_names;
+  const auto &graph_dfs_topo = graph->GetAllNodes();
+  for (auto &node : graph_dfs_topo) {
+    dfs_names.push_back(node->GetName());
+  }
+
+  EXPECT_EQ(dfs_names, expected_dfs_names);
 }
 }

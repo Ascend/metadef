@@ -19,7 +19,6 @@
 
 #include <string>
 #include <vector>
-#include <graph/types.h>
 #include <graph/ge_error_codes.h>
 
 namespace gert {
