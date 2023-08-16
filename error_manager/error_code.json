@@ -236,7 +236,7 @@
       "errTitle": "Invalid Argument",
       "ErrCode": "E10022",
       "ErrMessage": "Path [%s] for parameter [--%s] does not include the file name.",
-      "Arglist": "parameter,filename",
+      "Arglist": "filename,parameter",
       "suggestion": {
         "Possible Cause": "N/A",
         "Solution": "Add the file name to the path."
@@ -1137,7 +1137,7 @@
       "errClass": "GE Errors",
       "errTitle": "File size invalid",
       "ErrCode": "E19015",
-      "ErrMessage": "File[%s] size %s is out of valid range[0, %s].",
+      "ErrMessage": "File[%s] size %s is out of valid range(0, %s).",
       "Arglist": "file,size,maxsize",
       "suggestion": {
         "Possible Cause": "N/A",
