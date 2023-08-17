@@ -153,6 +153,15 @@ class TilingContext : public ExtendedKernelContext {
     kOutputNum
   };
 
+  /*
+  * outputs[0]: fallible tiling condition
+  */
+  enum FallibleTilingOutputIndex : uint32_t {
+    kTilingStatus = TilingOutputIndex::kOutputNum,
+    // add new output definitions here
+    kFallibleOutputNum
+  };
+
   /**
    * 设置tiling key
    * @param tiling_key tiling key
