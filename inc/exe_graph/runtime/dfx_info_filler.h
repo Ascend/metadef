@@ -26,8 +26,8 @@ class ProfilingInfoWrapper {
  public:
   virtual ~ProfilingInfoWrapper() = default;
   virtual void SetBlockDim(uint32_t block_dim) = 0;
-  virtual ge::graphStatus FillShapeInfo(std::vector<std::vector<int64_t>> &input_shapes,
-                                        std::vector<std::vector<int64_t>> &output_shapes) = 0;
+  virtual ge::graphStatus FillShapeInfo(const std::vector<std::vector<int64_t>> &input_shapes,
+                                        const std::vector<std::vector<int64_t>> &output_shapes) = 0;
 };
 
 class DataDumpInfoWrapper {
