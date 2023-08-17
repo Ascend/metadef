@@ -1448,6 +1448,9 @@ GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY extern const std::string REDUCE_O
 
 // logic stream id
 GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY extern const std::string LOGIC_STREAM_ID;
+
+// storage format
+GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY extern const std::string ATTR_NAME_IS_HEAVY_OP;
 }  // namespace ge
 
 /*lint +e618*/

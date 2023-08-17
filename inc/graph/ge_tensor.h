@@ -138,6 +138,9 @@ class GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY GeTensorDesc : public AttrH
   Format GetOriginFormat() const;
   void SetOriginFormat(const Format origin_format);
 
+  const std::string GetExpandDimsRule() const;
+  void SetExpandDimsRule(const std::string &expand_dims_rule);
+
   void SetName(const std::string &name);
   const std::string GetName() const;
 

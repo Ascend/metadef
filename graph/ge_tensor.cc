@@ -984,6 +984,13 @@ GeTensorDesc &GeTensorDesc::operator=(GeTensorDesc &&desc) {
   return *this;
 }
 
+const std::string GeTensorDesc::GetExpandDimsRule() const {
+  return impl_->GetExpandDimsRule();
+}
+void GeTensorDesc::SetExpandDimsRule(const std::string &expand_dims_rule) {
+  impl_->SetExpandDimsRule(expand_dims_rule);
+}
+
 uint32_t TensorDataImpl::invalid_data_ = 0x3A2D2900U;
 
 TensorDataImpl::TensorDataImpl(const TensorDataImpl &other) {
