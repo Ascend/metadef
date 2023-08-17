@@ -53,6 +53,16 @@ class InferShapeContext : public ExtendedKernelContext {
   const Tensor *GetInputTensor(const size_t index) const {
     return GetInputPointer<Tensor>(index);
   }
+
+  /**
+   * 基于算子IR原型定义，获取`OPTIONAL_INPUT`类型的输入tensor指针
+   * @param ir_index IR原型定义中的index
+   * @return tensor指针，index非法，或该INPUT没有实例化时，返回空指针
+   */
+  const Tensor *GetOptionalInputTensor(const size_t ir_index) const {
+    return GetDynamicInputPointer<Tensor>(ir_index, 0);
+  }
+
   /**
    * 基于算子IR原型定义，获取`OPTIONAL_INPUT`类型的输入shape指针
    * @param ir_index IR原型定义中的index

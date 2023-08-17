@@ -56,15 +56,16 @@ TopoSortingMode GetTopoSortingStrategy() {
     } else if (topo_sorting_mode == kTopoSortingDfsPostOrder) {
       return TopoSortingMode::kDFS_POSTORDER;
     } else {
-      GELOGI("OPTION_TOPOSORTING_MODE = %s which is not defined, Check OPTION_GRAPH_RUN_MODE by default.",
-             topo_sorting_mode_str.c_str());
+      GELOGW("OPTION_TOPOSORTING_MODE = %s is invalid", topo_sorting_mode_str.c_str());
     }
   }
+
   if (ge::GetContext().GetTrainGraphFlag()) {
+    GELOGI("train flag is 1, use BFS.");
     return TopoSortingMode::kBFS;
-  } else {
-    GELOGI("OPTION_GRAPH_RUN_MODE not set, use DFSTopologicalSorting by default.");
   }
+
+  GELOGI("train flag is 0, use DFS.");
   return TopoSortingMode::kDFS;
 }
 

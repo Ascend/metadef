@@ -257,7 +257,7 @@ TEST_F(UtestComputeGraph, AddNodeFront_success) {
   auto op_desc = std::make_shared<OpDesc>("node1", "node1");
   op_desc->AddInputDesc(tensor_desc->Clone());
   auto node = graph->AddNode(op_desc);
-  
+
   auto op_desc1 = std::make_shared<OpDesc>("add_front", "add_front");
   op_desc1->AddInputDesc(tensor_desc->Clone());
   auto nodeptr = graph->AddNodeFront(node);
@@ -339,7 +339,7 @@ TEST_F(UtestComputeGraph, RemoveConstInput_success) {
   auto op_desc = std::make_shared<OpDesc>("node1", CONSTANT);
   op_desc->AddInputDesc(tensor_desc->Clone());
   op_desc->AddOutputDesc(tensor_desc->Clone());
-  
+
   auto node1 = graph->AddNode(op_desc);
   auto node2 = graph->AddNode(op_desc);
   GraphUtils::AddEdge(node1->GetOutControlAnchor(), node2->GetInControlAnchor());
@@ -409,7 +409,7 @@ TEST_F(UtestComputeGraph, UpdateInputMapping_success) {
   opdesc->AddOutputDesc("name2", tensor_desc->Clone());
   auto node = graph->AddNode(opdesc);
   ge::AttrUtils::SetInt(opdesc, ATTR_NAME_PARENT_NODE_INDEX, 1);
-  
+
   graph->AddInputNode(node);
   std::map<uint32_t, uint32_t> input_mapping{{0,1}};
   EXPECT_EQ(graph->UpdateInputMapping(input_mapping), GRAPH_SUCCESS);
@@ -564,6 +564,46 @@ TEST_F(UtestComputeGraph, BFSTopologicalSortingInPriorityMode_success) {
   EXPECT_EQ(bfs_names, expected_bfs_names);
 }
 
+TEST_F(UtestComputeGraph, TrainTopologicalSortingInPriorityMode_BFS_success) {
+  std::map<std::string, std::string> options_map;
+
+  auto graph = BuildNormalGraph("test_train_topo_graph_bfs");
+  EXPECT_EQ(graph->TopologicalSorting(), GRAPH_SUCCESS);
+  std::vector<std::string> expected_bfs_names = {"node1", "node2", "node3", "node4", "node5", "node6", "netoutput"};
+  std::vector<std::string> bfs_names;
+  options_map["ge.graphRunMode"] = "1";  // tarin
+  options_map["ge.topoSortingMode"] = ""; // no topo sort mode
+  options_map["ge.exec.memoryOptimizationPolicy"] = "MemoryPriority";
+  GetThreadLocalContext().SetGraphOption(options_map);
+  EXPECT_EQ(graph->TopologicalSorting(), GRAPH_SUCCESS);
+  const auto &graph_bfs_topo = graph->GetAllNodes();
+  for (auto &node : graph_bfs_topo) {
+    bfs_names.push_back(node->GetName());
+  }
+
+  EXPECT_EQ(bfs_names, expected_bfs_names);
+}
+
+TEST_F(UtestComputeGraph, TrainAndInvalidTopologicalSortingInPriorityMode_BFS_success) {
+  std::map<std::string, std::string> options_map;
+
+  auto graph = BuildNormalGraph("test_train_topo_graph_with_invalid_sort_mode_bfs");
+  EXPECT_EQ(graph->TopologicalSorting(), GRAPH_SUCCESS);
+  std::vector<std::string> expected_bfs_names = {"node1", "node2", "node3", "node4", "node5", "node6", "netoutput"};
+  std::vector<std::string> bfs_names;
+  options_map["ge.graphRunMode"] = "1";  // tarin
+  options_map["ge.topoSortingMode"] = "10"; // invalid topo sort mode
+  options_map["ge.exec.memoryOptimizationPolicy"] = "MemoryPriority";
+  GetThreadLocalContext().SetGraphOption(options_map);
+  EXPECT_EQ(graph->TopologicalSorting(), GRAPH_SUCCESS);
+  const auto &graph_bfs_topo = graph->GetAllNodes();
+  for (auto &node : graph_bfs_topo) {
+    bfs_names.push_back(node->GetName());
+  }
+
+  EXPECT_EQ(bfs_names, expected_bfs_names);
+}
+
 TEST_F(UtestComputeGraph, DFSTopologicalSortingInPriorityMode_success) {
   std::map<std::string, std::string> options_map;
 
@@ -572,6 +612,26 @@ TEST_F(UtestComputeGraph, DFSTopologicalSortingInPriorityMode_success) {
   std::vector<std::string> expected_dfs_names = {"node6", "node1", "node2", "node3", "node4", "node5", "netoutput"};
   std::vector<std::string> dfs_names;
   options_map["ge.topoSortingMode"] = "1";
+  options_map["ge.exec.memoryOptimizationPolicy"] = "MemoryPriority";
+  GetThreadLocalContext().SetGraphOption(options_map);
+  EXPECT_EQ(graph->TopologicalSorting(), GRAPH_SUCCESS);
+  const auto &graph_dfs_topo = graph->GetAllNodes();
+  for (auto &node : graph_dfs_topo) {
+    dfs_names.push_back(node->GetName());
+  }
+
+  EXPECT_EQ(dfs_names, expected_dfs_names);
+}
+
+TEST_F(UtestComputeGraph, NotTrainTopologicalSortingInPriorityMode_DFS_success) {
+  std::map<std::string, std::string> options_map;
+
+  auto graph = BuildNormalGraph("test_dfs_not_train_topo_graph_dfx");
+  EXPECT_EQ(graph->TopologicalSorting(), GRAPH_SUCCESS);
+  std::vector<std::string> expected_dfs_names = {"node6", "node1", "node2", "node3", "node4", "node5", "netoutput"};
+  std::vector<std::string> dfs_names;
+  options_map["ge.graphRunMode"] = "0";  // not tarin
+  options_map["ge.topoSortingMode"] = "";
   options_map["ge.exec.memoryOptimizationPolicy"] = "MemoryPriority";
   GetThreadLocalContext().SetGraphOption(options_map);
   EXPECT_EQ(graph->TopologicalSorting(), GRAPH_SUCCESS);
