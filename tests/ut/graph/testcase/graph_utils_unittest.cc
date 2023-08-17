@@ -1026,7 +1026,7 @@ TEST_F(UtestGraphUtils, DumpGEGraphOptionsNotPreRunBeginNoDump) {
 }
 
 TEST_F(UtestGraphUtils, CheckDumpGraphNum) {
-  std::map<std::string, std::string> session_option{{"ge.maxDumpFileNum", "100"}};
+  std::map<std::string, std::string> session_option{{"ge.maxDumpFileNum", "10"}};
   GetThreadLocalContext().SetSessionOption(session_option);
   auto graph_builder0 = ut::GraphBuilder("test_graph0");
   const auto &node0 = graph_builder0.AddNode("data0", DATA, 1, 1);

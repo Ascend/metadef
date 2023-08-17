@@ -189,7 +189,7 @@ TEST_F(UtestTuningUtils, CreateDataNode) {
     ut::GraphBuilder builder = ut::GraphBuilder("graph");
     auto node = builder.AddNode("Data", "Data", 1, 1);
     NodePtr data_node;
-    EXPECT_EQ(TuningUtils::CreateDataNode(node, "", data_node), GRAPH_SUCCESS);
+    EXPECT_EQ(TuningUtils::CreateDataNode(node, data_node), GRAPH_SUCCESS);
     ge::GeTensorPtr tensor = std::make_shared<GeTensor>();
     std::vector<uint8_t> value{1, 2, 3};
     std::vector<int64_t> shape{3};
@@ -200,7 +200,7 @@ TEST_F(UtestTuningUtils, CreateDataNode) {
     weight1[1] = tensor;
     EXPECT_EQ(ge::OpDescUtils::SetWeights(*node, weight1), 0);
     auto node_tensor = OpDescUtils::MutableWeights(node);
-    EXPECT_EQ(TuningUtils::CreateDataNode(node, "", data_node), GRAPH_SUCCESS);
+    EXPECT_EQ(TuningUtils::CreateDataNode(node, data_node), GRAPH_SUCCESS);
 
 
     auto sub_builder = ut::GraphBuilder("sub");
@@ -210,7 +210,7 @@ TEST_F(UtestTuningUtils, CreateDataNode) {
     sub_builder.AddDataEdge(partitioncall_0_const1, 0, partitioncall_0_netoutput, 0);
     const auto &sub_graph = sub_builder.GetGraph();
     sub_graph->SetParentNode(node);
-    EXPECT_EQ(TuningUtils::CreateDataNode(node, "", data_node), GRAPH_SUCCESS);
+    EXPECT_EQ(TuningUtils::CreateDataNode(node, data_node), GRAPH_SUCCESS);
 }
 
 TEST_F(UtestTuningUtils, CreateDataNode_Weight) {
@@ -219,7 +219,7 @@ TEST_F(UtestTuningUtils, CreateDataNode_Weight) {
     auto node1 = builder.AddNode("Data1", "Data", 1, 1);
     NodePtr data_node;
     node->GetOpDesc()->SetExtAttr<NodePtr>("parentNode", node1);
-    EXPECT_EQ(TuningUtils::CreateDataNode(node, "", data_node), GRAPH_SUCCESS);
+    EXPECT_EQ(TuningUtils::CreateDataNode(node, data_node), GRAPH_SUCCESS);
 
     auto pld = builder.AddNode("pld", PLACEHOLDER, 0, 1);
     uint8_t val = 1;
@@ -227,7 +227,7 @@ TEST_F(UtestTuningUtils, CreateDataNode_Weight) {
     ASSERT_NE(pld->GetOpDesc(), nullptr);
     EXPECT_EQ(ge::AttrUtils::SetTensor(pld->GetOpDesc(), "value", const_tensor), true);
     EXPECT_EQ(ge::AttrUtils::SetStr(pld->GetOpDesc(), "_parentNodeName", "src_const"), true);
-    EXPECT_EQ(TuningUtils::CreateDataNode(pld, "", data_node), GRAPH_SUCCESS);
+    EXPECT_EQ(TuningUtils::CreateDataNode(pld, data_node), GRAPH_SUCCESS);
     std::string parent_node_name;
     EXPECT_EQ(ge::AttrUtils::GetStr(data_node->GetOpDesc(), ATTR_NAME_SRC_CONST_NAME, parent_node_name), true);
     EXPECT_EQ(parent_node_name, "src_const");
@@ -263,19 +263,19 @@ TEST_F(UtestTuningUtils, ChangePld2Data) {
 TEST_F(UtestTuningUtils, HandlePld) {
     ut::GraphBuilder builder = ut::GraphBuilder("graph");
     auto node0 = builder.AddNode("Data0", "Data", 1, 1);
-    EXPECT_EQ(TuningUtils::HandlePld(node0, ""), FAILED);
+    EXPECT_EQ(TuningUtils::HandlePld(node0), FAILED);
     AttrUtils::SetStr(node0->GetOpDesc(), "parentOpType", "Hello world");
     AttrUtils::SetStr(node0->GetOpDesc(), "_parentNodeName", "Hello world0");
     AttrUtils::SetInt(node0->GetOpDesc(), "anchorIndex", 1);
     AttrUtils::SetStr(node0->GetOpDesc(), "_peerNodeName", "Hello world0");
-    EXPECT_EQ(TuningUtils::HandlePld(node0, ""), FAILED);
+    EXPECT_EQ(TuningUtils::HandlePld(node0), FAILED);
     auto node2 = builder.AddNode("placeholder2", PLACEHOLDER, 1, 1);
     auto node3 = builder.AddNode("data3", DATA, 1, 1);
     AttrUtils::SetStr(node2->GetOpDesc(), "parentOpType", "Hello world");
     AttrUtils::SetStr(node2->GetOpDesc(), "_parentNodeName", "Hello world0");
     AttrUtils::SetInt(node2->GetOpDesc(), "anchorIndex", 1);
     AttrUtils::SetStr(node2->GetOpDesc(), "_peerNodeName", "Hello world0");
-    EXPECT_EQ(TuningUtils::HandlePld(node2, ""), SUCCESS);
+    EXPECT_EQ(TuningUtils::HandlePld(node2), SUCCESS);
 }
 
 TEST_F(UtestTuningUtils, CreateNetOutput) {
@@ -398,6 +398,7 @@ TEST_F(UtestTuningUtils, ConvertFileToGraph) {
   options.clear();
   EXPECT_EQ(TuningUtils::ConvertFileToGraph(options, g), FAILED);
 }
+
 
 TEST_F(UtestTuningUtils, MergeSubGraph) {
     ut::GraphBuilder builder = ut::GraphBuilder("graph");
@@ -607,79 +608,5 @@ TEST_F(UtestTuningUtils, MergeAllSubGraph) {
     EXPECT_EQ(TuningUtils::MergeAllSubGraph(vec, output_graph), SUCCESS);
 }
 
-TEST_F(UtestTuningUtils, WeightExternalizationAndRecover) {
-  std::vector<ComputeGraphPtr> tuning_subgraphs;
-  auto builder_tune = ut::GraphBuilder("tune_graph");
-  const auto pld0 = builder_tune.AddNode("pld0", PLACEHOLDER, 0, 1);
-  AttrUtils::SetStr(pld0->GetOpDesc(), "_parentNodeName", "Const0");
-  AttrUtils::SetStr(pld0->GetOpDesc(), "_peerNodeName", "Const0");
-  AttrUtils::SetStr(pld0->GetOpDesc(), "parentOpType", CONSTANT);
-  AttrUtils::SetInt(pld0->GetOpDesc(), "anchorIndex", 0);
-  const auto pld1 = builder_tune.AddNode("pld1", PLACEHOLDER, 0, 1);
-  AttrUtils::SetStr(pld1->GetOpDesc(), "_parentNodeName", "Const0");
-  AttrUtils::SetStr(pld1->GetOpDesc(), "_peerNodeName", "Const0");
-  AttrUtils::SetStr(pld1->GetOpDesc(), "parentOpType", CONSTANT);
-  AttrUtils::SetInt(pld1->GetOpDesc(), "anchorIndex", 0);
-  const auto pld2 = builder_tune.AddNode("pld2", PLACEHOLDER, 0, 1);
-  AttrUtils::SetStr(pld2->GetOpDesc(), "_parentNodeName", "Const1");
-  AttrUtils::SetStr(pld2->GetOpDesc(), "_peerNodeName", "Const1");
-  AttrUtils::SetStr(pld2->GetOpDesc(), "parentOpType", CONSTANT);
-  AttrUtils::SetInt(pld2->GetOpDesc(), "anchorIndex", 0);
-  const auto addn = builder_tune.AddNode("addn", "AddN", 3, 1);
-  const auto end0 = builder_tune.AddNode("end0", END, 1, 0);
-  builder_tune.AddDataEdge(pld0, 0, addn, 0);
-  builder_tune.AddDataEdge(pld1, 0, addn, 1);
-  builder_tune.AddDataEdge(pld2, 0, addn, 2);
-  builder_tune.AddDataEdge(addn, 0, end0, 0);
-  auto tune_graph = builder_tune.GetGraph();
-  tuning_subgraphs.push_back(tune_graph);
 
-  std::vector<ComputeGraphPtr> non_tuning_subgraphs;
-  auto builder_const = ut::GraphBuilder("const_graph");
-  const auto const0 = builder_const.AddNode("Const0", CONSTANT, 0, 1);
-  const auto const1 = builder_const.AddNode("Const1", CONSTANT, 0, 1);
-  ge::GeTensorPtr tensor = std::make_shared<GeTensor>();
-  std::vector<uint8_t> value{1, 2, 3};
-  std::vector<int64_t> shape{3};
-  tensor->MutableTensorDesc().SetShape(GeShape(shape));
-  tensor->SetData(value);
-  tensor->MutableTensorDesc().SetDataType(DT_UINT8);
-  EXPECT_EQ(ge::OpDescUtils::SetWeights(const0, {tensor}), 0);
-  EXPECT_EQ(ge::OpDescUtils::SetWeights(const1, {tensor}), 0);
-  const auto netoutput = builder_const.AddNode("netoutput0", NETOUTPUT, 2, 0);
-  builder_const.AddDataEdge(const0, 0, netoutput, 0);
-  builder_const.AddDataEdge(const1, 0, netoutput, 1);
-  auto nongraph = builder_const.GetGraph();
-  non_tuning_subgraphs.push_back(nongraph);
-  pld0->GetOpDesc()->SetExtAttr("parentNode", const0);
-  pld1->GetOpDesc()->SetExtAttr("parentNode", const0);
-  pld2->GetOpDesc()->SetExtAttr("parentNode", const1);
-
-  EXPECT_EQ(TuningUtils::ConvertGraphToFile(tuning_subgraphs, non_tuning_subgraphs, true, "./"), GRAPH_SUCCESS);
-  EXPECT_EQ(TuningUtils::reusable_weight_files_.size(), 1U);
-  EXPECT_EQ(TuningUtils::hash_to_files_.size(), 1U);
-  const auto file_const1 = tune_graph->FindFirstNodeMatchType(FILECONSTANT);
-  EXPECT_NE(file_const1, nullptr);
-  const auto file_const2 = nongraph->FindFirstNodeMatchType(FILECONSTANT);
-  EXPECT_NE(file_const2, nullptr);
-  const auto real_const3 = nongraph->FindFirstNodeMatchType(CONSTANT);
-  EXPECT_EQ(real_const3, nullptr);
-
-  ComputeGraphPtr load_aicore = std::make_shared<ComputeGraph>("TestGraph0");
-  ComputeGraphPtr load_const = std::make_shared<ComputeGraph>("TestGraph1");
-  EXPECT_EQ(GraphUtils::LoadGEGraph("./aicore_subgraph_0.txt", load_aicore), true);
-  EXPECT_EQ(GraphUtils::LoadGEGraph("./subgraph_0.txt", load_const), true);
-  const auto recover_const1 = load_aicore->FindFirstNodeMatchType(CONSTANT);
-  EXPECT_NE(recover_const1, nullptr);
-  const auto file_const3 = load_aicore->FindFirstNodeMatchType(FILECONSTANT);
-  EXPECT_EQ(file_const3, nullptr);
-  const auto recover_const2 = load_const->FindFirstNodeMatchType(CONSTANT);
-  EXPECT_NE(recover_const2, nullptr);
-  const auto file_const4 = load_const->FindFirstNodeMatchType(FILECONSTANT);
-  EXPECT_EQ(file_const4, nullptr);
-
-  system("rm -rf ./tmp_weight_*");
-  system("rm -rf ./aicore_subgraph_*");
-  system("rm -rf ./subgraph_*");
-}
 } // namespace ge

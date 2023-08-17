@@ -789,14 +789,6 @@ class GraphUtils {
   static graphStatus CopyGraphImpl(const Graph &src_graph, Graph &dst_graph,
                                    const std::map<ConstNodePtr, NodePtr> &node_old_2_new,
                                    const std::map<ConstOpDescPtr, OpDescPtr> &op_desc_old_2_new);
-
-  /**
-   * 改图接口，将图中的“FileConstant”节点用属性中对应的权重文件恢复成“Const”节点
-   * @param compute_graph
-   * @return
-   */
-  static graphStatus ConvertFileConstToConst(const ComputeGraphPtr &graph);
-  static graphStatus RecoverConstByWeightFile(const OpDescPtr &op_desc, const GeTensorPtr &weight);
 };
 
 class ComputeGraphBuilder {

@@ -113,15 +113,12 @@ private:
   static graphStatus MakeExeGraph(ComputeGraphPtr &exe_graph,
                                   const HelpInfo& help_info);
   static graphStatus ConvertConstToWeightAttr(const ComputeGraphPtr &exe_graph);
-  static graphStatus SetFileConstInfo(const NodePtr &node, const GeTensorPtr &tensor, const std::string &aoe_path,
-                                      const OpDescPtr &op_desc);
-  static graphStatus HandlePld(NodePtr &node, const std::string &aoe_path);
-  static graphStatus HandleConst(NodePtr &node, const std::string &aoe_path);
+  static graphStatus HandlePld(NodePtr &node);
   static graphStatus HandleEnd(NodePtr &node);
   static graphStatus ChangePld2Data(const NodePtr &node, const NodePtr &data_node);
   static graphStatus ChangeEnd2NetOutput(NodePtr &end_node, NodePtr &out_node);
   static graphStatus LinkEnd2NetOutput(NodePtr &end_node, NodePtr &out_node);
-  static graphStatus CreateDataNode(NodePtr &node, const std::string &aoe_path, NodePtr &data_node);
+  static graphStatus CreateDataNode(NodePtr &node, NodePtr &data_node);
   static graphStatus CreateNetOutput(const NodePtr &node, NodePtr &out_node);
   static graphStatus AddAttrToDataNodeForMergeGraph(const NodePtr &pld, const NodePtr &data_node);
   static graphStatus AddAttrToNetOutputForMergeGraph(const NodePtr &end, const NodePtr &out_node, const int64_t index);
@@ -162,15 +159,9 @@ private:
   static NodeVec netoutput_nodes_;
   static NodeVec merged_graph_nodes_;
   static std::mutex mutex_;
-  static std::set<std::string> reusable_weight_files_;
-  static std::map<size_t, std::vector<std::string>> hash_to_files_;
   // for debug
   static std::string PrintCheckLog();
   static std::string GetNodeNameByAnchor(const Anchor * const anchor);
-  static std::string GenerateFileConstPath(const std::string &aoe_path, const OpDescPtr &op_desc);
-  static Status GetOrSaveReusableFileConst(const GeTensorPtr &tensor, std::string &file_path);
-  static Status CheckFilesSame(const std::string &file_name, const char_t *const data, const size_t data_length,
-                               bool &is_content_same);
 };
 }
 #endif // MAIN_TUNING_UTILS_H

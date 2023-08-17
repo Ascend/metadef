@@ -20,9 +20,7 @@
 #include "graph/debug/ge_op_types.h"
 #include "graph/node_impl.h"
 #include "graph/utils/graph_utils_ex.h"
-#include "graph/utils/file_utils.h"
 #include "inc/common/checker.h"
-#include "mmpa/mmpa_api.h"
 
 namespace ge {
 namespace {
@@ -34,13 +32,9 @@ const char_t *const alias_indexes_attr = "_aliasIndexes";
 const char_t *const parent_node_anchor_index_attr = "_parentNodeAnchorIndex";
 const char_t *const tuning_subgraph_prefix = "/aicore_subgraph_";
 const char_t *const non_tuning_subgraph_prefix = "/subgraph_";
-const char_t *const kTmpWeightDir = "tmp_weight_";
-const char_t *const kOriginName4Recover = "_origin_name_4_recover";
-const char_t *const kOriginType4Recover = "_origin_type_4_recover";
 const std::set<std::string> kPartitionOpTypes = {PLACEHOLDER, END};
-const std::set<std::string> kExeTypes = {DATA, CONSTANT, FILECONSTANT, NETOUTPUT};
+const std::set<std::string> kExeTypes = {DATA, CONSTANT, NETOUTPUT};
 const size_t kConstOpNormalWeightSize = 1U;
-const size_t kMaxDataLen = 1048576U;  // 1M
 }
 const std::set<std::string> ir_builder_supported_options_for_lx_fusion = {
     BUILD_MODE,
@@ -72,8 +66,6 @@ NodeVec TuningUtils::netoutput_nodes_;
 NodeVec TuningUtils::merged_graph_nodes_;
 SubgraphCreateOutNode TuningUtils::create_output_;
 std::mutex TuningUtils::mutex_;
-std::set<std::string> TuningUtils::reusable_weight_files_;
-std::map<size_t, std::vector<std::string>> TuningUtils::hash_to_files_;
 
 std::string TuningUtils::PrintCheckLog() {
   std::stringstream ss;
@@ -110,9 +102,6 @@ graphStatus TuningUtils::ConvertGraphToFile(std::vector<ComputeGraphPtr> tuning_
   int64_t i = 0;
   int64_t j = 0;
   const std::lock_guard<std::mutex> lock(mutex_);
-  reusable_weight_files_.clear();
-  hash_to_files_.clear();
-  GELOGI("Total tuning graph num: %zu, non tuning graph: %zu.", tuning_subgraphs.size(), non_tuning_subgraphs.size());
   for (auto &subgraph : tuning_subgraphs) {
     (void)create_output_.emplace(subgraph, nullptr);
     const auto help_info = HelpInfo{i, exe_flag, true, path, user_path};
@@ -194,7 +183,11 @@ graphStatus TuningUtils::MakeExeGraph(ComputeGraphPtr &exe_graph,
     return ret;
   }
   // clear graph id
-  GE_ASSERT_TRUE(AttrUtils::SetStr(*exe_graph, ATTR_NAME_SESSION_GRAPH_ID, ""));
+  if (!AttrUtils::SetStr(*exe_graph, ATTR_NAME_SESSION_GRAPH_ID, "")) {
+    REPORT_CALL_ERROR("E18888", "TUU:clear graph %s session_graph_id failed", exe_graph->GetName().c_str());
+    GELOGE(FAILED, "[Invoke][SetStr] TUU:clear graph %s session_graph_id failed", exe_graph->GetName().c_str());
+    return FAILED;
+  }
   GELOGI("TUU:clear [%s] session_graph_id success", exe_graph->GetName().c_str());
   // if not make exe, just dump and return
   if (!help_info.exe_flag_) {
@@ -212,17 +205,38 @@ graphStatus TuningUtils::MakeExeGraph(ComputeGraphPtr &exe_graph,
   for (NodePtr &node : exe_graph->GetDirectNode()) {
     // 1.handle pld
     if (node->GetType() == PLACEHOLDER) {
-      GE_ASSERT_GRAPH_SUCCESS(HandlePld(node, help_info.path_));
+      if (HandlePld(node) != SUCCESS) {
+        REPORT_CALL_ERROR("E18888", "TUU:Failed to handle node %s from graph %s", node->GetName().c_str(),
+                          exe_graph->GetName().c_str());
+        GELOGE(FAILED, "[Invoke][HandlePld] TUU:Failed to handle node %s from graph %s", node->GetName().c_str(),
+               exe_graph->GetName().c_str());
+        return FAILED;
+      }
     }
     // 2.handle end
     if (node->GetType() == END) {
-      GE_ASSERT_GRAPH_SUCCESS(HandleEnd(node));
+      if (HandleEnd(node) != SUCCESS) {
+        REPORT_CALL_ERROR("E18888", "TUU:Failed to handle node %s from graph %s", node->GetName().c_str(),
+                          exe_graph->GetName().c_str());
+        GELOGE(FAILED, "[Invoke][HandlePld] TUU:Failed to handle node %s from graph %s", node->GetName().c_str(),
+               exe_graph->GetName().c_str());
+        return FAILED;
+      }
     }
-    GE_ASSERT_GRAPH_SUCCESS(HandleConst(node, help_info.path_));
   }
-  GE_ASSERT_GRAPH_SUCCESS(GraphUtils::RemoveNodesByTypeWithoutRelink(exe_graph, std::string(PLACEHOLDER)));
-  GE_ASSERT_GRAPH_SUCCESS(GraphUtils::RemoveNodesByTypeWithoutRelink(exe_graph, std::string(END)));
-  GE_ASSERT_GRAPH_SUCCESS(exe_graph->TopologicalSortingGraph(true));
+  const graphStatus ret_pld = GraphUtils::RemoveNodesByTypeWithoutRelink(exe_graph, std::string(PLACEHOLDER));
+  const graphStatus ret_end = GraphUtils::RemoveNodesByTypeWithoutRelink(exe_graph, std::string(END));
+  if ((ret_pld != SUCCESS) || (ret_end != SUCCESS)) {
+    REPORT_CALL_ERROR("E18888", "Graph[%s] delete placehold or end failed.", exe_graph->GetName().c_str());
+    GELOGE(FAILED, "[Sort][Graph] Graph[%s] delete placehold or end failed.", exe_graph->GetName().c_str());
+    return FAILED;
+  }
+  ret = exe_graph->TopologicalSortingGraph(true);
+  if (ret != SUCCESS) {
+    REPORT_CALL_ERROR("E18888", "Graph[%s] topological sort failed, ret:%d.", exe_graph->GetName().c_str(), ret);
+    GELOGE(ret, "[Sort][Graph] Graph [%s] topological sort failed, ret:%d.", exe_graph->GetName().c_str(), ret);
+    return ret;
+  }
   // dump subgraphs which modified by us
   if (help_info.user_path_.empty()) {
     DumpGraphToPath(exe_graph, help_info.index_, help_info.is_tuning_graph_, help_info.path_);
@@ -259,123 +273,7 @@ void TuningUtils::TryGetWeight(const NodePtr &node, std::vector<ge::GeTensorPtr>
   }
 }
 
-graphStatus TuningUtils::HandleConst(NodePtr &node, const std::string &aoe_path) {
-  if (kConstOpTypes.count(node->GetType()) == 0U) {
-    return SUCCESS;
-  }
-  const auto &weights = OpDescUtils::MutableWeights(node);
-  GE_ASSERT_TRUE(weights.size() == kConstOpNormalWeightSize);
-  GE_CHECK_NOTNULL(weights[0]);
-
-  const auto op_desc = node->GetOpDesc();
-  GE_CHECK_NOTNULL(op_desc);
-  GE_ASSERT_TRUE(AttrUtils::SetStr(op_desc, kOriginName4Recover, node->GetName()));
-  GE_ASSERT_TRUE(AttrUtils::SetStr(op_desc, kOriginType4Recover, node->GetType()));
-  op_desc->SetType(FILECONSTANT);
-  op_desc->SetName(op_desc->GetName() + "_" + FILECONSTANT);
-
-  GE_ASSERT_SUCCESS(SetFileConstInfo(node, weights[0U], aoe_path, op_desc));
-  weights[0U]->ClearData();
-  return SUCCESS;
-}
-
-std::string TuningUtils::GenerateFileConstPath(const std::string &aoe_path, const OpDescPtr &op_desc) {
-  std::string file_path;
-  if ((!AttrUtils::GetStr(op_desc, parent_node_name_attr, file_path)) || (file_path.empty())) {
-    file_path = op_desc->GetName();
-  }
-  file_path = kTmpWeightDir + std::to_string(mmGetPid()) + "/" + GetRegulatedName(file_path);
-
-  if (aoe_path.empty()) {
-    return "./" + file_path;
-  }
-  return aoe_path + "/" + file_path;
-}
-
-Status TuningUtils::CheckFilesSame(const std::string &file_name, const char_t *const data, const size_t data_length,
-                                   bool &is_content_same) {
-  const auto file_buff = ComGraphMakeUnique<char_t []>(data_length);
-  GE_CHECK_NOTNULL(file_buff);
-  const auto &real_path = RealPath(file_name.c_str());
-  GE_ASSERT_TRUE(!real_path.empty());
-  std::ifstream ifs(real_path, std::ifstream::binary);
-  GE_ASSERT_TRUE(ifs.is_open());
-  (void)ifs.seekg(0, std::ifstream::end);
-  const size_t file_length = static_cast<size_t>(ifs.tellg());
-  if (data_length != file_length) {
-    ifs.close();
-    return SUCCESS;
-  }
-  (void)ifs.seekg(0, std::ifstream::beg);
-  (void)ifs.read(static_cast<char_t *>(file_buff.get()), static_cast<std::streamsize>(file_length));
-  GE_ASSERT_TRUE(ifs.good());
-  ifs.close();
-  if ((memcmp(data, file_buff.get(), data_length) == 0)) {
-    is_content_same = true;
-    GELOGD("Check files with same content success");
-  }
-  return SUCCESS;
-}
-
-Status TuningUtils::GetOrSaveReusableFileConst(const GeTensorPtr &tensor, std::string &file_path) {
-  if (reusable_weight_files_.count(file_path) != 0U) {
-    GELOGD("File: %s is reusable.", file_path.c_str());
-    return SUCCESS;
-  }
-
-  const char_t* data = PtrToPtr<uint8_t, char_t>(tensor->GetData().GetData());
-  const size_t data_length = tensor->GetData().GetSize();
-  const size_t file_buff_len = std::min(data_length, kMaxDataLen);
-  const std::string file_buff_str(data, data + file_buff_len);
-  const size_t hash_value = std::hash<std::string>{}(file_buff_str);
-  GELOGD("Get hash of file[%s] success, value[%zu]", file_path.c_str(), hash_value);
-  if (hash_to_files_.count(hash_value) == 0U) {
-    GE_ASSERT_SUCCESS(SaveBinToFile(data, data_length, file_path));
-    reusable_weight_files_.emplace(file_path);
-    hash_to_files_[hash_value].emplace_back(file_path);
-    GELOGD("Save reusable weight file: %s, hash_value: %zu.", file_path.c_str(), hash_value);
-    return SUCCESS;
-  }
-
-  for (const auto &file : hash_to_files_[hash_value]) {
-    bool has_same_content = false;
-    GE_ASSERT_SUCCESS(CheckFilesSame(file, data, data_length, has_same_content));
-    if (has_same_content) {
-      GELOGD("External weight file[%s] can be reused, skip generate file:%s", file.c_str(), file_path.c_str());
-      file_path = file;
-      return SUCCESS;
-    }
-  }
-
-  GE_ASSERT_SUCCESS(SaveBinToFile(data, data_length, file_path));
-  reusable_weight_files_.emplace(file_path);
-  hash_to_files_[hash_value].emplace_back(file_path);
-  GELOGD("Save reusable weight file: %s, hash_value: %zu.", file_path.c_str(), hash_value);
-
-  return SUCCESS;
-}
-
-graphStatus TuningUtils::SetFileConstInfo(const NodePtr &node, const GeTensorPtr &tensor, const std::string &aoe_path,
-                                          const OpDescPtr &op_desc) {
-  GE_CHECK_NOTNULL(node->GetOpDesc());
-  std::string file_path = GenerateFileConstPath(aoe_path, node->GetOpDesc());
-  GELOGD("Generate tmp weight file path: %s of %s.", file_path.c_str(), node->GetName().c_str());
-  GE_ASSERT_SUCCESS(GetOrSaveReusableFileConst(tensor, file_path));
-  GE_ASSERT_TRUE(AttrUtils::SetStr(op_desc, ATTR_NAME_LOCATION, file_path));
-
-  const int64_t length = static_cast<int64_t>(tensor->GetData().GetSize());
-  GE_ASSERT_TRUE(AttrUtils::SetInt(op_desc, ATTR_NAME_LENGTH, length));
-  const auto tensor_desc = tensor->GetTensorDesc();
-  GE_ASSERT_TRUE(AttrUtils::SetDataType(op_desc, VAR_ATTR_DTYPE, tensor_desc.GetDataType()));
-  GE_ASSERT_TRUE(AttrUtils::SetListInt(op_desc, VAR_ATTR_SHAPE, tensor_desc.GetShape().GetDims()));
-
-  GELOGD("Convert node: %s to file constant: %s success, file path: %s, length: %ld.", node->GetName().c_str(),
-         op_desc->GetName().c_str(), file_path.c_str(), length);
-
-  return SUCCESS;
-}
-
-graphStatus TuningUtils::CreateDataNode(NodePtr &node, const std::string &aoe_path, NodePtr &data_node) {
+graphStatus TuningUtils::CreateDataNode(NodePtr &node, NodePtr &data_node) {
   const auto graph = node->GetOwnerComputeGraph();
   GE_CHECK_NOTNULL(graph);
   OpDescPtr data_op_desc;
@@ -383,11 +281,11 @@ graphStatus TuningUtils::CreateDataNode(NodePtr &node, const std::string &aoe_pa
   TryGetWeight(node, weight);
   GeTensorDesc output_desc;
   if (!weight.empty()) {
-    GE_ASSERT_TRUE(weight.size() == kConstOpNormalWeightSize);
-    const std::string file_const_name = node->GetName() + "_" + FILECONSTANT;
-    data_op_desc = ComGraphMakeShared<OpDesc>(file_const_name, FILECONSTANT);
-    GE_CHECK_NOTNULL(data_op_desc);
-    GE_ASSERT_SUCCESS(SetFileConstInfo(node, weight[0U], aoe_path, data_op_desc));
+    data_op_desc = ComGraphMakeShared<OpDesc>(node->GetName(), CONSTANT);
+    if (weight.size() != kConstOpNormalWeightSize) {
+      GELOGE(FAILED, "const op weight size %zu should be 1 for node:%s", weight.size(), node->GetName().c_str());
+      return FAILED;
+    }
     output_desc = weight[0U]->GetTensorDesc();
     std::string parent_node_name;
     if (AttrUtils::GetStr(node->GetOpDesc(), parent_node_name_attr, parent_node_name) && (!parent_node_name.empty())) {
@@ -417,6 +315,13 @@ graphStatus TuningUtils::CreateDataNode(NodePtr &node, const std::string &aoe_pa
   }
   data_node = graph->AddNode(data_op_desc);
   GE_CHECK_NOTNULL(data_node);
+  if (data_node->GetType() == CONSTANT) {
+    if (OpDescUtils::SetWeights(data_node, weight) != GRAPH_SUCCESS) {
+      REPORT_CALL_ERROR("E18888", "TUU:const node %s add weight failed", data_op_desc->GetName().c_str());
+      GELOGE(FAILED, "[Set][Weights] TUU:const node %s add weight failed", data_op_desc->GetName().c_str());
+      return FAILED;
+    }
+  }
   if (data_node->SetOwnerComputeGraph(graph) != GRAPH_SUCCESS) {
     REPORT_CALL_ERROR("E18888", "SetOwnerComputeGraph failed, node:%s", node->GetName().c_str());
     GELOGE(FAILED, "[Set][OwnerComputeGraph] failed, node:%s", node->GetName().c_str());
@@ -504,7 +409,7 @@ graphStatus TuningUtils::ChangePld2Data(const NodePtr &node, const NodePtr &data
   return ret;
 }
 
-graphStatus TuningUtils::HandlePld(NodePtr &node, const std::string &aoe_path) {
+graphStatus TuningUtils::HandlePld(NodePtr &node) {
   GE_CHECK_NOTNULL(node);
   const auto graph = node->GetOwnerComputeGraph();
   GE_CHECK_NOTNULL(graph);
@@ -516,7 +421,7 @@ graphStatus TuningUtils::HandlePld(NodePtr &node, const std::string &aoe_path) {
 
   NodePtr data_node = nullptr;
   // 1. create data node
-  if (CreateDataNode(node, aoe_path, data_node) != SUCCESS) {
+  if (CreateDataNode(node, data_node) != SUCCESS) {
     GELOGE(FAILED, "[Create][DataNode] TUU:Failed to handle node %s from graph %s",
            node->GetName().c_str(), graph->GetName().c_str());
     return FAILED;
