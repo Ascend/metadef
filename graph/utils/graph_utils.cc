@@ -73,8 +73,6 @@ const char_t *const kDumpStrPartition = "partition";
 const char_t *const kDumpStrOptimizeSubgraph = "OptimizeSubGraph";
 const char_t *const kDumpStrSubgraphFunc = "sub_graph";
 const char_t *const kDumpStrAicpu = "Aicpu";
-const char_t *const kOriginName4Recover = "_origin_name_4_recover";
-const char_t *const kOriginType4Recover = "_origin_type_4_recover";
 const size_t kNameMax = 255U;
 const int32_t kCopyGraphMaxRecursionDepth = 10;
 const int32_t kNameWidth = 5;
@@ -1015,7 +1013,6 @@ GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY bool GraphUtils::LoadGEGraph(cons
         return false;
       }
     }
-    GE_ASSERT_GRAPH_SUCCESS(ConvertFileConstToConst(compute_graph));
     return true;
   } else {
     REPORT_INPUT_ERROR("E19003", std::vector<std::string>({"file", "errmsg"}),
@@ -1023,72 +1020,6 @@ GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY bool GraphUtils::LoadGEGraph(cons
     GELOGE(GRAPH_FAILED, "[Get][Model] failed from ModelDef:%s", file);
     return false;
   }
-}
-
-GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY graphStatus
-GraphUtils::ConvertFileConstToConst(const ComputeGraphPtr &graph) {
-  GE_CHECK_NOTNULL(graph);
-  std::vector<NodePtr> file_consts;
-  for (const auto &node : graph->GetDirectNode()) {
-    if (node->GetType() == FILECONSTANT) {
-      file_consts.emplace_back(node);
-    }
-  }
-
-  for (const auto &node : file_consts) {
-    const auto op_desc = node->GetOpDesc();
-    GE_CHECK_NOTNULL(op_desc);
-
-    std::string file_path;
-    GE_ASSERT_TRUE(AttrUtils::GetStr(op_desc, ATTR_NAME_LOCATION, file_path));
-    GE_ASSERT_TRUE(!file_path.empty());
-    int64_t attr_length = 0;
-    GE_ASSERT_TRUE(AttrUtils::GetInt(op_desc, ATTR_NAME_LENGTH, attr_length));
-    GE_ASSERT_TRUE(attr_length > 0);
-    size_t file_length = static_cast<size_t>(attr_length);
-
-    const auto bin_buff = ComGraphMakeUnique<char_t []>(file_length);
-    GE_CHECK_NOTNULL(bin_buff);
-    GE_ASSERT_GRAPH_SUCCESS(GetBinFromFile(file_path, bin_buff.get(), file_length));
-
-    const GeTensorPtr &weight = ComGraphMakeShared<GeTensor>(
-        op_desc->GetOutputDesc(0U), PtrToPtr<char_t, uint8_t>(bin_buff.get()), file_length);
-    GE_CHECK_NOTNULL(weight);
-
-    std::string origin_type;
-    if (AttrUtils::GetStr(op_desc, kOriginType4Recover, origin_type) && (kConstOpTypes.count(origin_type) > 0U)) {
-      GE_ASSERT_SUCCESS(RecoverConstByWeightFile(op_desc, weight));
-      continue;
-    }
-
-    const auto const_op = OpDescUtils::CreateConstOp(weight);
-    GE_CHECK_NOTNULL(const_op);
-    const_op->SetName(op_desc->GetName() + "_" + CONSTANT);
-    const_op->SetId(op_desc->GetId());
-    const auto const_node = graph->AddNode(const_op);
-    GE_CHECK_NOTNULL(const_node);
-    GE_ASSERT_GRAPH_SUCCESS(GraphUtils::ReplaceNodeAnchors(const_node, node, {}, {0}));
-    NodeUtils::UnlinkAll(*node);
-    GE_ASSERT_GRAPH_SUCCESS(GraphUtils::RemoveJustNode(graph, node));
-    GELOGD("Convert node: %s from file constant to const success.", node->GetName().c_str());
-  }
-  return SUCCESS;
-}
-
-GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY graphStatus
-GraphUtils::RecoverConstByWeightFile(const OpDescPtr &op_desc, const GeTensorPtr &weight) {
-  GE_CHECK_NOTNULL(op_desc);
-  std::string op_name;
-  GE_ASSERT_TRUE(AttrUtils::GetStr(op_desc, kOriginName4Recover, op_name));
-  op_desc->SetName(op_name);
-  GE_ASSERT_GRAPH_SUCCESS(op_desc->DelAttr(kOriginName4Recover));
-  std::string op_type;
-  GE_ASSERT_TRUE(AttrUtils::GetStr(op_desc, kOriginType4Recover, op_type));
-  op_desc->SetType(op_type);
-  GE_ASSERT_GRAPH_SUCCESS(op_desc->DelAttr(kOriginType4Recover));
-  GE_ASSERT_TRUE(AttrUtils::SetTensor(op_desc, ATTR_NAME_WEIGHTS, weight));
-  GELOGD("Recover const node: %s, type: %s.", op_name.c_str(), op_type.c_str());
-  return SUCCESS;
 }
 
 // Printing protocol messages in text format is useful for debugging and human editing of messages.
