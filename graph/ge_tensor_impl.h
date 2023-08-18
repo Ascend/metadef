@@ -58,6 +58,13 @@ class GeTensorDescImpl {
     ext_meta_.SetOriginShapeInited(origin_shape_inited);
   }
 
+  void SetExpandDimsRule(const std::string &expand_dims_rule) {
+    ext_meta_.SetExpandDimsRule(expand_dims_rule);
+  }
+  std::string GetExpandDimsRule() const {
+    return ext_meta_.GetExpandDimsRule();
+  }
+
  private:
   friend class GeTensorImpl;
   friend class TensorUtils;
@@ -206,6 +213,13 @@ class GeTensorDescImpl {
       origin_shape_inited_ = origin_shape_inited;
     }
 
+    void SetExpandDimsRule(const std::string &expand_dims_rule) {
+      expand_dims_rule_ = expand_dims_rule;
+    }
+    std::string GetExpandDimsRule() const {
+      return expand_dims_rule_;
+    }
+
    private:
     int64_t size{0};
     int64_t data_offset{0};
@@ -224,6 +238,8 @@ class GeTensorDescImpl {
 
     std::string cmps_tab;
     std::string name;
+
+    std::string expand_dims_rule_;
   };
 
   mutable GeShape shape_;

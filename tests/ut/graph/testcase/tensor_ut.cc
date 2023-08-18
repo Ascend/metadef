@@ -333,6 +333,130 @@ TEST_F(TensorUT, NormalizeGeTensorWithOriginShape) {
   }
 }
 
+TEST_F(TensorUT, NormalizeGeTensor_With_StorageFormat) {
+  TensorDesc desc(Shape(), FORMAT_NC1HWC0);
+  desc.SetOriginFormat(FORMAT_NHWC);
+  desc.SetOriginShape(Shape({1, 2, 3, 4}));
+  Tensor tensor(desc);
+  auto ge_tensor = TensorAdapter::AsGeTensor(tensor);
+
+  GeTensor normalized_ge_tensor;
+  auto ret = TensorAdapter::NormalizeGeTensor(ge_tensor, normalized_ge_tensor);
+  EXPECT_EQ(ret, SUCCESS);
+  auto &normalized_ge_desc = normalized_ge_tensor.MutableTensorDesc();
+
+  // check storage format is set by attr
+  auto storage_format = static_cast<int64_t>(FORMAT_MAX);
+  EXPECT_TRUE(AttrUtils::GetInt(normalized_ge_desc, ATTR_NAME_STORAGE_FORMAT, storage_format));
+  EXPECT_EQ(storage_format, static_cast<int64_t>(FORMAT_NC1HWC0));
+
+  // check storage shape is right
+  std::vector<int64_t> storage_dims;
+  std::vector<int64_t> expect_storage_dims = {1, 1, 2, 3, 16};
+  EXPECT_TRUE(AttrUtils::GetListInt(normalized_ge_desc, ATTR_NAME_STORAGE_SHAPE, storage_dims));
+  EXPECT_EQ(storage_dims.size(), 5);
+  for (size_t i = 0U; i < expect_storage_dims.size(); i++) {
+    ASSERT_EQ(storage_dims[i], expect_storage_dims[i]);
+  }
+}
+// todo
+TEST_F(TensorUT, NormalizeGeTensor_With_StorageFormat_ExpandDimsRule) {
+  TensorDesc desc(Shape({24, 48}), FORMAT_NC1HWC0);
+  desc.SetOriginFormat(FORMAT_NCHW);
+  desc.SetOriginShape(Shape({24, 48}));
+  desc.SetExpandDimsRule("0011");
+  Tensor tensor(desc);
+  auto ge_tensor = TensorAdapter::AsGeTensor(tensor);
+  auto &ge_desc = ge_tensor.MutableTensorDesc();
+
+  GeTensor normalized_ge_tensor;
+  auto ret = TensorAdapter::NormalizeGeTensor(ge_tensor, normalized_ge_tensor);
+  EXPECT_EQ(ret, SUCCESS);
+  auto &normalized_ge_desc = normalized_ge_tensor.MutableTensorDesc();
+
+  // check storage format is set by attr
+  auto storage_format = static_cast<int64_t>(FORMAT_MAX);
+  EXPECT_TRUE(AttrUtils::GetInt(normalized_ge_desc, ATTR_NAME_STORAGE_FORMAT, storage_format));
+  EXPECT_EQ(storage_format, static_cast<int64_t>(FORMAT_NC1HWC0));
+
+  // todo check storage shape is right
+  /*std::vector<int64_t> storage_dims;
+  std::vector<int64_t> expect_storage_dims = {1, 1, 24, 48, 16};
+  EXPECT_TRUE(AttrUtils::GetListInt(normalized_ge_desc, ATTR_NAME_STORAGE_SHAPE, storage_dims));
+  std::cout<< ToString(storage_dims).c_str() <<std::endl;
+  EXPECT_EQ(storage_dims.size(), 5);
+  for (size_t i = 0U; i < expect_storage_dims.size(); i++) {
+    ASSERT_EQ(storage_dims[i], expect_storage_dims[i]);
+  }*/
+}
+// todo
+TEST_F(TensorUT, NormalizeGeTensor_With_StorageFormat_Wrong_ExpandDimsRule) {
+  TensorDesc desc(Shape({24, 48}), FORMAT_NC1HWC0);
+  desc.SetOriginFormat(FORMAT_NCHW);
+  desc.SetOriginShape(Shape({24, 48}));
+  desc.SetExpandDimsRule("^%");
+  Tensor tensor(desc);
+  auto ge_tensor = TensorAdapter::AsGeTensor(tensor);
+  auto &ge_desc = ge_tensor.MutableTensorDesc();
+
+  GeTensor normalized_ge_tensor;
+  auto ret = TensorAdapter::NormalizeGeTensor(ge_tensor, normalized_ge_tensor);
+   // EXPECT_EQ(ret, GRAPH_PARAM_INVALID);
+}
+
+TEST_F(TensorUT, NormalizeGeTensor_With_StorageFormat_ExpandDimsRule_MorethanRank) {
+  TensorDesc desc(Shape({24, 48}), FORMAT_NC1HWC0);
+  desc.SetOriginFormat(FORMAT_NCHW);
+  desc.SetOriginShape(Shape({24, 48}));
+  desc.SetExpandDimsRule("11111");
+  Tensor tensor(desc);
+  auto ge_tensor = TensorAdapter::AsGeTensor(tensor);
+  auto &ge_desc = ge_tensor.MutableTensorDesc();
+
+  GeTensor normalized_ge_tensor;
+  auto ret = TensorAdapter::NormalizeGeTensor(ge_tensor, normalized_ge_tensor);
+  // EXPECT_EQ(ret, GRAPH_PARAM_INVALID); TODO
+}
+
+TEST_F(TensorUT, NormalizeGeTensor_With_StorageFormat_Follow_User_Defined_StorageShape) {
+  std::vector<int64_t> user_defined_storage_shape = {1, 2, 2, 3, 16};
+  TensorDesc desc(Shape(user_defined_storage_shape), FORMAT_NC1HWC0);
+  desc.SetOriginFormat(FORMAT_NCHW);
+  desc.SetOriginShape(Shape({1, 2, 3, 4}));
+
+  Tensor tensor(desc);
+  auto ge_tensor = TensorAdapter::AsGeTensor(tensor);
+  auto &ge_desc = ge_tensor.MutableTensorDesc();
+
+  GeTensor normalized_ge_tensor;
+  auto ret = TensorAdapter::NormalizeGeTensor(ge_tensor, normalized_ge_tensor);
+  EXPECT_EQ(ret, SUCCESS);
+
+  std::vector<int64_t> storage_shape;
+  AttrUtils::GetListInt(normalized_ge_tensor.GetTensorDesc(), ATTR_NAME_STORAGE_SHAPE, storage_shape);
+  EXPECT_EQ(storage_shape, user_defined_storage_shape);
+}
+
+TEST_F(TensorUT, NormalizeGeTensor_With_StorageFormat_Follow_Infered_StorageShape) {
+  std::vector<int64_t> user_defined_storage_shape = {1, 2, 2, 3, 16};
+  std::vector<int64_t> expect_infered_storage_dims = {1, 1, 2, 3, 16};
+  TensorDesc desc(Shape(user_defined_storage_shape), FORMAT_NC1HWC0);
+  desc.SetOriginFormat(FORMAT_NCHW);
+  desc.SetOriginShape(Shape({1, 2, 3, 4}));
+
+  Tensor tensor(desc);
+  auto ge_tensor = TensorAdapter::AsGeTensor(tensor);
+  auto &ge_desc = ge_tensor.MutableTensorDesc();
+
+  GeTensor normalized_ge_tensor;
+  auto ret = TensorAdapter::NormalizeGeTensor(ge_tensor, normalized_ge_tensor);
+  EXPECT_EQ(ret, SUCCESS);
+
+  std::vector<int64_t> storage_shape;
+  AttrUtils::GetListInt(normalized_ge_tensor.GetTensorDesc(), ATTR_NAME_STORAGE_SHAPE, storage_shape);
+  EXPECT_NE(storage_shape, expect_infered_storage_dims);
+}
+
 TEST_F(TensorUT, GeShapeSetDimNum) {
   ge::GeShape shape;
   EXPECT_EQ(shape.GetDimNum(), 0);
@@ -669,6 +793,21 @@ TEST_F(TensorUT, TensorDesc_GetSetName) {
   EXPECT_EQ(name, AscendString("abc"));
 }
 
+
+TEST_F(TensorUT, TensorDesc_get_set_expand_dims_rule) {
+  TensorDesc td;
+  // init status
+  AscendString expand_dims_rule;
+  td.GetExpandDimsRule(expand_dims_rule);
+  EXPECT_EQ(expand_dims_rule.GetLength(), 0);
+
+  // test set and get
+  expand_dims_rule = AscendString("1100");
+  td.SetExpandDimsRule(expand_dims_rule);
+  td.GetExpandDimsRule(expand_dims_rule);
+  EXPECT_STREQ(expand_dims_rule.GetString(), "1100");
+}
+
 TEST_F(TensorUT, Tensor_SetTensorDesc_GetData) {
   std::vector<int64_t> shape{3};
   TensorDesc tensor_desc1(Shape(shape), FORMAT_ND, DT_UINT8);
@@ -728,5 +867,23 @@ TEST_F(TensorUT, TensorAdapter_AsTensor) {
   const GeTensor gt2;
   const Tensor t2 = TensorAdapter::AsTensor(gt2);
 }
+TEST_F(TensorUT, TensorDesc2GeTensorDesc_expand_dims_rule) {
+  TensorDesc td;
+  // test set and get
+  td.SetExpandDimsRule(AscendString("0011"));
 
+  auto ge_tensor_desc = TensorAdapter::TensorDesc2GeTensorDesc(td);
+  EXPECT_STREQ(ge_tensor_desc.GetExpandDimsRule().c_str(), "0011");
+}
+
+TEST_F(TensorUT, GeTensorDesc2TensorDesc_expand_dims_rule) {
+  GeTensorDesc ge_tensor_desc;
+  // test set and get
+  ge_tensor_desc.SetExpandDimsRule("0011");
+
+  auto tensor_desc = TensorAdapter::GeTensorDesc2TensorDesc(ge_tensor_desc);
+  AscendString expand_dims_rule;
+  tensor_desc.GetExpandDimsRule(expand_dims_rule);
+  EXPECT_STREQ(expand_dims_rule.GetString(), "0011");
+}
 }  // namespace ge

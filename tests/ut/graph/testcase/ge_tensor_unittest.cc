@@ -435,7 +435,15 @@ TEST_F(UtestGeTensor, GetOriginFormatFromDescProto_GetFullOriginFormat_Serialize
   GeTensorSerializeUtils::GetOriginFormatFromDescProto(&desc_proto, origin_format_result);
   EXPECT_EQ(origin_format_result, origin_format);
 }
+TEST_F(UtestGeTensor, tensor_desc_set_get_expand_dims_rule) {
+  GeTensorDesc a;
+  // init status
+  EXPECT_TRUE(a.GetExpandDimsRule().empty());
 
+  // test set and get
+  a.SetExpandDimsRule("0011");
+  EXPECT_STREQ(a.GetExpandDimsRule().c_str(), "0011");
+}
 TEST_F(UtestGeTensor, test_tensor_data_invalid) {
   std::vector<GeTensor> ge_tensor(2U);
   for (size_t i = 0U; i < ge_tensor.size(); ++i) {
