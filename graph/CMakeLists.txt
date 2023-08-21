@@ -100,6 +100,7 @@ SET(GRAPH_SOURCE_LIST
     "utils/graph_utils_ex.cc"
     "utils/node_utils_ex.cc"
     "utils/op_desc_utils_ex.cc"
+    "utils/enum_attr_utils.cc"
     "parallelism/tensor_parallel_attrs.cc"
     "utils/screen_printer.cc"
     "${METADEF_DIR}/third_party/transformer/src/axis_util.cc"
