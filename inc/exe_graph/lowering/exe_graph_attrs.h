@@ -68,9 +68,6 @@ constexpr const ge::char_t *kPassChangedInfo = "_pass_changed_info";
 // 打在exe graph上，保存space_registry的智能指针
 constexpr const ge::char_t *kSpaceRegistry = "SpaceRegistry";
 
-// 打在exe graph上，保存om_path的string
-constexpr const ge::char_t *kOmPath = "OmPath";
-
 // 打在exe graph上，保存外置权重文件目录的string
 constexpr const ge::char_t *kExternalFileConstantDir = "ExternalFileConstantDir";
 }  // namespace gert
