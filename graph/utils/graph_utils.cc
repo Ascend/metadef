@@ -1071,7 +1071,7 @@ GraphUtils::ConvertFileConstToConst(const ComputeGraphPtr &graph) {
     GE_ASSERT_GRAPH_SUCCESS(GraphUtils::ReplaceNodeAnchors(const_node, node, {}, {0}));
     NodeUtils::UnlinkAll(*node);
     GE_ASSERT_GRAPH_SUCCESS(GraphUtils::RemoveJustNode(graph, node));
-    GELOGD("Convert node: %s from file constant to const success.", node->GetName().c_str());
+    GELOGD("Convert node: %s from file constant to const by %s success.", node->GetName().c_str(), file_path.c_str());
   }
   return SUCCESS;
 }

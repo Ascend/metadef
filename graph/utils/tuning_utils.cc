@@ -75,6 +75,7 @@ NodeVec TuningUtils::merged_graph_nodes_;
 SubgraphCreateOutNode TuningUtils::create_output_;
 std::mutex TuningUtils::mutex_;
 std::set<std::string> TuningUtils::reusable_weight_files_;
+std::map<std::string, int64_t> TuningUtils::name_to_index_;
 std::map<size_t, std::vector<std::string>> TuningUtils::hash_to_files_;
 
 std::string TuningUtils::PrintCheckLog() {
@@ -113,6 +114,7 @@ graphStatus TuningUtils::ConvertGraphToFile(std::vector<ComputeGraphPtr> tuning_
   int64_t j = 0;
   const std::lock_guard<std::mutex> lock(mutex_);
   reusable_weight_files_.clear();
+  name_to_index_.clear();
   hash_to_files_.clear();
   GELOGI("Total tuning graph num: %zu, non tuning graph: %zu.", tuning_subgraphs.size(), non_tuning_subgraphs.size());
   for (auto &subgraph : tuning_subgraphs) {
@@ -292,7 +294,15 @@ std::string TuningUtils::GenerateFileConstPath(const std::string &aoe_path, cons
   if ((!AttrUtils::GetStr(op_desc, parent_node_name_attr, file_path)) || (file_path.empty())) {
     file_path = op_desc->GetName();
   }
-  file_path = kTmpWeightDir + std::to_string(mmGetPid()) + "/" + GetRegulatedName(file_path);
+  static std::atomic<int64_t> node_count{0};
+  const auto iter = name_to_index_.find(file_path);
+  if (iter == name_to_index_.end()) {
+    name_to_index_[file_path] = node_count;
+    file_path = kTmpWeightDir + std::to_string(mmGetPid()) + "/" + std::to_string(node_count);
+    ++node_count;
+  } else {
+    file_path = kTmpWeightDir + std::to_string(mmGetPid()) + "/" + std::to_string(iter->second);
+  }
 
   if (aoe_path.empty()) {
     return "./" + file_path;

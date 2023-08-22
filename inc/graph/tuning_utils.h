@@ -163,6 +163,7 @@ private:
   static NodeVec merged_graph_nodes_;
   static std::mutex mutex_;
   static std::set<std::string> reusable_weight_files_;
+  static std::map<std::string, int64_t> name_to_index_;
   static std::map<size_t, std::vector<std::string>> hash_to_files_;
   // for debug
   static std::string PrintCheckLog();
