@@ -228,12 +228,55 @@ TEST_F(UtestEnumAttrUtils, TestGetAttrName) {
                                    enum_attr_name, attr_name, is_value_string);
   ASSERT_EQ(ret, GRAPH_FAILED);
 
-  // 正常的流程 enum化的属性名
+  // 一个成员的正常的流程 enum化的属性名
   name_use_string_values.emplace_back(true);
   ret = EnumAttrUtils::GetAttrName(enum_attr_names, name_use_string_values,
                                    enum_attr_name, attr_name, is_value_string);
   ASSERT_EQ(ret, GRAPH_SUCCESS);
   ASSERT_EQ(attr_name, "name1");
+  ASSERT_EQ(is_value_string, true);
+
+  // 两个成员的正常的流程 enum化的属性名
+  enum_attr_name = "";
+  char_t a2 = 2;
+  enum_attr_name.append(kAppendNum, prefix);
+  enum_attr_name.append(kAppendNum, a2);
+  enum_attr_names.emplace_back("name2");
+  name_use_string_values.emplace_back(false);
+  ret = EnumAttrUtils::GetAttrName(enum_attr_names, name_use_string_values,
+                                   enum_attr_name, attr_name, is_value_string);
+  ASSERT_EQ(ret, GRAPH_SUCCESS);
+  ASSERT_EQ(attr_name, "name2");
+  ASSERT_EQ(is_value_string, false);
+
+  // 127个成员的正常的流程 enum化的属性名, 一位数最大值
+  enum_attr_name = "";
+  char_t a127 = 127;
+  enum_attr_name.append(kAppendNum, prefix);
+  enum_attr_name.append(kAppendNum, a127);
+  for (int i = 3; i <= 127; i++) {
+    enum_attr_names.emplace_back("name" + to_string(i));
+    name_use_string_values.emplace_back(true);
+  }
+  ret = EnumAttrUtils::GetAttrName(enum_attr_names, name_use_string_values,
+                                   enum_attr_name, attr_name, is_value_string);
+  ASSERT_EQ(ret, GRAPH_SUCCESS);
+  ASSERT_EQ(attr_name, "name127");
+  ASSERT_EQ(is_value_string, true);
+
+  // 128个成员的正常的流程 enum化的属性名，两位数的初始值
+  enum_attr_name = "";
+  char_t a128_1 = 1;
+  char_t a128_2 = 2;
+  enum_attr_name.append(kAppendNum, prefix);
+  enum_attr_name.append(kAppendNum, a128_1);
+  enum_attr_name.append(kAppendNum, a128_2);
+  enum_attr_names.emplace_back("name128");
+  name_use_string_values.emplace_back(true);
+  ret = EnumAttrUtils::GetAttrName(enum_attr_names, name_use_string_values,
+                                   enum_attr_name, attr_name, is_value_string);
+  ASSERT_EQ(ret, GRAPH_SUCCESS);
+  ASSERT_EQ(attr_name, "name128");
   ASSERT_EQ(is_value_string, true);
 
   // 正常的流程 非enum化的属性名
