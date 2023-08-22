@@ -30,6 +30,15 @@ struct OpCompilerOption {
     bool deterministic;
 };
 
+struct OpKernelInfo {
+    explicit OpKernelInfo(const std::string &bin_info_v, int8_t bin_type_v) :
+        bin_info(bin_info_v), bin_type(bin_type_v) {}
+    explicit OpKernelInfo(const char *bin_info_v, int8_t bin_type_v) :
+        bin_info(bin_info_v), bin_type(bin_type_v) {}
+    std::string bin_info;
+    int8_t bin_type;
+};
+
 class __attribute__((visibility("default"))) OpInfoRecordRegister {
 public:
     using NotifyFn = void(*)(bool);
@@ -57,6 +66,10 @@ public:
     * @param opt [IN] Operator compile option
     */
     void ExeOptInfoStat(const gert::TilingContext *ctx, const OpCompilerOption &opt) const;
+    void ExeOptInfoStat(
+        const gert::TilingContext *ctx,
+        const OpCompilerOption &opt,
+        const OpKernelInfo *kernelInfo) const;
 
 private:
     OpInfoRecordRegister() = default;
