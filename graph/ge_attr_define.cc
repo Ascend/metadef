@@ -784,6 +784,15 @@ const std::string ATTR_MODEL_COMPILER_VERSION = "compiler_version";
 
 const std::string ATTR_MODEL_SESSION_SCOPE_MEMORY_SIZE = "session_scope_memory_size";
 
+// Used for om compress
+const std::string ATTR_MODEL_IS_ATTR_STRING_USE_ENUM = "is_attr_string_use_enum";
+
+const std::string ATTR_MODEL_ATTR_NAME_ENUM = "attr_name_enum";
+
+const std::string ATTR_MODEL_ATTR_VALUE_ENUM = "attr_value_enum";
+
+const std::string ATTR_MODEL_ATTRS_USE_STRING_VALUE = "attrs_use_string_value";
+
 // Public attribute
 const std::string ATTR_NAME_IMPLY_TYPE = "imply_type";
 
