@@ -303,17 +303,35 @@ TEST_F(ProcessPointUTest, SetInitParamFailed) {
   ASSERT_EQ(strcmp(pp1.GetProcessPointName(), "func_pp"), 0);
 }
 
+namespace {
 class StubProcessPoint : public ProcessPoint {
  public:
   StubProcessPoint(const char_t *name, ProcessPointType type) : ProcessPoint(name, type) {}
   void Serialize(ge::AscendString &str) const override {
-    return;
+    dataflow::ProcessPoint process_point;
+    process_point.set_name(this->GetProcessPointName());
+    process_point.set_type(dataflow::ProcessPoint_ProcessPointType_INNER);
+    std::string target_str;
+    process_point.SerializeToString(&target_str);
+    str = ge::AscendString(target_str.c_str(), target_str.length());
   }
   StubProcessPoint &SetCompileConfig(const char_t *json_file_path) {
     ProcessPoint::SetCompileConfigFile(json_file_path);
     return *this;
   }
 };
+class StubProcessPointSerializeFailed : public ProcessPoint {
+ public:
+  StubProcessPointSerializeFailed(const char_t *name, ProcessPointType type) : ProcessPoint(name, type) {}
+  void Serialize(ge::AscendString &str) const override {
+    str = ge::AscendString("invalid Serialize content");
+  }
+  StubProcessPointSerializeFailed &SetCompileConfig(const char_t *json_file_path) {
+    ProcessPoint::SetCompileConfigFile(json_file_path);
+    return *this;
+  }
+};
+}  // namespace
 
 TEST_F(ProcessPointUTest, SetCompileConfigFileFailed) {
   auto pp = FunctionPp(nullptr).SetCompileConfig("./config.json");
@@ -326,6 +344,108 @@ TEST_F(ProcessPointUTest, SetCompileConfigFileFailed) {
   ASSERT_EQ(stubpp.GetCompileConfig(), nullptr);
   stubpp = StubProcessPoint("stubpp", ProcessPointType::GRAPH).SetCompileConfig(nullptr);
   ASSERT_EQ(strcmp(stubpp.GetCompileConfig(), ""), 0);
+}
+
+TEST_F(ProcessPointUTest, AddInvokedClosureUnsupport) {
+  auto funcpp = FunctionPp("funcpp").SetCompileConfig("./config");
+  StubProcessPoint stubpp("test stub pp", ProcessPointType::INVALID);
+  funcpp.AddInvokedClosure("invoke_key", stubpp);
+  ge::AscendString str;
+  funcpp.Serialize(str);
+  dataflow::ProcessPoint process_point;
+  ASSERT_TRUE(process_point.ParseFromArray(str.GetString(), str.GetLength()));
+  ASSERT_EQ(process_point.invoke_pps().size(), 0);
+}
+
+TEST_F(ProcessPointUTest, AddInvokedClosureMismatch) {
+  auto funcpp = FunctionPp("funcpp").SetCompileConfig("./config");
+  StubProcessPoint stubpp("test stub pp", ProcessPointType::GRAPH);
+  funcpp.AddInvokedClosure("invoke_key", stubpp);
+  ge::AscendString str;
+  funcpp.Serialize(str);
+  dataflow::ProcessPoint process_point;
+  ASSERT_TRUE(process_point.ParseFromArray(str.GetString(), str.GetLength()));
+  ASSERT_EQ(process_point.invoke_pps().size(), 0);
+}
+
+TEST_F(ProcessPointUTest, AddInvokedClosureInner) {
+  auto funcpp = FunctionPp("funcpp").SetCompileConfig("./config");
+  StubProcessPoint stubpp("test stub pp", ProcessPointType::INNER);
+  funcpp.AddInvokedClosure("invoke_key", stubpp);
+  ge::AscendString str;
+  funcpp.Serialize(str);
+  dataflow::ProcessPoint process_point;
+  ASSERT_TRUE(process_point.ParseFromArray(str.GetString(), str.GetLength()));
+  ASSERT_EQ(process_point.invoke_pps().size(), 1);
+  EXPECT_EQ(process_point.invoke_pps().begin()->first, "invoke_key");
+  ASSERT_EQ(process_point.invoke_pps().begin()->second.name(), "test stub pp");
+}
+
+TEST_F(ProcessPointUTest, AddInvokedClosureSerializeFailed) {
+  auto funcpp = FunctionPp("funcpp").SetCompileConfig("./config");
+  StubProcessPointSerializeFailed stubpp("test stub pp", ProcessPointType::INNER);
+  funcpp.AddInvokedClosure("invoke_key", stubpp);
+  ge::AscendString str;
+  funcpp.Serialize(str);
+  dataflow::ProcessPoint process_point;
+  ASSERT_TRUE(process_point.ParseFromArray(str.GetString(), str.GetLength()));
+  ASSERT_EQ(process_point.invoke_pps().size(), 0);
+}
+
+TEST_F(ProcessPointUTest, FunctionPpInvokedPpByBase) {
+  ge::Graph ge_graph("ge_graph");
+  GraphBuilder graph_build = [ge_graph]() { return ge_graph; };
+  auto graph_pp = GraphPp("graphPp_1", graph_build).SetCompileConfig("./graph.json");
+  const ProcessPoint &base_pp = graph_pp;
+  auto pp1 = FunctionPp("pp1").AddInvokedClosure("key1", base_pp);
+
+  auto invoked_pp = pp1.GetInvokedClosures();
+  ASSERT_EQ(invoked_pp.size(), 1);
+}
+
+TEST_F(ProcessPointUTest, FunctionPpInvokedPpRepeat) {
+  ge::Graph ge_graph("ge_graph");
+  GraphBuilder graph_build = [ge_graph]() { return ge_graph; };
+  auto graph_pp = GraphPp("graphPp_1", graph_build).SetCompileConfig("./graph.json");
+  FunctionPp funcpp("funcpp");
+  auto pp1 = funcpp.AddInvokedClosure("repeat_key1", graph_pp);
+
+  StubProcessPoint stubpp1("test stub pp", ProcessPointType::INNER);
+  funcpp.AddInvokedClosure("invoke_key", stubpp1);
+
+  StubProcessPoint stubpp2("test stub pp", ProcessPointType::INNER);
+  funcpp.AddInvokedClosure("repeat_key1", stubpp2);
+
+  auto invoked_pp = pp1.GetInvokedClosures();
+  ASSERT_EQ(invoked_pp.size(), 1);
+  ge::AscendString str;
+  funcpp.Serialize(str);
+  dataflow::ProcessPoint process_point;
+  ASSERT_TRUE(process_point.ParseFromArray(str.GetString(), str.GetLength()));
+  ASSERT_EQ(process_point.invoke_pps().size(), 2);
+}
+
+TEST_F(ProcessPointUTest, FunctionPpInvokedPpRepeatInnerFirst) {
+  FunctionPp funcpp("funcpp");
+
+  StubProcessPoint stubpp1("test stub pp", ProcessPointType::INNER);
+  funcpp.AddInvokedClosure("repeat_key1", stubpp1);
+
+  ge::Graph ge_graph("ge_graph");
+  GraphBuilder graph_build = [ge_graph]() { return ge_graph; };
+  auto graph_pp = GraphPp("graphPp_1", graph_build).SetCompileConfig("./graph.json");
+  auto pp1 = funcpp.AddInvokedClosure("repeat_key1", graph_pp);
+
+  StubProcessPoint stubpp2("test stub pp", ProcessPointType::INNER);
+  funcpp.AddInvokedClosure("invoke_key", stubpp2);
+
+  auto invoked_pp = pp1.GetInvokedClosures();
+  ASSERT_EQ(invoked_pp.size(), 0);
+  ge::AscendString str;
+  funcpp.Serialize(str);
+  dataflow::ProcessPoint process_point;
+  ASSERT_TRUE(process_point.ParseFromArray(str.GetString(), str.GetLength()));
+  ASSERT_EQ(process_point.invoke_pps().size(), 2);
 }
 
 TEST_F(ProcessPointUTest, InvalidPp) {
@@ -344,4 +464,5 @@ TEST_F(ProcessPointUTest, AddInvokedClosureFailed) {
   auto funcpp = FunctionPp("funcpp").AddInvokedClosure(nullptr, graphpp).AddInvokedClosure("graph", graphpp);
   ASSERT_EQ(funcpp.GetInvokedClosures().size(), 0);
 }
+
 } // namespace ge

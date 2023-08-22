@@ -212,6 +212,7 @@ TEST_F(FlowGraphUTest, FlowNode_FlowNodeImpl_nullptr) {
   ASSERT_FALSE(ge::AttrUtils::GetListStr(op_desc, "_dflow_process_points", pp_attrs));
 }
 
+namespace {
 class StubProcessPoint : public ProcessPoint {
  public:
   StubProcessPoint(const char_t *name, ProcessPointType type) : ProcessPoint(name, type) {}
@@ -219,6 +220,7 @@ class StubProcessPoint : public ProcessPoint {
     return;
   }
 };
+}  // namespace
 
 TEST_F(FlowGraphUTest, FlowNode_Invalid_Pp) {
   auto pp = FunctionPp(nullptr);

@@ -200,21 +200,48 @@ public:
   FunctionPpImpl() = default;
   ~FunctionPpImpl() = default;
 
-  graphStatus AddInvokedClosure(const char_t *name, const GraphPp graph_pp) {
-    if (name == nullptr) {
-      GELOGE(GRAPH_PARAM_INVALID, "[Check][Param] AddInvokedClosure failed for name is nullptr.");
-      return GRAPH_PARAM_INVALID;
+  graphStatus AddInvokedClosure(const char_t *name, const GraphPp &graph_pp) {
+    const graphStatus check_ret = CheckInvokeName(name);
+    if (check_ret != GRAPH_SUCCESS) {
+      GELOGE(check_ret, "[Check][Param] check invoke name failed.");
+      return check_ret;
     }
     if (graph_pp.GetGraphBuilder() == nullptr) {
       GELOGE(GRAPH_PARAM_INVALID, "[Check][Param] AddInvokedClosure failed for graphpp graph builder is nullptr.");
       return GRAPH_PARAM_INVALID;
     }
-    if (invoked_closures_.find(name) != invoked_closures_.end()) {
-      GELOGE(GRAPH_PARAM_INVALID, "AddInvokedClosure failed for duplicate name(%s).", name);
-      return GRAPH_PARAM_INVALID;
-    }
     (void) invoked_closures_.emplace(name, graph_pp);
     GELOGI("AddInvokedClosure key(%s), pp name(%s).", name, graph_pp.GetProcessPointName());
+    return GRAPH_SUCCESS;
+  }
+
+  graphStatus AddInvokedClosure(const char_t *name, const ProcessPoint &pp) {
+    const graphStatus check_ret = CheckInvokeName(name);
+    if (check_ret != GRAPH_SUCCESS) {
+      GELOGE(check_ret, "[Check][Param] check invoke name failed.");
+      return check_ret;
+    }
+    if (pp.GetProcessPointType() == ProcessPointType::GRAPH) {
+      try {
+        const auto &graph_pp = dynamic_cast<const GraphPp &>(pp);
+        return AddInvokedClosure(name, graph_pp);
+      } catch (const std::exception &e) {
+        GELOGE(GRAPH_PARAM_INVALID, "ProcessPointType is Graph, but dynamic_cast to GraphPP exception, error=%s.", name,
+               e.what());
+        return GRAPH_PARAM_INVALID;
+      }
+    }
+
+    if (pp.GetProcessPointType() != ProcessPointType::INNER) {
+      GELOGE(GRAPH_PARAM_INVALID, "AddInvokedClosure failed, as ProcessPointType=%d is not support.",
+             static_cast<int32_t>(pp.GetProcessPointType()));
+      return GRAPH_PARAM_INVALID;
+    }
+    ge::AscendString serialize_str;
+    pp.Serialize(serialize_str);
+    other_invoked_closures_[name] = std::string(serialize_str.GetString(), serialize_str.GetLength());
+    GELOGI("AddInvokedClosure key(%s), pp name(%s), type(%d).", name, pp.GetProcessPointName(),
+           static_cast<int32_t>(pp.GetProcessPointType()));
     return GRAPH_SUCCESS;
   }
 
@@ -242,14 +269,29 @@ public:
 private:
   void AddInvokedPps(dataflow::ProcessPoint &process_point);
   void AddFunctionPpInitPara(dataflow::ProcessPoint &process_point);
+  graphStatus CheckInvokeName(const char_t *name) const;
   ge::AttrStore attrs_;
   std::map<const std::string, const GraphPp> invoked_closures_;
+  std::map<std::string, std::string> other_invoked_closures_;
 };
 
+graphStatus FunctionPpImpl::CheckInvokeName(const char_t *name) const {
+  if (name == nullptr) {
+    GELOGE(GRAPH_PARAM_INVALID, "[Check][Param] check invoke name failed as name is nullptr.");
+    return GRAPH_PARAM_INVALID;
+  }
+  if ((invoked_closures_.find(name) != invoked_closures_.end()) ||
+      (other_invoked_closures_.find(name) != other_invoked_closures_.end())) {
+    GELOGE(GRAPH_PARAM_INVALID, "check invoke name[%s] failed as duplicate.", name);
+    return GRAPH_PARAM_INVALID;
+  }
+  return GRAPH_SUCCESS;
+}
+
 void FunctionPpImpl::AddInvokedPps(dataflow::ProcessPoint &process_point) {
+  auto invoke_pps = process_point.mutable_invoke_pps();
+  GE_RT_VOID_CHECK_NOTNULL(invoke_pps);
   for (auto iter = invoked_closures_.cbegin(); iter != invoked_closures_.cend(); ++iter) {
-    auto invoke_pps = process_point.mutable_invoke_pps();
-    GE_RT_VOID_CHECK_NOTNULL(invoke_pps);
     const GraphPp &graph_pp = iter->second;
     dataflow::ProcessPoint invoked_pp;
     invoked_pp.set_name(graph_pp.GetProcessPointName());
@@ -258,7 +300,18 @@ void FunctionPpImpl::AddInvokedPps(dataflow::ProcessPoint &process_point) {
     const auto builder = graph_pp.GetGraphBuilder();
     invoked_pp.add_graphs(graph_pp.GetProcessPointName());
     (*invoke_pps)[iter->first] = std::move(invoked_pp);
-    GELOGI("Add invoke pp success. key:%s, invoked pp name:%s", (iter->first).c_str(), graph_pp.GetProcessPointName());
+    GELOGI("Add invoke graph pp success. key:%s, invoked pp name:%s", (iter->first).c_str(),
+           graph_pp.GetProcessPointName());
+  }
+  for (const auto &other_invoked_closure : other_invoked_closures_) {
+    const auto &serialize_str = other_invoked_closure.second;
+    dataflow::ProcessPoint invoked_pp;
+    if (!invoked_pp.ParseFromString(serialize_str)) {
+      GELOGE(GRAPH_FAILED, "parse process point failed, key:%s.", other_invoked_closure.first.c_str());
+      return;
+    }
+    (*invoke_pps)[other_invoked_closure.first] = std::move(invoked_pp);
+    GELOGI("Add invoke pp success. key:%s", other_invoked_closure.first.c_str());
   }
   return;
 }
@@ -526,6 +579,18 @@ FunctionPp &FunctionPp::AddInvokedClosure(const char_t *name, const GraphPp &gra
   }
 
   if (impl_->AddInvokedClosure(name, graph_pp) != GRAPH_SUCCESS) {
+    REPORT_INNER_ERROR("E18888", "AddInvokedClosure failed.");
+  }
+  return *this;
+}
+
+FunctionPp &FunctionPp::AddInvokedClosure(const char_t *name, const ProcessPoint &pp) {
+  if (impl_ == nullptr) {
+    REPORT_INNER_ERROR("E18888", "AddInvokedClosure failed: FunctionPp can not be used, impl is nullptr.");
+    return *this;
+  }
+
+  if (impl_->AddInvokedClosure(name, pp) != GRAPH_SUCCESS) {
     REPORT_INNER_ERROR("E18888", "AddInvokedClosure failed.");
   }
   return *this;
