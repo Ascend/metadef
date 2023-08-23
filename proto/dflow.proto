@@ -29,7 +29,8 @@ message ProcessPoint {
   enum ProcessPointType {
     FUNCTION = 0;
     GRAPH = 1;
-    INVALID = 2;
+    INNER = 2;
+    INVALID = 3;
   }
 
   string name = 1; // PP name
@@ -42,4 +43,5 @@ message ProcessPoint {
   repeated FlowEdge out_edges = 8; // node outputs
   map<string, ge.proto.AttrDef> attrs = 9; // func init attrs
   bool is_built_in = 10;
+  map<string, string> pp_extend_attrs = 11; // pp extend attrs
 }
