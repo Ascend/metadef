@@ -76,6 +76,17 @@ class TransformerExpandDimsUT : public testing::Test {
     ExpandDimension::ExpandDims(int_reshape_type, new_shape);
     EXPECT_EQ(new_shape.GetDims(), expect_dims);
   }
+
+  void RunReshapeTypeCase(const ge::Format &format, const size_t &dims_size, const std::string &reshape_type) {
+    std::cout << "RunReshapeTypeCase: origin format=" << format << ", dims size=" << dims_size << ", reshape_type=" << reshape_type << std::endl;
+    int64_t reshape_mask = transformer::ExpandDimension::GenerateReshapeType(format, ge::FORMAT_NC1HWC0, dims_size, reshape_type);
+    std::string ret_shape_type;
+    std::string fail_reason;
+    bool ret = transformer::ExpandDimension::GenerateReshapeTypeByMask(format, dims_size, reshape_mask, ret_shape_type, fail_reason);
+    EXPECT_EQ(ret, true);
+    EXPECT_EQ(fail_reason.empty(), true);
+    EXPECT_EQ(reshape_type, ret_shape_type);
+  }
 };
 
 TEST_F(TransformerExpandDimsUT, all_expand_dims_cases_1) {
@@ -539,4 +550,49 @@ TEST_F(TransformerExpandDimsUT, dhwcn_reshape_type) {
   RunExpandDimsCase(ge::FORMAT_DHWCN, ge::FORMAT_NDC1HWC0, "DHWCN", {5, 6, 7, 8, 9, 7}, {5, 6, 7, 8, 9, 7});
 }
 
+TEST_F(TransformerExpandDimsUT, reshape_type_case1) {
+  RunReshapeTypeCase(ge::FORMAT_NCHW, 1, "N");
+  RunReshapeTypeCase(ge::FORMAT_NCHW, 2, "NC");
+  RunReshapeTypeCase(ge::FORMAT_NCHW, 2, "HW");
+  RunReshapeTypeCase(ge::FORMAT_NCHW, 3, "NHW");
+  RunReshapeTypeCase(ge::FORMAT_NCHW, 3, "CHW");
+  RunReshapeTypeCase(ge::FORMAT_NCHW, 4, "NCHW");
+
+  RunReshapeTypeCase(ge::FORMAT_NDHWC, 1, "D");
+  RunReshapeTypeCase(ge::FORMAT_NDHWC, 2, "NC");
+  RunReshapeTypeCase(ge::FORMAT_NDHWC, 2, "DC");
+  RunReshapeTypeCase(ge::FORMAT_NDHWC, 2, "HW");
+  RunReshapeTypeCase(ge::FORMAT_NDHWC, 3, "NHC");
+  RunReshapeTypeCase(ge::FORMAT_NDHWC, 3, "HWC");
+  RunReshapeTypeCase(ge::FORMAT_NDHWC, 3, "NHW");
+  RunReshapeTypeCase(ge::FORMAT_NDHWC, 4, "DHWC");
+  RunReshapeTypeCase(ge::FORMAT_NDHWC, 4, "NHWC");
+  RunReshapeTypeCase(ge::FORMAT_NDHWC, 5, "NDHWC");
+}
+
+TEST_F(TransformerExpandDimsUT, reshape_type_case2) {
+  std::string reshape_type;
+  std::string failed_reason;
+  bool ret = transformer::ExpandDimension::GenerateReshapeTypeByMask(ge::FORMAT_ND, 2, 0, reshape_type, failed_reason);
+  EXPECT_EQ(ret, true);
+  EXPECT_EQ(reshape_type.empty(), true);
+
+  ret = transformer::ExpandDimension::GenerateReshapeTypeByMask(ge::FORMAT_ND, 2, 1, reshape_type, failed_reason);
+  EXPECT_EQ(ret, false);
+  EXPECT_EQ(reshape_type.empty(), true);
+
+  ret = transformer::ExpandDimension::GenerateReshapeTypeByMask(ge::FORMAT_NC1HWC0, 2, 1, reshape_type, failed_reason);
+  EXPECT_EQ(ret, false);
+  EXPECT_EQ(reshape_type.empty(), true);
+
+  int64_t reshape_mask = 3 | 5 << 56;
+  ret = transformer::ExpandDimension::GenerateReshapeTypeByMask(ge::FORMAT_NHWC, 2, reshape_mask, reshape_type, failed_reason);
+  EXPECT_EQ(ret, false);
+  EXPECT_EQ(reshape_type.empty(), true);
+
+  reshape_mask = 3 | 4 << 56;
+  ret = transformer::ExpandDimension::GenerateReshapeTypeByMask(ge::FORMAT_NHWC, 3, reshape_mask, reshape_type, failed_reason);
+  EXPECT_EQ(ret, false);
+  EXPECT_EQ(reshape_type.empty(), true);
+}
 }  // namespace ge

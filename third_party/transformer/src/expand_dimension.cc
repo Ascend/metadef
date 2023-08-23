@@ -25,6 +25,7 @@
 #include "external/graph/types.h"
 #include "common/ge_common/debug/ge_log.h"
 #include "external/graph/ge_error_codes.h"
+#include "graph/utils/type_utils.h"
 
 namespace transformer {
 namespace {
@@ -405,6 +406,58 @@ bool ExpandDimension::GenerateReshapeType(const ge::Format &origin_format, const
   GELOGD("Integer reshape type[%s] has been generated for original format[%d], dim size[%zu], reshape type[%s].",
          std::bitset<kBitSetDisplaySize>(reshape_type_mask).to_string().c_str(), origin_format, origin_dim_size,
          valid_shape_type.c_str());
+  return true;
+}
+
+bool ExpandDimension::GenerateReshapeTypeByMask(const ge::Format &origin_format, const size_t &origin_dim_size,
+                                                const int64_t &reshape_type_mask, std::string &reshape_type,
+                                                std::string &failed_reason) {
+  if (origin_format == ge::FORMAT_ND) {
+    if (reshape_type_mask == 0) {
+      return true;
+    } else {
+      failed_reason = "Can not generate reshape type for ND format.";
+      GELOGI("%s", failed_reason.c_str());
+      return false;
+    }
+  }
+
+  std::string origin_format_str = ge::TypeUtils::FormatToSerialString(origin_format);
+  size_t full_size = 0;
+  if (!GetFormatFullSize(origin_format, full_size)) {
+    failed_reason = origin_format_str + " is not supported for expanding dims.";
+    GELOGI("%s", failed_reason.c_str());
+    return false;
+  }
+
+  if (reshape_type_mask == 0 && origin_dim_size == full_size) {
+    reshape_type = origin_format_str;
+    return true;
+  }
+
+  size_t full_size_mask = static_cast<size_t>(reshape_type_mask >> kMaxReshapeTypeSize);
+  if (full_size != full_size_mask) {
+    failed_reason = "Full size[" + std::to_string(full_size_mask) + "] from reshape mask is not correct,";
+    failed_reason += " it should be[" + std::to_string(full_size) + "].";
+    GELOGI("%s", failed_reason.c_str());
+    return false;
+  }
+
+  reshape_type.clear();
+  size_t dim_count = 0;
+  for (size_t i = 0; i < full_size; ++i) {
+    if ((reshape_type_mask & (1 << i)) == 0) {
+      reshape_type += origin_format_str.at(i);
+      dim_count++;
+    }
+  }
+
+  if (dim_count != origin_dim_size) {
+    std::string bit_str = std::bitset<kBitSetDisplaySize>(reshape_type_mask).to_string();
+    failed_reason = "[" + bit_str + "] is not correct when dim size is [" + std::to_string(origin_dim_size) + "].";
+    GELOGI("%s", failed_reason.c_str());
+    return false;
+  }
   return true;
 }
 
