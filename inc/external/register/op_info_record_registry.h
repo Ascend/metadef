@@ -65,7 +65,6 @@ public:
     * @param ctx [IN] Operator context information
     * @param opt [IN] Operator compile option
     */
-    void ExeOptInfoStat(const gert::TilingContext *ctx, const OpCompilerOption &opt) const;
     void ExeOptInfoStat(
         const gert::TilingContext *ctx,
         const OpCompilerOption &opt,
