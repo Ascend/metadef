@@ -176,6 +176,10 @@ class ExpandDimsType {
     return ge::GRAPH_SUCCESS;
   }
 
+  uint64_t GetExpandDimsMask() const {
+    return mask_;
+  }
+
  private:
   uint64_t size_ : 8;
   uint64_t mask_ : kMaxExpandSize;
