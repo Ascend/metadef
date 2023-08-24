@@ -17,25 +17,40 @@
 set -e
 set -u
 
-prefix=""
-NO_CA_CHECK=""
+# The version of opensdk is tagged as ${YearMonthDay}. If the user-specified 
+# ${YearMonthDay} is earlier than 20230820, please use the original link below:
+# REPO_HOST="https://ascend-repo.obs.myhuaweicloud.com"
+# REPO_TYPE="CANN_daily_y2b"
+
+REPO_HOST="https://ascend-cann.obs.myhuaweicloud.com"
+REPO_TYPE="CANN"
+FILE_NAME="ai_cann_x86.tar.gz"
+HTTP_OK="200"
 
 usage() {
   echo "Usage:"
-  echo "    bash update_newest_packages.sh [-k] [-d <path>]"
+  echo "    bash update_newest_packages.sh [-k] [-d <path>] [-t <YearMonthDay>]"
   echo "Description:"
   echo "    -k, Allow insecure server connections when using SSL."
   echo "    -d <dir_name>, Extract files into dir_name."
+  echo "    -t <YearMonthDay>, Specify the package version. (e.g., -t 20230821)"
 }
 
 checkopts(){
-  while getopts 'd:k' opt; do
+  PREFIX=""
+  NEWEST_DATE=""
+  INSTALL_DIR=""
+  CA_OPTION=""
+  while getopts 'd:t:k' opt; do
     case "${opt}" in
       k)
-        NO_CA_CHECK="-k"
+        CA_OPTION="-k"
         ;;
       d)
-        prefix="$OPTARG"
+        PREFIX="$(realpath ${OPTARG})"
+        ;;
+      t)
+        NEWEST_DATE="${OPTARG}"
         ;;
       *)
         echo "Undefined option: ${opt}"
@@ -45,49 +60,108 @@ checkopts(){
   done
 }
 
+build_download_url() {
+  local day=$1
+  local url="${REPO_HOST}/${REPO_TYPE}/${day}_newest/${FILE_NAME}"
+  echo ${url}
+}
+
+build_install_dir() {
+  local base_dir=$1
+  local pkg_name=${2}_newest
+  local path="${base_dir}/${pkg_name}"
+  echo ${path}
+}
+
+verify_url() {
+  local url=$1
+  local status=0
+  set +e
+  status=$(curl -k -I -m 5 -o /dev/null -s -w %{http_code} ${url})
+  set -e
+  echo ${status}
+}
+
+probe_newest_package() {
+  local url=""
+  local status=0
+  local start=$(date +%Y%m%d)
+  local end=$(date -d "-28 day ${start}" +%Y%m%d)
+  echo "Start to probe the newest package from ${start} to ${end}"
+  while [ ${start} -ge ${end} ]; do
+    url="$(build_download_url ${start})"
+    if [[ $(verify_url ${url}) -eq ${HTTP_OK} ]]; then
+      # find the latest package and update the global variable 
+      NEWEST_DATE=${start}
+      echo "The latest package version found: ${NEWEST_DATE}_newest/${FILE_NAME}"
+      break
+    fi
+    start=$(date -d "-1 day ${start}" +%Y%m%d)
+    url=""
+    # set request interval to avoid potential Access Denied
+    sleep 0.2
+  done
+
+  if [[ -z ${url} ]]; then 
+    echo "Failed to find the newest package in the last 28 days. Please Check..."
+    exit 1
+  fi
+}
+
+extract_and_install_package() {
+  local install_path=$1
+  local tar_name=$2
+  echo "Extracting..."
+  cd ${install_path}
+  tar -xf ${tar_name}
+  # the newest opensdk is a .run package
+  local pkg="$(ls ./ai_cann_x86 | grep opensdk)"
+  cp ai_cann_x86/${pkg} ./
+  # run the package
+  chmod u+x ${pkg}
+  if test -x ${pkg}; then
+    ./${pkg} --noexec --extract=./opensdk
+  fi
+  rm -rf ai_cann_x86
+  # create symbolic link
+  cd ../
+  rm -rf latest
+  ln -s ${install_path} latest
+}
+
+
 checkopts "$@"
 
-if [[ -z "$prefix" ]]
-then
-  echo "Invalid path: Please check \${prefix}"
-  usage
-  exit 1
+if [[ ${NEWEST_DATE} =~ ^20 ]]; then
+  # user-specified package version
+  echo "Download package with user-specified version ${NEWEST_DATE}"
+  DOWNLOAD_URL="$(build_download_url ${NEWEST_DATE})"
+  if [[ $(verify_url ${DOWNLOAD_URL}) -ne ${HTTP_OK} ]]; then
+    echo "Invalid package version: ${NEWEST_DATE}_newest. Please check..."
+    exit 1
+  fi
+else
+  # automatically probe package version
+  probe_newest_package
+  DOWNLOAD_URL="$(build_download_url ${NEWEST_DATE})"
 fi
 
-local_dir=$(realpath ${prefix})
+INSTALL_DIR="$(build_install_dir ${PREFIX} ${NEWEST_DATE})"
 
-newest_dir=$(curl -s ${NO_CA_CHECK} https://ascend-repo.obs.cn-east-2.myhuaweicloud.com/CANN_daily_y2b/common/libs.txt)
-newest_dir=$(echo ${newest_dir%*/})
-echo "${newest_dir%*/}"
-filename=ai_cann_x86.tar.gz
-newest_file=${newest_dir}/${filename}
-echo "Newest file URL: ${newest_file}"
-
-local_newest_dir=$(echo "${newest_dir}" | awk -F "/" '{print $NF}')
-local_newest_path="${local_dir}/$(echo "${newest_dir}" | awk -F "/" '{print $NF}')"
-echo "Local newest dir: ${local_newest_path}"
-
-if [ -d ${local_newest_path} ]; then
-    echo "The newest package already exists, no need to update"
-    echo "Newest package: ${local_newest_path}"
+echo "-- Download url: ${DOWNLOAD_URL}"
+echo "-- Prefix: ${PREFIX}"
+echo "-- Local install path: ${INSTALL_DIR}"
+if [ -d ${INSTALL_DIR} ]; then
+    echo "The newest package already exists, no need to update."
+    echo "Newest package path: ${INSTALL_DIR}."
     exit 0
 fi
+echo "Download the newest package from ${DOWNLOAD_URL} to ${INSTALL_DIR}/${FILE_NAME}..."
+mkdir -p ${INSTALL_DIR}
+curl ${CA_OPTION} -o ${INSTALL_DIR}/${FILE_NAME} ${DOWNLOAD_URL}
 
-echo "Download the newest file from ${newest_file} to ${local_newest_path}/${filename}..."
-mkdir -p ${local_newest_path} && cd ${local_newest_path}
-curl ${NO_CA_CHECK} -o ${filename} ${newest_file}
-
-echo "Extracting..."
-tar -xf ${filename}
-mv ai_cann_x86/*opensdk* ./
-rm -rf ai_cann_x86
-ls | grep opensdk | xargs tar -xf
-
-cd ${local_dir}
-rm -rf latest
-ln -s ${local_newest_dir} latest
-
+extract_and_install_package ${INSTALL_DIR} ${FILE_NAME}
 
 echo "Updated successfully!"
-echo "When you build in metadef: set cmake option -DASCEND_OPENSDK_DIR=${local_dir}/latest/opensdk/opensdk/"
-echo "When you build in air: set env variable ASCEND_CUSTOM_PATH=${local_dir}/latest"
+echo "When you build in metadef: set cmake option -DASCEND_OPENSDK_DIR=${PREFIX}/latest/opensdk/opensdk/"
+echo "When you build in air: set env variable ASCEND_CUSTOM_PATH=${PREFIX}/latest"
