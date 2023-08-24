@@ -82,6 +82,10 @@ message SubmodelDef {
 message CompileResource {
   string host_resource_type = 1;
   map<string, string> logic_device_id_to_resource_type = 2;
+  message RunningResourceList {
+    repeated RunningResource running_resource = 1;
+  }
+  map<string, RunningResourceList> dev_to_resource_list = 3; // key is logic device id
 }
 
 message FlowModelDef {
