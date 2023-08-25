@@ -140,8 +140,8 @@ class TilingContext : public ExtendedKernelContext {
    * outputs[2]: atomic-clean-flag
    * outputs[3]: tiling-data
    * outputs[4]: workspace sizes
-   * outputs[5]: schedule mode
-   * outputs[6]: tiling condition
+   * outputs[5]: tiling condition
+   * outputs[6]: schedule mode
    */
   enum TilingOutputIndex : uint32_t {
     kOutputTilingKey,
@@ -149,8 +149,8 @@ class TilingContext : public ExtendedKernelContext {
     kOutputAtomicCleanFlag,
     kOutputTilingData,
     kOutputWorkspace,
-    kOutputScheduleMode,
     kOutputTilingCond,
+    kOutputScheduleMode,
     // add new output definitions here
     kOutputNum
   };
