@@ -162,4 +162,12 @@ TEST_F(ExpandDimsTypeUT, ExpandSpecifyPart) {
   ASSERT_EQ(3, out_shape.GetDimNum());
   ASSERT_EQ(out_shape, Shape({2, 16, 16}));
 }
+TEST_F(ExpandDimsTypeUT, GetExpandDimMask) {
+  ExpandDimsType edt("011");
+  ASSERT_EQ(edt.GetFullSize(), 3);
+  ASSERT_FALSE(edt.IsExpandIndex(0));
+  ASSERT_TRUE(edt.IsExpandIndex(1));
+  ASSERT_TRUE(edt.IsExpandIndex(2));
+  ASSERT_EQ(edt.GetExpandDimsMask(), 6);
+}
 }  // namespace gert

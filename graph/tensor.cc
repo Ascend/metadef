@@ -894,79 +894,20 @@ GeTensor TensorAdapter::AsGeTensorShared(const Tensor &tensor) {
   }
   return {};
 }
-namespace {
-graphStatus TransferStorageShape(const GeTensorDesc &tensor_desc, Format storage_format,
-                                 const std::string &expand_dims_rule, GeShape &storage_shape) {
-  if (storage_shape.GetShapeSize() != 0) {
-    GELOGD("Follow user defined storage shape [%s]", storage_shape.ToString().c_str());
-    return SUCCESS;
-  }
-  // todo check expand dims rule by fe interface, update later
-  // expand dims
-  const auto reshape_mask = transformer::ExpandDimension::GenerateReshapeType(
-      tensor_desc.GetFormat(), storage_format, tensor_desc.GetShape().GetDimNum(), expand_dims_rule);
-  storage_shape = tensor_desc.GetShape();
-  transformer::ExpandDimension::ExpandDims(reshape_mask, tensor_desc.GetShape(), storage_shape);
 
-  // transfer storage shape
-  transformer::ExtAxisValue ext_axis_value;
-  transformer::ShapeTransferAccordingToFormat::InitExtAxisValue(nullptr, ext_axis_value);
-  bool is_success = transformer::ShapeTransferAccordingToFormat::TransferShape(
-      tensor_desc.GetFormat(), storage_format, tensor_desc.GetDataType(), ext_axis_value, storage_shape, storage_shape);
-  if (!is_success) {
-    GELOGE(
-        GRAPH_PARAM_INVALID,
-        "Fail to transfer storage_shape from storage_format:%s, origin_format:%s, origin_shape:%s, expand_dims_rule:%s",
-        TypeUtils::FormatToSerialString(storage_format).c_str(),
-        TypeUtils::FormatToSerialString(tensor_desc.GetFormat()).c_str(), tensor_desc.GetShape().ToString().c_str(),
-        expand_dims_rule.c_str());
-    return GRAPH_PARAM_INVALID;
-  }
-  return SUCCESS;
-}
-
-graphStatus SetAttrIfDefinedStorageFormat(GeTensorDesc &tensor_desc) {
-  bool is_origin_format_set = false;
-  (void)AttrUtils::GetBool(tensor_desc, ATTR_NAME_ORIGIN_FORMAT_IS_SET, is_origin_format_set);
-  bool is_storage_format_set = is_origin_format_set && TensorUtils::IsOriginShapeInited(tensor_desc);
-  if (!is_storage_format_set) {
-    return SUCCESS;
-  }
-
-  const auto storage_format = tensor_desc.GetFormat();
-  if (storage_format == FORMAT_RESERVED) {
-    return SUCCESS;
-  }
-
-  auto storage_shape = tensor_desc.GetShape();
-  tensor_desc.SetFormat(tensor_desc.GetOriginFormat());
-  tensor_desc.SetShape(tensor_desc.GetOriginShape());
-  (void)AttrUtils::SetBool(tensor_desc, ATTR_NAME_ORIGIN_FORMAT_IS_SET, false);
-
-  // todo depend on fe interface get reshape type mask
-  auto ret = TransferStorageShape(tensor_desc, storage_format, "", storage_shape);
-  GE_ASSERT_SUCCESS(ret, "Failed to transfer storage shape.");
-
-  // set attrs to tensor desc
-  (void)AttrUtils::SetInt(tensor_desc, ATTR_NAME_STORAGE_FORMAT, storage_format);
-  (void)AttrUtils::SetListInt(tensor_desc, ATTR_NAME_STORAGE_SHAPE, storage_shape.GetDims());
-  (void)AttrUtils::SetStr(tensor_desc, ATTR_NAME_RESHAPE_INFER_TYPE, ""); // todo
-  GELOGD("User defined storage_format:%s, origin_format:%s, expand_dims_rule:%s, storage_shape:%s, origin_shape:%s.",
-         TypeUtils::FormatToSerialString(static_cast<Format>(storage_format)).c_str(),
-         TypeUtils::FormatToSerialString(tensor_desc.GetFormat()).c_str(), storage_shape.ToString().c_str(),
-         tensor_desc.GetShape().ToString().c_str());
-  return GRAPH_SUCCESS;
-}
-
-} // namespace
 GeTensor TensorAdapter::NormalizeGeTensor(const GeTensor &tensor) {
-  GeTensor normalized_tensor;
-  (void)NormalizeGeTensor(tensor, normalized_tensor);
+  auto normalized_tensor = tensor;
+  auto &desc = normalized_tensor.MutableTensorDesc();
+  bool origin_format_is_set = false;
+  if (AttrUtils::GetBool(desc, ATTR_NAME_ORIGIN_FORMAT_IS_SET, origin_format_is_set) && origin_format_is_set &&
+      TensorUtils::IsOriginShapeInited(desc)) {
+    (void) AttrUtils::SetInt(desc, ATTR_NAME_STORAGE_FORMAT, static_cast<int64_t>(desc.GetFormat()));
+    (void) AttrUtils::SetListInt(desc, ATTR_NAME_STORAGE_SHAPE, desc.GetShape().GetDims());
+    desc.SetFormat(desc.GetOriginFormat());
+    desc.SetShape(desc.GetOriginShape());
+    (void) AttrUtils::SetBool(desc, ATTR_NAME_ORIGIN_FORMAT_IS_SET, false);
+  }
   return normalized_tensor;
-}
-graphStatus TensorAdapter::NormalizeGeTensor(const GeTensor &src_tensor, GeTensor &normalized_tensor) {
-  normalized_tensor = src_tensor;
-  return SetAttrIfDefinedStorageFormat(normalized_tensor.MutableTensorDesc());
 }
 
 GeTensor TensorAdapter::AsGeTensor(Tensor &tensor) {
