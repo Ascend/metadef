@@ -32,6 +32,7 @@ enum TensorPlacement : int32_t {
     kFollowing,    ///< Tensor位于Host，且数据紧跟在结构体后面
     kTensorPlacementEnd
 };
+#ifndef ONLY_COMPILE_OPEN_SRC
 inline const char *GetPlacementStr(const TensorPlacement placement) {
   static const char
       *placement_str[static_cast<int32_t>(kTensorPlacementEnd) + 1] = {
@@ -41,6 +42,7 @@ inline const char *GetPlacementStr(const TensorPlacement placement) {
   }
   return placement_str[placement];
 }
+#endif
 
 enum TensorOperateType : int32_t {
   kGetTensorAddress,  ///< 获取Tensor的地址
