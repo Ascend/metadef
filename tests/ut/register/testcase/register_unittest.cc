@@ -1841,7 +1841,7 @@ TEST_F(UtestRegister, ascendC_py_interface_get_tiling_def_ok) {
   size_t size = 1024;
   EXPECT_EQ(AscendCPyInterfaceGetTilingDefInfo(op_type.c_str(), const_cast<char *>(res_info.c_str()), size), 1);
   const nlohmann::json result =
-      R"({"class_name":"TestMaxPoolTilingData","data_size":34,"fields":[{"classType":"0","dtype":"int8_t","name":"dim_0"},{"classType":"0","dtype":"int16_t","name":"dim_1"},{"classType":"0","dtype":"int32_t","name":"dim_2"},{"classType":"0","dtype":"int64_t","name":"dim_3"},{"classType":"0","dtype":"uint8_t","name":"dim_4"},{"classType":"0","dtype":"uint16_t","name":"dim_5"},{"classType":"0","dtype":"uint32_t","name":"dim_6"},{"classType":"0","dtype":"uint64_t","name":"dim_7"},{"classType":"0","dtype":"int32_t","name":"act_core_num"}]})"_json;
+      R"({"class_name":"TestMaxPoolTilingData","data_size":36,"fields":[{"classType":"0","dtype":"int8_t","name":"dim_0"},{"arrSize":1,"classType":"1","dtype":"uint8_t","name":"dim_1PH"},{"classType":"0","dtype":"int16_t","name":"dim_1"},{"classType":"0","dtype":"int32_t","name":"dim_2"},{"classType":"0","dtype":"int64_t","name":"dim_3"},{"classType":"0","dtype":"uint8_t","name":"dim_4"},{"arrSize":1,"classType":"1","dtype":"uint8_t","name":"dim_5PH"},{"classType":"0","dtype":"uint16_t","name":"dim_5"},{"classType":"0","dtype":"uint32_t","name":"dim_6"},{"classType":"0","dtype":"uint64_t","name":"dim_7"},{"classType":"0","dtype":"int32_t","name":"act_core_num"}]})"_json;
   std::string result_str = result.dump();
   EXPECT_EQ(result_str, res_info.substr(0, result_str.size()));
   op_type = "TestMaxPoolStruct";
@@ -1881,7 +1881,7 @@ TEST_F(UtestRegister, ascendC_register_tilingdata_base_ok) {
   int offset = 0;
   params.SaveToBuffer((void *) (&res_data), params.GetDataSize());
   EXPECT_EQ(*((int8_t *) (res_data + offset)), params.get_dim_0());
-  offset += sizeof(int8_t);
+  offset += sizeof(int16_t);
   EXPECT_EQ(*((int16_t *) (res_data + offset)), params.get_dim_1());
   offset += sizeof(int16_t);
   EXPECT_EQ(*((int32_t *) (res_data + offset)), params.get_dim_2());
@@ -1889,7 +1889,7 @@ TEST_F(UtestRegister, ascendC_register_tilingdata_base_ok) {
   EXPECT_EQ(*((int64_t *) (res_data + offset)), params.get_dim_3());
   offset += sizeof(int64_t);
   EXPECT_EQ(*((uint8_t *) (res_data + offset)), params.get_dim_4());
-  offset += sizeof(uint8_t);
+  offset += sizeof(uint16_t);
   EXPECT_EQ(*((uint16_t *) (res_data + offset)), params.get_dim_5());
   offset += sizeof(uint16_t);
   EXPECT_EQ(*((uint32_t *) (res_data + offset)), params.get_dim_6());
@@ -1919,7 +1919,7 @@ TEST_F(UtestRegister, ascendC_register_tilingdata_base_failed) {
   paramStruct.dim_1.set_act_core_num(8);
   paramStruct.SaveToBuffer((void *) (&res_data), 1024);
 
-  auto params = TestMaxPoolTilingData();
+  auto params = TestMaxPoolTilingData((void *) (&res_data));
   params.set_dim_0(0);
   params.set_dim_1(10);
   params.set_dim_2(20);
@@ -1931,8 +1931,9 @@ TEST_F(UtestRegister, ascendC_register_tilingdata_base_failed) {
   params.set_act_core_num(8);
   params.SaveToBuffer((void *) (&res_data), 1024);
   EXPECT_EQ(*((int8_t *) (res_data + offset)), params.get_dim_0());
-  offset += sizeof(int8_t);
+  offset += sizeof(int16_t);
   EXPECT_EQ(*((int16_t *) (res_data + offset)), params.get_dim_1());
+  params.SetDataPtr(res_data);
   unsetenv("ENABLE_RUNTIME_V2");
 }
 
