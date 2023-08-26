@@ -21,6 +21,32 @@
 #include "graph/ascend_string.h"
 
 namespace optiling {
+void TilingDef::GeLogError(const std::string& str) const {
+  GELOGE(ge::GRAPH_FAILED, "%s", str.c_str());
+}
+
+void TilingDef::SaveToBuffer(void *pdata, size_t capacity) {
+  // copy tilingdata to buffer without struct tiling data.
+  auto mem_ret = memcpy_s(pdata, capacity, data_ptr_, data_size_);
+  if (mem_ret != EOK) {
+    GELOGE(ge::GRAPH_FAILED,
+           "TilingDef::SaveToBuffer failed: memcpy_s return [%d], capacity = [%zu], data_size_ = [%zu].", mem_ret,
+           capacity, data_size_);
+  }
+  // save struct tiling data to buffer
+  for (auto ptr : saveBufferPtr) {
+    TilingDef* sub_ptr = (TilingDef *)ptr.first;
+    size_t offset = ptr.second;
+    uint8_t* struct_ptr = (uint8_t*)pdata + offset;
+    mem_ret = memcpy_s(struct_ptr, sub_ptr->data_size_, sub_ptr->data_ptr_, sub_ptr->data_size_);
+    if (mem_ret != EOK) {
+    GELOGE(ge::GRAPH_FAILED,
+           "TilingDef::SaveToBuffer failed: memcpy_s return [%d], capacity = [%zu], data_size_ = [%zu].", mem_ret,
+           sub_ptr->data_size_, sub_ptr->data_size_);
+   }
+  }
+}
+
 std::vector<FieldInfo> TilingDef::GetFieldInfo() const {
   return field_info_;
 }
@@ -33,59 +59,11 @@ size_t TilingDef::GetDataSize() const {
   return data_size_;
 }
 
-void TilingDef::GeLogError(const std::string& str) const {
-  GELOGE(ge::GRAPH_FAILED, "%s", str.c_str());
-}
-
-void TilingDef::SetDataPtr(void *ptr) {
-  if (!inited_data_ptr && data_ptr_ != nullptr) {
-    delete[] data_ptr_;
-  }
-  inited_data_ptr = true;
-  data_ptr_ = (uint8_t*)ptr;
-  for (auto &ptr : saveBufferPtr) {
-    TilingDef* sub_ptr = (TilingDef *)ptr.first;
-    size_t offset = ptr.second;
-    uint8_t* struct_ptr = data_ptr_ + offset;
-    sub_ptr->SetDataPtr(struct_ptr);
-  }
-}
-
-void TilingDef::SaveToBuffer(void *pdata, size_t capacity) {
-  if (inited_data_ptr) {
-    GELOGI("TilingDef::SaveToBuffer, op %s, data had been saved.", class_name_);
-    return;
-  }
-  // copy tilingdata to buffer without struct tiling data.
-  auto mem_ret = memcpy_s(pdata, capacity, data_ptr_, data_size_);
-  if (mem_ret != EOK) {
-    GELOGE(ge::GRAPH_FAILED,
-           "TilingDef::SaveToBuffer failed: memcpy_s return op [%s] [%d], capacity = [%zu], data_size_ = [%zu].",
-           class_name_, mem_ret, capacity, data_size_);
-  }
-}
-
-void TilingDef::CheckAlignAndGenPlaceHolder(const char *name, size_t typeSize) {
-  if (data_size_ % typeSize == 0) {
-    return;
-  }
-  size_t alignSize = typeSize - (data_size_ % typeSize);
-  field_info_.emplace_back(FieldInfo("uint8_t", name, alignSize));
-  data_size_ += alignSize;
-  return;
-}
-
 void TilingDef::InitData() {
-    GELOGI("TilingDef::InitData, op %s, init data size %d.", class_name_, data_size_);
-    data_ptr_ = new (std::nothrow)uint8_t[data_size_]();
+    GELOGI("TilingDef::InitData, init data size %d.", data_size_);
+    data_ptr_ = new uint8_t[data_size_]();
     if (data_ptr_ == nullptr) {
-          GELOGE(ge::GRAPH_FAILED, "TilingDef::InitData failed: op %s, init data size %d.", class_name_, data_size_);
-    }
-    for (auto &ptr : saveBufferPtr) {
-      TilingDef* sub_ptr = (TilingDef *)ptr.first;
-      size_t offset = ptr.second;
-      uint8_t* struct_ptr = data_ptr_ + offset;
-      sub_ptr->SetDataPtr(struct_ptr);
+          GELOGE(ge::GRAPH_FAILED, "TilingDef::InitData failed: init data size %d.", data_size_);
     }
 }
 

@@ -81,18 +81,17 @@ class TilingDef {
 public:
   ~TilingDef()
   {
-    if (!inited_data_ptr && data_ptr_ != nullptr) {
+    if (data_ptr_ != nullptr) {
       delete[] data_ptr_;
+      data_ptr_ = nullptr;
     }
-    data_ptr_ = nullptr;
     class_name_ = nullptr;
   }
   void SaveToBuffer(void *pdata, size_t capacity);
   std::vector<FieldInfo> GetFieldInfo() const;
   const char *GetTilingClassName() const;
   size_t GetDataSize() const;
-  void SetDataPtr(void *ptr);
-  void CheckAlignAndGenPlaceHolder(const char *name, size_t typeSize);
+
 protected:
   void InitData();
   void GeLogError(const std::string& str) const;
@@ -103,9 +102,6 @@ protected:
   const char *class_name_;
   std::vector<std::pair<void *, size_t>> saveBufferPtr;
   size_t struct_size_ = 0;
-  bool inited_data_ptr = false;
-  uint32_t feature_bit_flag = 0;
-  uint8_t reserved_buf[128] = {0};
 };
 
 using TilingDataConstructor = std::shared_ptr<TilingDef> (*)();
@@ -139,24 +135,21 @@ REGISTER_TILING_DATA_CLASS(MaxPool, MaxPoolTilingData)
 #define BEGIN_TILING_DATA_DEF(class_name)                                                                              \
   class class_name : public TilingDef {                                                                                \
    public:                                                                                                             \
-    size_t FieldHandler(const char *dtype, const char *name, size_t typeSize, const char* namePh) {                    \
-      CheckAlignAndGenPlaceHolder(namePh, typeSize);                                                                   \
+    size_t FieldHandler(const char *dtype, const char *name, size_t len) {                                             \
       field_info_.emplace_back(FieldInfo(dtype, name));                                                                \
       size_t ret_val = data_size_;                                                                                     \
-      data_size_ += typeSize;                                                                                          \
+      data_size_ += len;                                                                                               \
       return ret_val;                                                                                                  \
     }                                                                                                                  \
-    size_t FieldHandler(const char *dtype, const char *name, size_t typeSize,                                          \
-                 size_t arrSize, const char* namePh) {                                                                 \
-      CheckAlignAndGenPlaceHolder(namePh, typeSize);                                                                   \
+    size_t FieldHandler(const char *dtype, const char *name, size_t len,                                               \
+                 size_t arrSize) {                                                                                     \
       field_info_.emplace_back(FieldInfo(dtype, name, arrSize));                                                       \
       size_t ret_val = data_size_;                                                                                     \
-      data_size_ += typeSize * arrSize;                                                                                \
+      data_size_ += len * arrSize;                                                                                     \
       return ret_val;                                                                                                  \
     }                                                                                                                  \
     size_t FieldHandler(const char *dtype, const char *name,                                                           \
-                 const char *structType, size_t structSize, void *ptr, const char* namePh) {                           \
-      CheckAlignAndGenPlaceHolder(namePh, 8);                                                                          \
+                 const char *structType, size_t structSize, void *ptr) {                                               \
       field_info_.emplace_back(FieldInfo(dtype, name, structType, structSize));                                        \
       size_t ret_val = data_size_;                                                                                     \
       data_size_ += structSize;                                                                                        \
@@ -168,18 +161,9 @@ REGISTER_TILING_DATA_CLASS(MaxPool, MaxPoolTilingData)
    public:                                                                                                             \
     class_name() {                                                                                                     \
       class_name_ = #class_name;                                                                                       \
-      StructSizeInfoBase::GetInstance().SetStructSize(#class_name, data_size_);                                        \
       InitData();                                                                                                      \
-    }                                                                                                                  \
-    class_name(void *ptr) {                                                                                            \
-      class_name_ = #class_name;                                                                                       \
       StructSizeInfoBase::GetInstance().SetStructSize(#class_name, data_size_);                                        \
-      if (ptr == nullptr) {                                                                                            \
-        GeLogError("tilingdata_base.h BEGIN_TILING_DATA_DEF init func with param nullptr!");                           \
-        return;                                                                                                        \
-      }                                                                                                                \
-      SetDataPtr(ptr);                                                                                                 \
-    }
+  }
 
 #define TILING_DATA_FIELD_DEF(data_type, field_name)                                                                   \
  public:                                                                                                               \
@@ -191,8 +175,7 @@ REGISTER_TILING_DATA_CLASS(MaxPool, MaxPoolTilingData)
                                                                                                                        \
  private:                                                                                                              \
   data_type field_name##_ = 0;                                                                                         \
-  size_t field_name##_offset_ = FieldHandler(#data_type, #field_name, sizeof(data_type), #field_name"PH");             \
-  uint8_t field_name##_reserve_buf_[16] = {0};
+  size_t field_name##_offset_ = FieldHandler(#data_type, #field_name, sizeof(data_type));
 
 #define TILING_DATA_FIELD_DEF_ARR(arr_type, arr_size, field_name)                                                      \
  public:                                                                                                               \
@@ -213,19 +196,16 @@ REGISTER_TILING_DATA_CLASS(MaxPool, MaxPoolTilingData)
                                                                                                                        \
  private:                                                                                                              \
   arr_type *field_name##_ = nullptr;                                                                                   \
-  size_t field_name##_offset_ = FieldHandler(#arr_type, #field_name, sizeof(arr_type), arr_size, #field_name"PH");     \
-  uint8_t field_name##_reserve_buf_[16] = {0};
+  size_t field_name##_offset_ = FieldHandler(#arr_type, #field_name, sizeof(arr_type), arr_size);
 
 #define TILING_DATA_FIELD_DEF_STRUCT(struct_type, field_name)                                                          \
  public:                                                                                                               \
-  struct_type field_name{nullptr};                                                                                     \
+  struct_type field_name;                                                                                              \
                                                                                                                        \
  private:                                                                                                              \
   size_t field_name##_offset_ =                                                                                        \
       FieldHandler("struct", #field_name, #struct_type,                                                                \
-                   StructSizeInfoBase::GetInstance().GetStructSize(#struct_type),                                      \
-                   (void *) &field_name, #field_name"PH");                                                             \
-  uint8_t field_name##_reserve_buf_[16] = {0};
+                   StructSizeInfoBase::GetInstance().GetStructSize(#struct_type), (void *) &field_name)
 
 #define END_TILING_DATA_DEF                                                                                            \
   }                                                                                                                    \
