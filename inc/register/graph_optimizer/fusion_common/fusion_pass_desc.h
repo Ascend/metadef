@@ -26,6 +26,7 @@ const PassAttr FE_PASS = 0x08UL;  // graph passes and ub passes in air project
 const PassAttr ENABLE_AUTO_FUSION = 0x10UL;  // whether using auto match fusion frame
 const PassAttr ALWAYS_GENERALIZE = 0x20UL;
 const PassAttr PRUNING = 0x40UL; // whether the pass need to pre run before graph fusion
+const PassAttr ENABLE_FUSION_CHECK = 0x80UL; // enable do fusion check for matched fusion nodes during ub fusion
 const PassAttr PASS_BIT_MASK = 0x1UL;  // check if the loweset bit of pass is 1
 
 enum class PassAttrType {
@@ -37,7 +38,8 @@ enum class PassAttrType {
   /* The OpDescs in the patterns of this kind fusion pass are able to be generalized in all scenarios.
    * For example, they can ignore the value dependency restrict. */
   ALWAYS_GENERALIZE_FLAG = 5,
-  PRUNING_FLAG = 6
+  PRUNING_FLAG = 6,
+  FUSION_CHECK_FLAG = 7  // Do fusion check for matched fusion nodes during ub fusion
 };
 
 bool IsPassAttrTypeOn(PassAttr pass_attr, PassAttrType attr_type);
