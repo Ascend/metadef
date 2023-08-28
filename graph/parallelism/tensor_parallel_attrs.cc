@@ -451,6 +451,18 @@ USED_BY_JSON void from_json(const Json &j, ModifyValueReshardTask &task_info) {
   GetValue(j, "value", task_info.value);
 }
 
+USED_BY_JSON void to_json(Json &j, const CastReshardTask &task_info) {
+  j = Json();
+  j["task_type"] = kCommTaskTypeCast;
+  j["dst_type"] = static_cast<int32_t>(task_info.dst_type);
+}
+
+USED_BY_JSON void from_json(const Json &j, CastReshardTask &task_info) {
+  int32_t dst_type = -1;
+  GetValue(j, "dst_type", dst_type);
+  task_info.dst_type = static_cast<DataType>(dst_type);
+}
+
 USED_BY_JSON void to_json(Json &j, const CommTask &comm_task) {
   GE_CHK_STATUS(CommTaskBuilder::GetInstance().ConvertToJson(comm_task, j));
 }
@@ -666,6 +678,9 @@ void CommTaskBuilder::InitCommTaskBuilders() {
   builders_[kCommTaskTypeReshape] = [](const Json &j, CommTask &comm_task) {
     comm_task.reshape_reshard_task = CreateReshardTaskInfo<ReshapeReshardTask>(j);
   };
+  builders_[kCommTaskTypeCast] = [](const Json &j, CommTask &comm_task) {
+    comm_task.cast_reshard_task = CreateReshardTaskInfo<CastReshardTask>(j);
+  };
 }
 
 template<typename T>
@@ -720,6 +735,9 @@ void CommTaskBuilder::InitJsonConverters() {
   };
   json_converters_[kCommTaskTypeReshape] = [](const CommTask &comm_task, nlohmann::json &j) {
     return ConvertToJson(comm_task.reshape_reshard_task.get(), j);
+  };
+  json_converters_[kCommTaskTypeCast] = [](const CommTask &comm_task, nlohmann::json &j) {
+    return ConvertToJson(comm_task.cast_reshard_task.get(), j);
   };
 }
 

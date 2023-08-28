@@ -23,12 +23,11 @@
 #include "graph/ge_tensor.h"
 
 namespace ge {
-namespace {
-  constexpr uint16_t kMaxValueOfEachDigit = 127U;
-  constexpr size_t kAppendNum = 1U;
-  constexpr char_t prefix = '\0';
-}
 using namespace std;
+constexpr uint16_t kMaxValueOfEachDigit = 127U;
+constexpr size_t kAppendNum = 1U;
+constexpr char_t prefix = '\0';
+
 class EnumAttrUtils {
  public:
   static void GetEnumAttrName(vector<string> &enum_attr_names, const string &attr_name, string &enum_attr_name,

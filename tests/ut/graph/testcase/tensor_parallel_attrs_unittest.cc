@@ -498,6 +498,23 @@ TEST_F(TensorParallelAttrsTest, ParseReshapeTaskInfo) {
     ASSERT_EQ(out_comm_task.reshape_reshard_task->shape, (std::vector<int64_t>{1, 1, 2, 3}));
 }
 
+TEST_F(TensorParallelAttrsTest, ParseCastTaskInfo) {
+  const std::string &json_str =
+      R"(
+{
+  "task_type": "Cast",
+  "dst_type": 1
+}
+)";
+  CommTask comm_task;
+  ASSERT_EQ(TensorParallelAttrs::FromJson(json_str, comm_task), SUCCESS);
+
+  CommTask out_comm_task;
+  TestToAndFromJson(comm_task, out_comm_task);
+  ASSERT_TRUE(out_comm_task.cast_reshard_task != nullptr);
+  ASSERT_EQ(out_comm_task.cast_reshard_task->dst_type, DT_FLOAT16);
+}
+
 TEST_F(TensorParallelAttrsTest, ParseModifyValueCommTask) {
   const std::string &json_str = R"(
 {

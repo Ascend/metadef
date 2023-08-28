@@ -190,6 +190,30 @@ TEST_F(UtestGeAttrValue, GetStr) {
   EXPECT_EQ(*s2, add_info);
 }
 
+TEST_F(UtestGeAttrValue, GetStr_for_2_name) {
+  OpDescPtr op_desc = std::make_shared<OpDesc>("Add", "Add");
+  EXPECT_TRUE(op_desc);
+
+  std::string name1 = "compile_info_key1";
+  std::string name2 = "compile_info_key2";
+  std::string value1 = "add_info1";
+  std::string value2 = "add_info2";
+  std::string value;
+
+  // name1未设置属性，name2设置属性，获取的值是name2的属性值
+  AttrUtils::SetStr(op_desc, name2, value2);
+  EXPECT_TRUE(AttrUtils::GetStr(op_desc, name1, name2, value));
+  EXPECT_EQ(value, value2);
+
+  // name1和name2均设置属性，获取的是name1的属性值
+  AttrUtils::SetStr(op_desc, name1, value1);
+  EXPECT_TRUE(AttrUtils::GetStr(op_desc, name1, name2, value));
+  EXPECT_EQ(value, value1);
+
+  // 异常场景
+  EXPECT_FALSE(AttrUtils::GetStr(nullptr, name1, name2, value));
+}
+
 TEST_F(UtestGeAttrValue, SetNullObjectAttr) {
   OpDescPtr op_desc(nullptr);
   EXPECT_EQ(AttrUtils::SetStr(op_desc, "key", "value"), false);
