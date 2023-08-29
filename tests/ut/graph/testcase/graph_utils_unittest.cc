@@ -285,7 +285,29 @@ ComputeGraphPtr BuildGraphWithSubGraph() {
   root_graph->TopologicalSorting();
   return root_graph;
 }
-} // namespace
+
+ComputeGraphPtr BuildGraphWithConst() {
+  auto ge_tensor = std::make_shared<GeTensor>();
+  uint8_t data_buf[4096] = {0};
+  data_buf[0] = 7;
+  data_buf[10] = 8;
+  ge_tensor->SetData(data_buf, 4096);
+
+  ut::GraphBuilder builder = ut::GraphBuilder("graph");
+  auto data_node = builder.AddNode("Data", "Data", 0, 1);
+  auto const_node = builder.AddNode("Const", "Const", 0, 1);
+  AttrUtils::SetTensor(const_node->GetOpDesc(), ge::ATTR_NAME_WEIGHTS, ge_tensor);
+  AttrUtils::SetStr(const_node->GetOpDesc(), "fake_attr_name", "fake_attr_value");
+  auto add_node = builder.AddNode("Add", "Add", 2, 1);
+  AttrUtils::SetStr(add_node->GetOpDesc(), "fake_attr_name", "fake_attr_value");
+  AttrUtils::SetStr(add_node->GetOpDesc(), ge::ATTR_NAME_WEIGHTS, "fake_attr_value");
+  auto netoutput = builder.AddNode("Netoutput", "NetOutput", 1, 0);
+  builder.AddDataEdge(data_node, 0, add_node, 0);
+  builder.AddDataEdge(const_node, 0, add_node, 1);
+  builder.AddDataEdge(add_node, 0, netoutput, 0);
+  return builder.GetGraph();
+}
+}  // namespace
 
 namespace {
 class UtestComputeGraphBuilder : public ComputeGraphBuilder {
@@ -1058,7 +1080,7 @@ TEST_F(UtestGraphUtils, CopyRootComputeGraph) {
   ASSERT_EQ(ret, GRAPH_FAILED);
 }
 
-TEST_F(UtestGraphUtils, CopyComputeGraphWithFilter) {
+TEST_F(UtestGraphUtils, CopyComputeGraphWithNodeAndGraphFilter) {
   auto graph = BuildGraphWithSubGraph();
   // check origin graph size
   ASSERT_EQ(graph->GetAllNodesSize(), 5 + 1 + 1);
@@ -1081,7 +1103,7 @@ TEST_F(UtestGraphUtils, CopyComputeGraphWithFilter) {
     return sub_graph->GetName() != "sub2";
   };
   // test copy root graph success
-  auto ret = GraphUtils::CopyComputeGraph(graph, node_filter, graph_filter, dst_compute_graph);
+  auto ret = GraphUtils::CopyComputeGraph(graph, node_filter, graph_filter, nullptr, dst_compute_graph);
   ASSERT_EQ(ret, GRAPH_SUCCESS);
   ASSERT_EQ(dst_compute_graph->GetAllNodesSize(), 4 + 1 + 0);
   ASSERT_EQ(dst_compute_graph->GetDirectNodesSize(), 4);
@@ -1096,6 +1118,67 @@ TEST_F(UtestGraphUtils, CopyComputeGraphWithFilter) {
             graph->GetSubgraph("sub1")->GetDirectNode().at(0U)->GetOpDesc()->GetId());
   ASSERT_NE(sub1_graph, nullptr);
   ASSERT_EQ(dst_compute_graph->GetSubgraph("sub2"), nullptr);
+}
+
+TEST_F(UtestGraphUtils, CopyComputeGraphWithAttrFilter) {
+  auto graph = BuildGraphWithConst();
+  ComputeGraphPtr dst_compute_graph = std::make_shared<ComputeGraph>(ComputeGraph("dst"));
+  const std::string const_node_name = "Const";
+  auto const_node_with_weight_src = graph->FindNode(const_node_name);
+  auto attr_filter = [&const_node_name](const OpDesc &op_desc, const std::string &attr_name) {
+    // keep all attr for nodes which is not `const`
+    if (op_desc.GetName() != const_node_name) {
+      return true;
+    }
+    // const node not copy weights
+    if (attr_name == ge::ATTR_NAME_WEIGHTS) {
+      return false;
+    }
+    return true;
+  };
+
+  // test copy graph success with attr filter
+  ASSERT_EQ(GraphUtils::CopyComputeGraph(graph, nullptr, nullptr, attr_filter, dst_compute_graph), GRAPH_SUCCESS);
+  auto const_node_with_weight_dst = dst_compute_graph->FindNode(const_node_name);
+  ASSERT_NE(const_node_with_weight_dst, nullptr);
+  ASSERT_NE(const_node_with_weight_src, const_node_with_weight_dst);
+  // src node keep origin weight
+  ConstGeTensorPtr weight = nullptr;
+  ASSERT_TRUE(AttrUtils::GetTensor(const_node_with_weight_src->GetOpDesc(), ATTR_NAME_WEIGHTS, weight));
+  ASSERT_NE(weight, nullptr);
+  ASSERT_EQ(weight->GetData().GetSize(), 4096U);
+  const uint8_t *buff = weight->GetData().GetData();
+  ASSERT_EQ((buff == nullptr), false);
+  ASSERT_EQ(buff[0], 7);
+  ASSERT_EQ(buff[10], 8);
+  // dst node has not weight
+  ASSERT_FALSE(AttrUtils::GetTensor(const_node_with_weight_dst->GetOpDesc(), ATTR_NAME_WEIGHTS, weight));
+  // dst node has other attr
+  std::string str_value;
+  ASSERT_TRUE(AttrUtils::GetStr(const_node_with_weight_dst->GetOpDesc(), "fake_attr_name", str_value));
+  ASSERT_EQ("fake_attr_value", str_value);
+  auto add_node_dst = dst_compute_graph->FindNode("Add");
+  ASSERT_NE(add_node_dst, nullptr);
+  // other node has all attr copyed
+  ASSERT_TRUE(AttrUtils::GetStr(add_node_dst->GetOpDesc(), "fake_attr_name", str_value));
+  ASSERT_TRUE(AttrUtils::GetStr(add_node_dst->GetOpDesc(), ATTR_NAME_WEIGHTS, str_value));
+
+  // test copy graph success without attr filter
+  ComputeGraphPtr dst_compute_graph2 = std::make_shared<ComputeGraph>(ComputeGraph("dst2"));
+  ASSERT_EQ(GraphUtils::CopyComputeGraph(graph, nullptr, nullptr, nullptr, dst_compute_graph2), GRAPH_SUCCESS);
+  auto const_node_with_weight_dst2 = dst_compute_graph2->FindNode(const_node_name);
+  ASSERT_NE(const_node_with_weight_dst2, nullptr);
+  ASSERT_NE(const_node_with_weight_src, const_node_with_weight_dst2);
+  ConstGeTensorPtr weight2 = nullptr;
+  ASSERT_TRUE(AttrUtils::GetTensor(const_node_with_weight_dst2->GetOpDesc(), ATTR_NAME_WEIGHTS, weight2));
+  ASSERT_NE(weight2, nullptr);
+  ASSERT_EQ(weight2->GetData().GetSize(), 4096U);
+  const uint8_t *buff2 = weight2->GetData().GetData();
+  // deep copy
+  ASSERT_NE(buff2, buff);
+  ASSERT_EQ((buff2 == nullptr), false);
+  ASSERT_EQ(buff2[0], 7);
+  ASSERT_EQ(buff2[10], 8);
 }
 
 TEST_F(UtestGraphUtils, DumpGraphByPath) {

@@ -247,17 +247,20 @@ class GraphUtils {
     * @param src_compute_graph 需要是根图对象
     * @param node_filter 节点拷贝白名单过滤器，可以通过传递此参数实现满足条件的节点的复制，不传递时代表全量拷贝
     * @param graph_filter 子图拷贝白名单过滤器，可以通过传递此参数实现满足条件的子图的复制，不传递时代表全量拷贝
+    * @param attr_filter 节点上属性拷贝白名单过滤器，可以通过传递此参数实现满足条件的属性复制，不传递时代表全量拷贝
     * @param dst_compute_graph
     * @return
     */
   static graphStatus CopyComputeGraph(const ComputeGraphPtr &src_compute_graph, const NodeFilter &node_filter,
-                                      const GraphFilter &graph_filter, ComputeGraphPtr &dst_compute_graph);
+                                      const GraphFilter &graph_filter, const AttrFilter &attr_filter,
+                                      ComputeGraphPtr &dst_compute_graph);
 
   /**
   * ComputeGraph图对象的深拷贝接口
   * @param src_compute_graph
   * @param node_filter 节点拷贝白名单过滤器，可以通过传递此参数实现满足条件的节点的复制，不传递时代表全量拷贝
   * @param graph_filter 子图拷贝白名单过滤器，可以通过传递此参数实现满足条件的子图的复制，不传递时代表全量拷贝
+  * @param attr_filter 节点上属性拷贝白名单过滤器，可以通过传递此参数实现满足条件的属性复制，不传递时代表全量拷贝
   * @param dst_compute_graph
   * @param node_old_2_new 新旧节点映射关系
   * @param op_desc_old_2_new 新旧节点描述信息的映射关系
@@ -265,7 +268,8 @@ class GraphUtils {
   * @return
   */
   static graphStatus CopyComputeGraph(const ComputeGraphPtr &src_compute_graph, const NodeFilter &node_filter,
-                                      const GraphFilter &graph_filter, ComputeGraphPtr &dst_compute_graph,
+                                      const GraphFilter &graph_filter, const AttrFilter &attr_filter,
+                                      ComputeGraphPtr &dst_compute_graph,
                                       std::map<ConstNodePtr, NodePtr> &node_old_2_new,
                                       std::map<ConstOpDescPtr, OpDescPtr> &op_desc_old_2_new, const int32_t depth);
 
@@ -298,6 +302,13 @@ class GraphUtils {
    * @return
    */
   static OpDescPtr CopyOpDesc(const ConstOpDescPtr &org_op_desc);
+  /**
+   * `CopyOpDesc`的重载接口
+   * @param org_op_desc
+   * @param attr_filter 节点上属性拷贝白名单过滤器，可以通过传递此参数实现满足条件的属性复制，不传递时代表全量拷贝
+   * @return
+   */
+  static OpDescPtr CopyOpDesc(const ConstOpDescPtr &org_op_desc, const AttrFilter &attr_filter);
   /**
    * 接口行为是在数据`src`锚点所属的`src_node`节点和数据`dsts`锚点所属的`dst_node`节点们之间插入一个`insert_node`节点,
    * 默认是`insert_node`的`0`号数据输入锚点和`0`号输出数据锚点参与连边，`insert_node`插入之后, `src_node`和`insert_node`
@@ -778,7 +789,8 @@ class GraphUtils {
   static bool MatchDumpStr(const std::string &suffix);
 
   static graphStatus CopyOpAndSubgraph(const ComputeGraphPtr &src_compute_graph, const NodeFilter &node_filter,
-                                       const GraphFilter &graph_filter, ComputeGraphPtr &dst_compute_graph,
+                                       const GraphFilter &graph_filter, const AttrFilter &attr_filter,
+                                       ComputeGraphPtr &dst_compute_graph,
                                        std::map<ConstNodePtr, NodePtr> &node_old_2_new,
                                        std::map<ConstOpDescPtr, OpDescPtr> &op_desc_old_2_new,
                                        std::unordered_map<std::string, NodePtr> &all_new_nodes, const int32_t depth);

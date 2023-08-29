@@ -40,6 +40,7 @@ using OperatorImplPtr = std::shared_ptr<OperatorImpl>;
 class ComputeGraphImpl;
 using ComputeGraphImplPtr = std::shared_ptr<ComputeGraphImpl>;
 
+using AttrFilter = std::function<bool(const OpDesc &, const std::string &attr_name)>;
 using NodeFilter = std::function<bool(const Node &)>;
 using GraphFilter = std::function<bool(const Node &, const char_t *, const ComputeGraphPtr &)>;
 
