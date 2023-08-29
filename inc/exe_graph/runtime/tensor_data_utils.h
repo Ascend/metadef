@@ -19,7 +19,6 @@
 #include "graph/types.h"
 
 namespace gert {
-#ifdef ONLY_COMPILE_OPEN_SRC
 inline const ge::char_t *GetPlacementStr(const TensorPlacement placement) {
   static const ge::char_t *placement_str[static_cast<int32_t>(kTensorPlacementEnd) + 1] = {"DeviceHbm", "HostDDR",
                                                                                            "HostDDR", "Unknown"};
@@ -28,6 +27,5 @@ inline const ge::char_t *GetPlacementStr(const TensorPlacement placement) {
   }
   return placement_str[placement];
 }
-#endif
 }  // namespace gert
 #endif  // METADEF_CXX_INC_EXE_GRAPH_TENSOR_DATA_UTILS_H_
