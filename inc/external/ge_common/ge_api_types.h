@@ -494,6 +494,10 @@ struct OutputTensorInfo {
   OutputTensorInfo &operator=(const OutputTensorInfo &)& = delete;
 };
 
+struct ModelDistibuteDesc {
+  uint32_t logic_device_number;
+};
+
 using Status = uint32_t;
 using RunAsyncCallback = std::function<void(Status, std::vector<ge::Tensor> &)>;
 
