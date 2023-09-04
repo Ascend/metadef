@@ -206,8 +206,11 @@ class NodeUtils {
   ///          PartionedCall_0's subgraph: Data->A->Netoutput
   ///          PartionedCall_1's subgraph: Data1->B->Netoutput
   ///          If it is called like GetInNodeCrossPartionCallNode(B,0,peer_node)or(Data1,0,peer_node), peer_node is A
+  /// @param [out] peer_out_anchor_index, peer_node's corresponding out anchor's index
   /// @return [graphStatus] running result of this function
   static graphStatus GetInNodeCrossPartionedCallNode(const NodePtr &node, uint32_t index, NodePtr &peer_node);
+  static graphStatus GetInNodeCrossPartionedCallNode(const NodePtr &node, uint32_t index, NodePtr &peer_node,
+                                                     int32_t &peer_out_anchor_index);
 
   static graphStatus SetNodeParallelGroup(Node &node, const char_t *const group_name);
 
