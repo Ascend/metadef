@@ -34,7 +34,7 @@ struct OpExecuteOptions {
 
 enum OpExecuteInputExtendIndex : uint32_t {
   kAllocate,
-  kStream,
+  kRtStream,
   kExecuteOption,
   kBlockMemory,
   // add new extend input here
@@ -105,7 +105,7 @@ class OpExecuteContext : public ExtendedKernelContext {
   rtStream GetStream() const {
     const size_t input_num = GetComputeNodeInputNum();
     const size_t output_num = GetComputeNodeOutputNum();
-    auto stream = GetInputPointer<rtStream>(input_num + output_num + kStream);
+    auto stream = GetInputPointer<rtStream>(input_num + output_num + kRtStream);
     if (stream == nullptr) {
       return nullptr;
     }
