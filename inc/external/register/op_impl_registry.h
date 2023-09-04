@@ -71,7 +71,6 @@ class OpImplRegister {
     return *this;
   }
   OpImplRegister &InputsDataDependency(std::initializer_list<int32_t> inputs);
-
  private:
   template<typename T, typename std::enable_if<(!std::is_array<T>::value), int32_t>::type = 0>
   static void *CreateCompileInfo() {
@@ -124,7 +123,8 @@ class OpImplRegisterV2 {
                        DeleteCompileInfo<T>);
   }
   OpImplRegisterV2 &InputsDataDependency(std::initializer_list<int32_t> inputs);
-
+  OpImplRegisterV2 &OpExecuteFunc(OpImplKernelRegistry::OpExecuteFunc op_execute_func);
+  OpImplRegisterV2 &HostInputs(std::initializer_list<int32_t> inputs);
  private:
   OpImplRegisterV2 &TilingParse(OpImplKernelRegistry::KernelFunc tiling_parse_func,
                                 OpImplKernelRegistry::CompileInfoCreatorFunc creator_func,
@@ -139,7 +139,6 @@ class OpImplRegisterV2 {
   static void DeleteCompileInfo(void *const obj) {
     delete reinterpret_cast<T *>(obj);
   }
-
  private:
   std::unique_ptr<OpImplRegisterV2Impl> impl_;
 };
