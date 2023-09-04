@@ -19,6 +19,7 @@
 #undef private
 #include "graph/utils/op_desc_utils.h"
 #include "graph/utils/graph_utils.h"
+#include "exe_graph/runtime/tiling_parse_context.h"
 #include "exe_graph/lowering/value_holder.h"
 #include "platform/platform_infos_def.h"
 #include "common/ge_common/util.h"

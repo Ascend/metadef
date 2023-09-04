@@ -127,7 +127,7 @@ class GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY GeTensorDesc : public AttrH
   graphStatus GetOriginShapeRange(std::vector<std::pair<int64_t, int64_t>> &range) const;
 
   const GeShape &GetOriginShape() const;
-  GeShape &MutableOriginShape();
+  GeShape &MutableOriginShape() const;
 
   void SetOriginShape(const GeShape &origin_shape);
   bool IsOriginShapeInitialized() const;

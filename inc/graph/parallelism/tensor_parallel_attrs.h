@@ -34,6 +34,7 @@ constexpr const char_t *kCommTaskTypeSliceByAxis = "SliceByAxis";
 constexpr const char_t *kCommTaskTypeSplit = "Split";
 constexpr const char_t *kCommTaskTypeTranspose = "Transpose";
 constexpr const char_t *kCommTaskTypeReshape = "Reshape";
+constexpr const char_t *kCommTaskTypeCast = "Cast";
 constexpr const char_t *kCommTaskTypeHcomAllGather = "HcomAllGather";
 constexpr const char_t *kCommTaskTypeHcomAllReduce = "HcomAllReduce";
 constexpr const char_t *kCommTaskTypeHcomAllReduceMean = "HcomAllReduceMean";
@@ -123,6 +124,10 @@ struct SendRecvReshardTask {
   std::string parallel_group;
   std::string comm_type = kSendRecvCommTypeQueue;
   FlowAttr flow_attr; // used when comm_type is Queue
+};
+
+struct CastReshardTask {
+  DataType dst_type = DT_MAX;
 };
 
 // group communications
@@ -233,6 +238,7 @@ struct CommTask {
   std::shared_ptr<ModifyValueReshardTask> modify_value_reshard_task;
   std::shared_ptr<LocalReduceReshardTask> local_reduce_reshard_task;
   std::shared_ptr<ReshapeReshardTask> reshape_reshard_task;
+  std::shared_ptr<CastReshardTask> cast_reshard_task;
 };
 
 struct CommStepInput {

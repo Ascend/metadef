@@ -886,7 +886,7 @@ const GeShape &GeTensorDesc::GetOriginShape() const {
   return impl_->OriginShapeReference();
 }
 
-GeShape &GeTensorDesc::MutableOriginShape() {
+GeShape &GeTensorDesc::MutableOriginShape() const {
   return OriginShapeReference();
 }
 

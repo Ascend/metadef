@@ -22,12 +22,21 @@
 
 namespace OpInfoRecord {
 struct OpCompilerOption {
-    OpCompilerOption(const std::string &impl_mode_v, bool deterministic_v = true) :
+    explicit OpCompilerOption(const std::string &impl_mode_v, bool deterministic_v = true) :
         impl_mode(impl_mode_v), deterministic(deterministic_v) {}
-    OpCompilerOption(const char *impl_mode_v, bool deterministic_v = true) :
+    explicit OpCompilerOption(const char *impl_mode_v, bool deterministic_v = true) :
         impl_mode(impl_mode_v), deterministic(deterministic_v) {}
     std::string impl_mode;
     bool deterministic;
+};
+
+struct OpKernelInfo {
+    explicit OpKernelInfo(const std::string &bin_info_v, int8_t bin_type_v) :
+        bin_info(bin_info_v), bin_type(bin_type_v) {}
+    explicit OpKernelInfo(const char *bin_info_v, int8_t bin_type_v) :
+        bin_info(bin_info_v), bin_type(bin_type_v) {}
+    std::string bin_info;
+    int8_t bin_type;
 };
 
 class __attribute__((visibility("default"))) OpInfoRecordRegister {
@@ -56,11 +65,14 @@ public:
     * @param ctx [IN] Operator context information
     * @param opt [IN] Operator compile option
     */
-    void ExeOptInfoStat(const gert::TilingContext *ctx, const OpCompilerOption &opt) const;
+    void ExeOptInfoStat(
+        const gert::TilingContext *ctx,
+        const OpCompilerOption &opt,
+        const OpKernelInfo *kernelInfo) const;
 
 private:
-    OpInfoRecordRegister() {}
-    ~OpInfoRecordRegister() {}
+    OpInfoRecordRegister() = default;
+    ~OpInfoRecordRegister() = default;
     OpInfoRecordRegister(const OpInfoRecordRegister &) = delete;
     OpInfoRecordRegister &operator=(const OpInfoRecordRegister &) = delete;
 };  // class OpInfoRecordRegister

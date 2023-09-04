@@ -546,7 +546,17 @@ ge::graphStatus PostProcMemoryCheck(const ge::Operator &op, OpRunInfoV2 &run_inf
   if (!ge::AttrUtils::GetBool(op_desc, kMemoryCheck, value) || !value) {
     return ge::GRAPH_SUCCESS;
   }
-  run_info.AlignOffsetWith64();
+  uint64_t ori_op_para_size = 0;
+  if (ge::AttrUtils::GetInt(op_desc, kOriOpParaSize, ori_op_para_size)) {
+    GELOGD("The ori_op_para_size of node[%s] is %lu.", op_desc->GetName().c_str(), ori_op_para_size);
+    if (!run_info.SetMemCheckBaseOffset(ori_op_para_size)) {
+      REPORT_CALL_ERROR("E19999", "[register][op_tiling][PostProcMemoryCheck]Node:%s set mem check offset:%lu failed.",
+                        op_desc->GetName().c_str(), ori_op_para_size);
+      return ge::GRAPH_FAILED;
+    }
+  } else {
+    run_info.AlignOffsetWith64();
+  }
   for (size_t i = 0U; i < op_desc->GetAllInputsSize(); ++i) {
     const ge::GeTensorDescPtr tensor = op_desc->MutableInputDesc(static_cast<uint32_t>(i));
     if (tensor == nullptr) {

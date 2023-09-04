@@ -138,6 +138,7 @@ public:
   void ResetWorkspace();
   void ResetAddrBase(void *const addr_base, const uint64_t max_size);
   void AlignOffsetWith64();
+  bool SetMemCheckBaseOffset(const uint64_t &offset);
   void SetTilingCond(const int32_t tiling_cond);
   int32_t GetTilingCond() const;
 private:

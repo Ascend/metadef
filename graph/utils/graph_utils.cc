@@ -47,6 +47,7 @@
 #include "mmpa/mmpa_api.h"
 #include "common/checker.h"
 #include "graph/utils/op_type_utils.h"
+#include "graph/utils/constant_utils.h"
 
 namespace ge {
 enum class DumpGraphLevel {
@@ -1913,9 +1914,9 @@ ComputeGraphPtr GraphUtils::FindRootGraph(ComputeGraphPtr graph) {
   }
   return result;
 }
-GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY
-graphStatus GraphUtils::CopyComputeGraph(const ComputeGraphPtr &src_compute_graph, const NodeFilter &node_filter,
-                                         const GraphFilter &graph_filter, ComputeGraphPtr &dst_compute_graph) {
+GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY graphStatus GraphUtils::CopyComputeGraph(
+    const ComputeGraphPtr &src_compute_graph, const NodeFilter &node_filter, const GraphFilter &graph_filter,
+    const AttrFilter &attr_filter, ComputeGraphPtr &dst_compute_graph) {
   GE_CHECK_NOTNULL(src_compute_graph);
   if (src_compute_graph->GetParentGraph() != nullptr) {
     GELOGE(GRAPH_FAILED,
@@ -1928,7 +1929,7 @@ graphStatus GraphUtils::CopyComputeGraph(const ComputeGraphPtr &src_compute_grap
   const int32_t depth = 0;
   std::map<ConstNodePtr, NodePtr> old_2_new_node;
   std::map<ConstOpDescPtr, OpDescPtr> old_2_new_op_desc;
-  const graphStatus ret = CopyComputeGraph(src_compute_graph, node_filter, graph_filter, dst_compute_graph,
+  const graphStatus ret = CopyComputeGraph(src_compute_graph, node_filter, graph_filter, attr_filter, dst_compute_graph,
                                            old_2_new_node, old_2_new_op_desc, depth);
   if (ret != GRAPH_SUCCESS) {
     GELOGE(GRAPH_FAILED, "[Copy][ComputeGraphPtr] failed, ret:%d.", ret);
@@ -1965,26 +1966,34 @@ GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY OpDescPtr GraphUtils::CloneOpDesc
   return op_desc;
 }
 
-GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY OpDescPtr GraphUtils::CopyOpDesc(const ConstOpDescPtr &org_op_desc) {
-  if ((org_op_desc == nullptr) || (org_op_desc->impl_ == nullptr)) {
-    REPORT_INNER_ERROR("E18888", "org_op_desc is null, check invalid");
-    GELOGE(GRAPH_FAILED, "[Check][Param] org_op_desc is null");
-    return nullptr;
-  }
+GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY OpDescPtr GraphUtils::CopyOpDesc(const ConstOpDescPtr &org_op_desc,
+                                                                                const AttrFilter &attr_filter) {
+  GE_ASSERT_NOTNULL(org_op_desc);
+  GE_ASSERT_NOTNULL(org_op_desc->impl_);
   const auto op_def = ComGraphMakeShared<proto::OpDef>();
-  GE_CHECK_NOTNULL_EXEC(op_def, return nullptr);
+  GE_ASSERT_NOTNULL(op_def);
 
   ModelSerializeImp imp;
-  (void)imp.SerializeOpDesc(org_op_desc, op_def.get());
-
+  (void) imp.SerializeOpDesc(org_op_desc, op_def.get());
   imp.SetProtobufOwner(op_def);
   OpDescPtr op_desc = nullptr;
-  if (!imp.UnserializeOpDesc(op_desc, *op_def)) {
-    REPORT_CALL_ERROR("E18888", "UnserializeOpDesc failed.");
-    return nullptr;
+  GE_ASSERT_TRUE(imp.UnserializeOpDesc(op_desc, *op_def));
+  // weight's data call `Clone` for deep copy if needed
+  if (ConstantUtils::IsConstant(op_desc) && ((attr_filter == nullptr) || attr_filter(*op_desc, ATTR_NAME_WEIGHTS))) {
+    ConstGeTensorPtr weight = nullptr;
+    if (AttrUtils::GetTensor(org_op_desc, ATTR_NAME_WEIGHTS, weight)) {
+      const GeTensor copy_weight = weight->Clone();
+      GE_ASSERT_TRUE(AttrUtils::SetTensor(op_desc, ATTR_NAME_WEIGHTS, copy_weight));
+      GELOGD("Clone ATTR_NAME_WEIGHTS for node:%s success.", op_desc->GetName().c_str());
+    }
   }
-
-  GE_CHECK_NOTNULL_EXEC(op_desc->impl_, return nullptr);
+  // remove attr by attr_filter
+  for (const auto &attr_name : op_desc->GetAllAttrNames()) {
+    if ((attr_filter != nullptr) && (!attr_filter(*op_desc, attr_name))) {
+      GE_ASSERT_GRAPH_SUCCESS(op_desc->DelAttr(attr_name));
+    }
+  }
+  GE_ASSERT_NOTNULL(op_desc->impl_);
   op_desc->ext_attrs_ = org_op_desc->ext_attrs_;
   op_desc->impl_->input_name_idx_.insert(org_op_desc->impl_->input_name_idx_.cbegin(),
                                          org_op_desc->impl_->input_name_idx_.cend());
@@ -1999,26 +2008,28 @@ GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY OpDescPtr GraphUtils::CopyOpDesc(
   return op_desc;
 }
 
-GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY
-graphStatus GraphUtils::CopyComputeGraph(const ComputeGraphPtr &src_compute_graph, ComputeGraphPtr &dst_compute_graph) {
-  return CopyComputeGraph(src_compute_graph, nullptr, nullptr, dst_compute_graph);
+GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY OpDescPtr GraphUtils::CopyOpDesc(const ConstOpDescPtr &org_op_desc) {
+  return CopyOpDesc(org_op_desc, nullptr);
 }
 
-GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY
-graphStatus GraphUtils::CopyComputeGraph(const ComputeGraphPtr &src_compute_graph, ComputeGraphPtr &dst_compute_graph,
-                                         std::map<ConstNodePtr, NodePtr> &node_old_2_new,
-                                         std::map<ConstOpDescPtr, OpDescPtr> &op_desc_old_2_new, const int32_t depth) {
-  return CopyComputeGraph(src_compute_graph, nullptr, nullptr, dst_compute_graph, node_old_2_new, op_desc_old_2_new,
-                          depth);
+GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY graphStatus
+GraphUtils::CopyComputeGraph(const ComputeGraphPtr &src_compute_graph, ComputeGraphPtr &dst_compute_graph) {
+  return CopyComputeGraph(src_compute_graph, nullptr, nullptr, nullptr, dst_compute_graph);
 }
 
-GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY
-graphStatus GraphUtils::CopyOpAndSubgraph(const ComputeGraphPtr &src_compute_graph, const NodeFilter &node_filter,
-                                          const GraphFilter &graph_filter, ComputeGraphPtr &dst_compute_graph,
-                                          std::map<ConstNodePtr, NodePtr> &node_old_2_new,
-                                          std::map<ConstOpDescPtr, OpDescPtr> &op_desc_old_2_new,
-                                          std::unordered_map<std::string, NodePtr> &all_new_nodes,
-                                          const int32_t depth) {
+GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY graphStatus
+GraphUtils::CopyComputeGraph(const ComputeGraphPtr &src_compute_graph, ComputeGraphPtr &dst_compute_graph,
+                             std::map<ConstNodePtr, NodePtr> &node_old_2_new,
+                             std::map<ConstOpDescPtr, OpDescPtr> &op_desc_old_2_new, const int32_t depth) {
+  return CopyComputeGraph(src_compute_graph, nullptr, nullptr, nullptr, dst_compute_graph, node_old_2_new,
+                          op_desc_old_2_new, depth);
+}
+
+GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY graphStatus GraphUtils::CopyOpAndSubgraph(
+    const ComputeGraphPtr &src_compute_graph, const NodeFilter &node_filter, const GraphFilter &graph_filter,
+    const AttrFilter &attr_filter, ComputeGraphPtr &dst_compute_graph, std::map<ConstNodePtr, NodePtr> &node_old_2_new,
+    std::map<ConstOpDescPtr, OpDescPtr> &op_desc_old_2_new, std::unordered_map<std::string, NodePtr> &all_new_nodes,
+    const int32_t depth) {
   GE_CHECK_NOTNULL(src_compute_graph);
   GE_CHECK_NOTNULL(dst_compute_graph);
   const auto dst_root_compute_graph = FindRootGraph(dst_compute_graph);
@@ -2029,27 +2040,9 @@ graphStatus GraphUtils::CopyOpAndSubgraph(const ComputeGraphPtr &src_compute_gra
     if ((node_filter != nullptr) && (!node_filter(*n))) {
       continue;
     }
-    const OpDescPtr op_desc = GraphUtils::CopyOpDesc(n->GetOpDesc());
+    const auto &op_desc = GraphUtils::CopyOpDesc(n->GetOpDesc(), attr_filter);
     GE_CHECK_NOTNULL(op_desc);
     GE_CHECK_NOTNULL(op_desc->impl_);
-    if (CopyTensorAttrs(op_desc, n) != GRAPH_SUCCESS) {
-      GELOGE(GRAPH_FAILED, "[Copy][TensorAttrs] from node:%s failed.", n->GetName().c_str());
-      return GRAPH_FAILED;
-    }
-
-    if (NodeUtils::IsConst(*n)) {
-      GeTensorPtr weight = nullptr;
-      if (AttrUtils::MutableTensor(n->GetOpDesc(), ATTR_NAME_WEIGHTS, weight)) {
-        const GeTensor copy_weight = weight->Clone();
-        if (!AttrUtils::SetTensor(op_desc, ATTR_NAME_WEIGHTS, copy_weight)) {
-          REPORT_CALL_ERROR("E18888", "copy ATTR_NAME_WEIGHTS for node:%s failed.", op_desc->GetName().c_str());
-          GELOGE(INTERNAL_ERROR, "[Set][Tensor]copy ATTR_NAME_WEIGHTS for node:%s failed.", op_desc->GetName().c_str());
-          return GRAPH_FAILED;
-        }
-        GELOGD("Clone ATTR_NAME_WEIGHTS for node:%s success.", op_desc->GetName().c_str());
-      }
-    }
-
     op_desc->SetName(n->GetName());
     const NodePtr node = dst_compute_graph->AddNode(op_desc, n->GetOpDesc()->GetId());
     if (node == nullptr) {
@@ -2078,7 +2071,7 @@ graphStatus GraphUtils::CopyOpAndSubgraph(const ComputeGraphPtr &src_compute_gra
       dst_subgraph->SetParentGraph(dst_compute_graph);
       std::map<ConstNodePtr, NodePtr> sub_node_old_2_new;
       std::map<ConstOpDescPtr, OpDescPtr> sub_op_desc_old_2_new;
-      const graphStatus ret = CopyComputeGraph(src_subgraph, node_filter, graph_filter, dst_subgraph,
+      const graphStatus ret = CopyComputeGraph(src_subgraph, node_filter, graph_filter, attr_filter, dst_subgraph,
                                                sub_node_old_2_new, sub_op_desc_old_2_new, depth + 1);
       if (ret != GRAPH_SUCCESS) {
         GELOGE(GRAPH_FAILED, "[Copy][SubGraph] %s of parent node:%s failed.",
@@ -2095,11 +2088,10 @@ graphStatus GraphUtils::CopyOpAndSubgraph(const ComputeGraphPtr &src_compute_gra
   return GRAPH_SUCCESS;
 }
 
-GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY
-graphStatus GraphUtils::CopyComputeGraph(const ComputeGraphPtr &src_compute_graph, const NodeFilter &node_filter,
-                                         const GraphFilter &graph_filter, ComputeGraphPtr &dst_compute_graph,
-                                         std::map<ConstNodePtr, NodePtr> &node_old_2_new,
-                                         std::map<ConstOpDescPtr, OpDescPtr> &op_desc_old_2_new, const int32_t depth) {
+GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY graphStatus GraphUtils::CopyComputeGraph(
+    const ComputeGraphPtr &src_compute_graph, const NodeFilter &node_filter, const GraphFilter &graph_filter,
+    const AttrFilter &attr_filter, ComputeGraphPtr &dst_compute_graph, std::map<ConstNodePtr, NodePtr> &node_old_2_new,
+    std::map<ConstOpDescPtr, OpDescPtr> &op_desc_old_2_new, const int32_t depth) {
   GE_CHECK_NOTNULL(dst_compute_graph);
   GE_CHECK_NOTNULL(src_compute_graph);
 
@@ -2111,8 +2103,8 @@ graphStatus GraphUtils::CopyComputeGraph(const ComputeGraphPtr &src_compute_grap
   }
   // copy op and subgraph from old graph to new graph
   std::unordered_map<std::string, NodePtr> all_new_nodes;
-  graphStatus ret = CopyOpAndSubgraph(src_compute_graph, node_filter, graph_filter, dst_compute_graph, node_old_2_new,
-                                      op_desc_old_2_new, all_new_nodes, depth);
+  graphStatus ret = CopyOpAndSubgraph(src_compute_graph, node_filter, graph_filter, attr_filter, dst_compute_graph,
+                                      node_old_2_new, op_desc_old_2_new, all_new_nodes, depth);
   if (ret != GRAPH_SUCCESS) {
     GELOGE(GRAPH_FAILED, "[Copy][OpAndSubGraph] failed.");
     return GRAPH_FAILED;

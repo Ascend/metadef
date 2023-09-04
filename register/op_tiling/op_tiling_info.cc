@@ -90,6 +90,18 @@ public:
     const uint64_t offset = (offset_ + sizeof(uint64_t) - 1U) / sizeof(uint64_t);
     offset_ = offset * sizeof(uint64_t);
   }
+
+  bool SetMemCheckBaseOffset(const uint64_t &offset) {
+    GELOGD("When max size is %lu, set a new offset[%lu] to replace ori offset[%lu].", max_size_, offset, offset_);
+    uint64_t new_offset = (offset + sizeof(uint64_t) - 1U) / sizeof(uint64_t);
+    new_offset  = new_offset * sizeof(uint64_t);
+    if (new_offset < offset_ || new_offset >= max_size_) {
+      return false;
+    }
+    offset_ = new_offset;
+    return true;
+  }
+
   void* GetAddrBase(uint64_t& max_size) const {
     max_size = max_size_;
     return addr_base_;
@@ -232,6 +244,10 @@ void OpRunInfo::AddTilingData(const ge::char_t *value, const size_t size) {
 
 void OpRunInfo::AlignOffsetWith64() {
   return impl_->AlignOffsetWith64();
+}
+
+bool OpRunInfo::SetMemCheckBaseOffset(const uint64_t &offset) {
+  return impl_->SetMemCheckBaseOffset(offset);
 }
 
 void* OpRunInfo::GetAddrBase(uint64_t& max_size) const {

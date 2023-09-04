@@ -238,10 +238,16 @@ TEST_F(RegisterOpTilingUT, PostProcMemoryCheck1) {
   cout << "TEST" << data.str() << endl;
   EXPECT_EQ(data.str().empty(), true);
   (void)ge::AttrUtils::SetBool(op_desc, kMemoryCheck, true);
+  (void)ge::AttrUtils::SetInt(op_desc, kOriOpParaSize, 64);
   ret = PostProcMemoryCheck(op, run_info);
   ByteBuffer &data1 = run_info.GetAllTilingData();
   cout << "TEST1" << data1.str().c_str() << endl;
-  EXPECT_EQ(data1.str().empty(), false);
+  EXPECT_EQ(data1.str().empty(), true);
+  run_info.ResetAddrBase(nullptr, 1024);
+  ret = PostProcMemoryCheck(op, run_info);
+  ByteBuffer &data2 = run_info.GetAllTilingData();
+  cout << "TEST2" << data2.str().c_str() << endl;
+  EXPECT_EQ(data2.str().empty(), false);
 }
 
 TEST_F(RegisterOpTilingUT, UpDateNodeShapeBySliceInfo1) {

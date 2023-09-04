@@ -23,8 +23,9 @@
 #include "graph/types.h"
 #include "graph/compiler_def.h"
 #include "op_impl_kernel_registry.h"
-#include "exe_graph/runtime/tiling_parse_context.h"
+
 namespace gert {
+class TilingParseContext;
 class OpImplRegistry : public OpImplKernelRegistry {
  public:
   static OpImplRegistry &GetInstance();
