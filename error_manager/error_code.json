@@ -497,13 +497,13 @@
     },
     {
       "errClass": "GE Errors",
-      "errTitle": "Invalid --input_shape_range Argument",
+      "errTitle": "Invalid --input_shape Argument",
       "ErrCode": "E10049",
-      "ErrMessage": "Dimension count [%s] configured in [--input_shape_range] does not match dimension count [%s] of the node.",
+      "ErrMessage": "Dimension count [%s] configured in [--input_shape] does not match dimension count [%s] of the node.",
       "Arglist": "shape_range_size,cur_dim_size",
       "suggestion": {
         "Possible Cause": "N/A",
-        "Solution": "Set the dimension count in [--input_shape_range] according to the dimension count of the node."
+        "Solution": "Set the dimension count in [--input_shape] according to the dimension count of the node."
       }
     },
     {
