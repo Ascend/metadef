@@ -94,9 +94,9 @@ bool IsRefFromRefData(const OutDataAnchorPtr &out_data_anchor, ge::NodeIndexIO &
     return false;
   }
   // find src ref_data
-  auto root_graph = ge::GraphUtils::FindRootGraph(owner_node->GetOwnerComputeGraph());
-  // 不保证调用阶段是否在图拆分后，因此用allnode查找
-  const auto ref_data = ge::GraphUtils::FindNodeFromAllNodes(root_graph, ref_var_src_var_name);
+  const auto &ower_graph = owner_node->GetOwnerComputeGraph();
+  GE_ASSERT_NOTNULL(ower_graph);
+  const auto ref_data = ower_graph->FindNode(ref_var_src_var_name);
   if (ref_data == nullptr) {
     GELOGW("Can not find refdata named %s. Please check ref relation on graph.", ref_var_src_var_name.c_str());
     return false;
