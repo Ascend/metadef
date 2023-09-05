@@ -23,7 +23,6 @@
 #include "exe_graph/runtime/infer_shape_context.h"
 #include "exe_graph/runtime/infer_shape_range_context.h"
 #include "exe_graph/runtime/tiling_context.h"
-#include "exe_graph/runtime/op_execute_context.h"
 #include "exe_graph/runtime/infer_datatype_context.h"
 #include "graph/ascend_string.h"
 
@@ -37,9 +36,6 @@ struct OpImplKernelRegistry {
   using InferShapeRangeKernelFunc = UINT32 (*)(InferShapeRangeContext *);
   using TilingKernelFunc = UINT32 (*)(TilingContext *);
   using InferDataTypeKernelFunc = UINT32 (*)(InferDataTypeContext *);
-  // aclnn接口的原型，入参含义：
-  // OpExecuteContext：保存算子的Input，Output，Attr信息
-  using OpExecuteFunc = UINT32 (*)(OpExecuteContext *);
   using OpType = ge::AscendString;
   using PrivateAttrList = std::vector<std::pair<ge::AscendString, ge::AnyValue>>;
   using PrivateAttrSet = std::unordered_set<ge::AscendString>;
@@ -68,26 +64,6 @@ struct OpImplKernelRegistry {
       return ge::GRAPH_SUCCESS;
     }
 
-    bool HasHostInput() const {
-      return (host_inputs != 0UL);
-    }
-    /*
-     * param index: must be ir index
-     */
-    bool IsHostInput(const size_t index) const {
-      if (index >= (sizeof(host_inputs) * kInt64ByteCount)) {
-        return false;
-      }
-      return static_cast<bool>(host_inputs & (static_cast<uint64_t>(1) << index));
-    }
-    ge::graphStatus SetHostInputs(const size_t index) {
-      if (index >= (sizeof(host_inputs) * kInt64ByteCount)) {
-        return ge::GRAPH_FAILED;
-      }
-      host_inputs |= 1UL << index;
-      return ge::GRAPH_SUCCESS;
-    }
-
     InferShapeKernelFunc infer_shape;
     InferShapeRangeKernelFunc infer_shape_range;
     InferDataTypeKernelFunc infer_datatype;
@@ -95,16 +71,14 @@ struct OpImplKernelRegistry {
     KernelFunc tiling_parse;
     CompileInfoCreatorFunc compile_info_creator;
     CompileInfoDeleterFunc compile_info_deleter;
-    OpExecuteFunc op_execute_func;
-    size_t max_tiling_data_size = 0UL;
-    uint64_t inputs_dependency = 0UL;
-    static constexpr size_t kInt64ByteCount = 8UL;
+    size_t max_tiling_data_size = 0;
+    uint64_t inputs_dependency = 0;
+    static constexpr size_t kInt64ByteCount = 8;
     PrivateAttrList private_attrs;
     // todo 去重和registry没关系，下一步从这里删除，移动到register中实现
     PrivateAttrSet unique_private_attrs;
-    uint64_t host_inputs = 0UL;
     uint8_t reserved_0_[7] = {0U};   // Reserved field, 8-byte aligned for unique_private_attrs
-    uint8_t reserved_1_[24] = {0U};  // Reserved field, 16+8, do not directly use when only 8-byte left
+    uint8_t reserved_1_[40] = {0U};  // Reserved field, 32+8, do not directly use when only 8-byte left
   };
   virtual ~OpImplKernelRegistry() = default;
   virtual const OpImplFunctions *GetOpImpl(const ge::char_t *op_type) const = 0;
