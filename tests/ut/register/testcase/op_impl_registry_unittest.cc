@@ -13,16 +13,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#define private public
-#define protected public
 #include "register/op_impl_registry.h"
-#undef private
-#undef protected
 #include <gtest/gtest.h>
 #include "exe_graph/runtime/kernel_context.h"
 #include "graph/any_value.h"
 #include "register/op_impl_registry_api.h"
-
 namespace gert_test {
 namespace {
 ge::graphStatus TestInferShapeFunc1(gert::InferShapeContext *) {
@@ -46,7 +41,6 @@ ge::graphStatus TestTilingFunc1(gert::TilingContext *) {
 ge::graphStatus TestTilingFunc2(gert::TilingContext *) {
   return ge::GRAPH_SUCCESS;
 }
-
 ge::graphStatus TestInferDataTypeFunc(gert::InferDataTypeContext *) {
   return ge::GRAPH_SUCCESS;
 }
@@ -56,11 +50,6 @@ ge::graphStatus TestTilingParseFunc1(gert::TilingParseContext *) {
 ge::graphStatus TestTilingParseFunc2(gert::TilingParseContext *) {
   return ge::GRAPH_SUCCESS;
 }
-
-ge::graphStatus TestOpExecuteFunc(gert::OpExecuteContext *) {
-  return ge::GRAPH_SUCCESS;
-}
-
 struct TilingParseCompileInfo {
   int64_t a;
   int64_t b;
@@ -75,13 +64,6 @@ class OpImplRegistryUT : public testing::Test {
     gert::OpImplRegistry::GetInstance().GetAllTypesToImpl().clear();
   }
 };
-
-TEST_F(OpImplRegistryUT, Register_impl_null) {
-  gert::OpImplRegisterV2 reg("Test");
-  reg.impl_.release();
-  reg.HostInputs({0, 2, 128});
-}
-
 TEST_F(OpImplRegistryUT, Register_Success_RegisterAll) {
   auto funcs = gert::OpImplRegistry::GetInstance().GetOpImpl("TestFoo");
   ASSERT_EQ(funcs, nullptr);
@@ -92,8 +74,6 @@ TEST_F(OpImplRegistryUT, Register_Success_RegisterAll) {
       .TilingParse<TilingParseCompileInfo>(TestTilingParseFunc1)
       .InferShapeRange(TestInferShapeRangeFunc1)
       .InferDataType(TestInferDataTypeFunc)
-      .OpExecuteFunc(TestOpExecuteFunc)
-      .HostInputs({0, 2, 128})
       .PrivateAttr("A")
       .PrivateAttr("B", 10L)
       .PrivateAttr("C", std::vector<int64_t>({1, 2, 3, 4}))
@@ -113,8 +93,6 @@ TEST_F(OpImplRegistryUT, Register_Success_RegisterAll) {
   EXPECT_NE(funcs->compile_info_deleter, nullptr);
   EXPECT_EQ(funcs->infer_shape_range, &TestInferShapeRangeFunc1);
   EXPECT_EQ(funcs->infer_datatype, &TestInferDataTypeFunc);
-  EXPECT_EQ(funcs->op_execute_func, &TestOpExecuteFunc);
-
   EXPECT_TRUE(funcs->IsInputDataDependency(0U));
   EXPECT_TRUE(funcs->IsInputDataDependency(1U));
   EXPECT_FALSE(funcs->IsInputDataDependency(2U));
@@ -122,14 +100,6 @@ TEST_F(OpImplRegistryUT, Register_Success_RegisterAll) {
   EXPECT_FALSE(funcs->IsInputDataDependency(4U));
   EXPECT_TRUE(funcs->IsInputDataDependency(5U));
   EXPECT_FALSE(funcs->IsInputDataDependency(6U));
-
-  EXPECT_TRUE(funcs->IsHostInput(0U));
-  EXPECT_FALSE(funcs->IsHostInput(1U));
-  EXPECT_TRUE(funcs->IsHostInput(2U));
-  EXPECT_FALSE(funcs->IsHostInput(3U));
-  EXPECT_FALSE(funcs->IsHostInput(4U));
-  EXPECT_FALSE(funcs->IsHostInput(5U));
-  EXPECT_FALSE(funcs->IsHostInput(6U));
 
   EXPECT_EQ(funcs->private_attrs.size(), 7u);
   EXPECT_EQ(funcs->private_attrs[0].first, "A");

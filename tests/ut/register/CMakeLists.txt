@@ -28,7 +28,7 @@ add_executable(ut_register
 )
 
 target_compile_options(ut_register PRIVATE
-    -g --coverage -fprofile-arcs -ftest-coverage -fno-access-control
+    -g --coverage -fprofile-arcs -ftest-coverage
 )
 
 target_compile_definitions(ut_register PRIVATE
