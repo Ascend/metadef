@@ -61,7 +61,7 @@ inline bool IsLogEnable(const int32_t module_name, const int32_t log_level) {
 #define GELOGE(ERROR_CODE, fmt, ...)                                                                \
   do {                                                                                              \
     dlog_error(GE_MODULE_NAME, "%" PRIu64 " %s: ErrorNo: %" PRIuLEAST8 "(%s) %s" fmt, \
-	       GeLog::GetTid(), &__FUNCTION__[0], \
+	       GeLog::GetTid(), &__FUNCTION__[0U], \
                (ERROR_CODE), ((GE_GET_ERRORNO_STR(ERROR_CODE)).c_str()),                            \
                ErrorManager::GetInstance().GetLogHeader().c_str(), ##__VA_ARGS__);                  \
   } while (false)
@@ -69,30 +69,30 @@ inline bool IsLogEnable(const int32_t module_name, const int32_t log_level) {
 #define GELOGW(fmt, ...)                                                                          \
   do {                                                                                            \
     if (IsLogEnable(GE_MODULE_NAME, DLOG_WARN)) {                                                 \
-      dlog_warn(GE_MODULE_NAME, "%" PRIu64 " %s:" fmt, GeLog::GetTid(), &__FUNCTION__[0], ##__VA_ARGS__); \
+      dlog_warn(GE_MODULE_NAME, "%" PRIu64 " %s:" fmt, GeLog::GetTid(), &__FUNCTION__[0U], ##__VA_ARGS__); \
     }                                                                                             \
   } while (false)
 
 #define GELOGI(fmt, ...)                                                                          \
   do {                                                                                            \
     if (IsLogEnable(GE_MODULE_NAME, DLOG_INFO)) {                                                 \
-      dlog_info(GE_MODULE_NAME, "%" PRIu64 " %s:" fmt, GeLog::GetTid(), &__FUNCTION__[0], ##__VA_ARGS__); \
+      dlog_info(GE_MODULE_NAME, "%" PRIu64 " %s:" fmt, GeLog::GetTid(), &__FUNCTION__[0U], ##__VA_ARGS__); \
     }                                                                                             \
   } while (false)
 
 #define GELOGD(fmt, ...)                                                                           \
   do {                                                                                             \
     if (IsLogEnable(GE_MODULE_NAME, DLOG_DEBUG)) {                                                 \
-      dlog_debug(GE_MODULE_NAME, "%" PRIu64 " %s:" fmt, GeLog::GetTid(), &__FUNCTION__[0], ##__VA_ARGS__); \
+      dlog_debug(GE_MODULE_NAME, "%" PRIu64 " %s:" fmt, GeLog::GetTid(), &__FUNCTION__[0U], ##__VA_ARGS__); \
     }                                                                                              \
   } while (false)
 
 #define GEEVENT(fmt, ...)                                                                        \
   do {                                                                                                               \
     dlog_event((static_cast<uint32_t>(RUN_LOG_MASK) | static_cast<uint32_t>(GE_MODULE_NAME)), "%" PRIu64 " %s:" fmt, \
-               GeLog::GetTid(), &__FUNCTION__[0], ##__VA_ARGS__);                                                    \
+               GeLog::GetTid(), &__FUNCTION__[0U], ##__VA_ARGS__);                                                    \
     if (IsLogEnable(GE_MODULE_NAME, DLOG_INFO)) {                                                \
-      dlog_info(GE_MODULE_NAME, "%" PRIu64 " %s:" fmt, GeLog::GetTid(), &__FUNCTION__[0], ##__VA_ARGS__); \
+      dlog_info(GE_MODULE_NAME, "%" PRIu64 " %s:" fmt, GeLog::GetTid(), &__FUNCTION__[0U], ##__VA_ARGS__); \
     }                                                                                            \
   } while (false)
 
@@ -104,13 +104,13 @@ inline bool IsLogEnable(const int32_t module_name, const int32_t log_level) {
     char_t *v = const_cast<char_t *>(TraceStatStr[idx]);                                                             \
     KeyValue kv = {k, v};                                                                                            \
     DlogWithKV(GE_MODULE_NAME, DLOG_TRACE, &kv, 1, "%" PRIu64 " %s:" fmt, GeLog::GetTid(), \
-	       &__FUNCTION__[0], ##__VA_ARGS__); \
+	       &__FUNCTION__[0U], ##__VA_ARGS__); \
   } while (false)
 
 #define GE_LOG_ERROR(MOD_NAME, ERROR_CODE, fmt, ...)                                                           \
   do {                                                                                                         \
     dlog_error((MOD_NAME), "%" PRIu64 " %s: ErrorNo: %" PRIuLEAST8 "(%s) %s" fmt, GeLog::GetTid(), \
-	       &__FUNCTION__[0], (ERROR_CODE),  \
+	       &__FUNCTION__[0U], (ERROR_CODE),  \
                ((GE_GET_ERRORNO_STR(ERROR_CODE)).c_str()), ErrorManager::GetInstance().GetLogHeader().c_str(), \
                ##__VA_ARGS__);                                                                                 \
   } while (false)

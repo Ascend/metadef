@@ -34,7 +34,6 @@
 
 namespace ge {
 graphStatus OpDescUtilsEx::CallInferFuncV2Inner(const OpDescPtr &op_desc, Operator &op) {
-  GE_ASSERT_NOTNULL(op_desc, "[Check][Input] invalid, op_desc is null.");
   const auto call_infer_data_type = OperatorFactoryImpl::GetInferDataTypeFunc();
   const auto call_infer_shape_v2 = OperatorFactoryImpl::GetInferShapeV2Func();
   const auto call_infer_shape_range = OperatorFactoryImpl::GetInferShapeRangeFunc();
@@ -53,7 +52,7 @@ graphStatus OpDescUtilsEx::CallInferFuncV2Inner(const OpDescPtr &op_desc, Operat
 graphStatus OpDescUtilsEx::CallInferFuncV2(const OpDescPtr &op_desc, Operator &op) {
   const auto ret_v2 = CallInferFuncV2Inner(op_desc, op);
   if (ret_v2 != GRAPH_SUCCESS) {
-    GELOGW("[Call][InferFuncV2] failed, ret_v2[%u]", ret_v2);
+    GELOGW("[Call][InferFuncV2] failed, op %s ret_v2[%u]", op_desc->GetName().c_str(), ret_v2);
     // compatible with V1 processing by upper layer
     return GRAPH_PARAM_INVALID;
   }

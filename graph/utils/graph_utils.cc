@@ -1040,7 +1040,9 @@ GraphUtils::ConvertFileConstToConst(const ComputeGraphPtr &graph) {
     GE_CHECK_NOTNULL(op_desc);
 
     std::string file_path;
-    GE_ASSERT_TRUE(AttrUtils::GetStr(op_desc, kLocation4Recover, file_path));
+    if (!AttrUtils::GetStr(op_desc, kLocation4Recover, file_path)) {
+      continue;
+    }
     GE_ASSERT_TRUE(!file_path.empty());
     GE_ASSERT_GRAPH_SUCCESS(op_desc->DelAttr(kLocation4Recover));
     int64_t attr_length = 0;

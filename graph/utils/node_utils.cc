@@ -49,6 +49,7 @@ const char_t *const kRefIndex = "_parent_node_index";
 const char_t *const kPartSrcGraph = "part_src_graph";
 
 namespace {
+constexpr int32_t kInvalidIndex = -1;
 bool OpShapeIsUnknown(const OpDescPtr &desc) {
   for (const auto &ptr : desc->GetAllInputsDescPtr()) {
     const auto ge_shape = ptr->GetShape();
@@ -988,7 +989,14 @@ NodePtr NodeUtils::CreatNodeWithoutGraph(const OpDescPtr op_desc) {
 }
 
 graphStatus NodeUtils::GetInNodeCrossPartionedCallNode(const NodePtr &node, uint32_t index, NodePtr &peer_node) {
+  int32_t peer_out_anchor_index = kInvalidIndex;
+  return GetInNodeCrossPartionedCallNode(node, index, peer_node, peer_out_anchor_index);
+}
+
+graphStatus NodeUtils::GetInNodeCrossPartionedCallNode(const NodePtr &node, uint32_t index, NodePtr &peer_node,
+                                                       int32_t &peer_out_anchor_index) {
   GE_CHECK_NOTNULL(node);
+  peer_out_anchor_index = kInvalidIndex;
   if ((node->GetAllInDataAnchorsSize() <= index) && (node->GetType() != DATA)) {
     return GRAPH_FAILED;
   }
@@ -1001,7 +1009,7 @@ graphStatus NodeUtils::GetInNodeCrossPartionedCallNode(const NodePtr &node, uint
     return GRAPH_SUCCESS;
   }
   // node->GetInDataAnchor(index)->GetPeerOutAnchor() can be sure not nullptr because peer_node is not nullptr
-  int32_t peer_out_anchor_index =
+  peer_out_anchor_index =
       (node->GetType() == DATA) ? -1 : node->GetInDataAnchor(static_cast<int32_t>(index))->GetPeerOutAnchor()->GetIdx();
   while (!IsComputableOp(peer_node)) {
     if (peer_node->GetType() == DATA) {

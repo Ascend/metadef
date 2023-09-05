@@ -36,6 +36,12 @@ class OptimizeUtility {
     (void)compute_graph;
     return SUCCESS;
   }
+
+  // Constant folding
+  virtual Status ConstantFolding(NodePtr &node) {
+    (void)node;
+    return SUCCESS;
+  }
 };
 }  // namespace ge
 #endif  // INC_COMMON_OPTIMIZER_OPTIMIZE_UTILITY_H_
