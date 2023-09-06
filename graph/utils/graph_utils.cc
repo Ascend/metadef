@@ -94,9 +94,9 @@ bool IsRefFromRefData(const OutDataAnchorPtr &out_data_anchor, ge::NodeIndexIO &
     return false;
   }
   // find src ref_data
-  auto root_graph = ge::GraphUtils::FindRootGraph(owner_node->GetOwnerComputeGraph());
-  // 不保证调用阶段是否在图拆分后，因此用allnode查找
-  const auto ref_data = ge::GraphUtils::FindNodeFromAllNodes(root_graph, ref_var_src_var_name);
+  const auto &ower_graph = owner_node->GetOwnerComputeGraph();
+  GE_ASSERT_NOTNULL(ower_graph);
+  const auto ref_data = ower_graph->FindNode(ref_var_src_var_name);
   if (ref_data == nullptr) {
     GELOGW("Can not find refdata named %s. Please check ref relation on graph.", ref_var_src_var_name.c_str());
     return false;
@@ -865,7 +865,9 @@ GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY void GraphUtils::DumpGEGraph(cons
     return;
   }
   std::string real_path_name;
-  auto const ret = GetDumpRealPath(file_index, suffix, user_graph_name, real_path_name);
+  std::stringstream stream_file_name;
+  stream_file_name << "graph_" << graph->GetGraphID() << "_" << suffix;  // add graphId, like graph_x_xxxx
+  auto const ret = GetDumpRealPath(file_index, stream_file_name.str(), user_graph_name, real_path_name);
   if (ret != GRAPH_SUCCESS) {
     GELOGW("[Get][RealPath]realpath invalid.");
     return;
@@ -957,7 +959,7 @@ GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY void GraphUtils::DumpGEGrph(const
   std::stringstream stream_file_name;
   stream_file_name << path.c_str() << "/ge_proto_" << std::setw(kNameWidth) << std::setfill('0')
                    << file_index;
-  stream_file_name << "_" << suffix << ".txt";
+  stream_file_name << "_graph_" << graph->GetGraphID() << "_" << suffix << ".txt";
   const std::string proto_file = stream_file_name.str();
   (void)DumpGEGraphByPath(graph, proto_file, ge::DumpLevel::NO_DUMP);
 }
