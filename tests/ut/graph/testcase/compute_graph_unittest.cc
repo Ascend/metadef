@@ -1038,4 +1038,30 @@ TEST_F(UtestComputeGraph, NoDelayTopologicalSortingMultiInput) {
 
   EXPECT_EQ(dfs_names, expected_dfs_names);
 }
+
+TEST_F(UtestComputeGraph, ReorderByNodeId) {
+  auto graph = BuildDelayTopoGraphMultiInput("test_delay_topo_graph");
+  const auto &constant = graph->FindNode("const");
+  const auto &constantop = graph->FindNode("constant");
+  const auto &variable = graph->FindNode("variable");
+  const auto &node1 = graph->FindNode("node1");
+  const auto &node2 = graph->FindNode("node2");
+  const auto &node3 = graph->FindNode("node3");
+  const auto &node4 = graph->FindNode("node4");
+  const auto &node5 = graph->FindNode("node5");
+  const auto &data = graph->FindNode("data");
+  int64_t seq_id = 0L;
+  std::vector<NodePtr> nodes{node5, node4, node3, node2, node1, variable, data, constantop, constant};
+  for (auto &node : nodes) {
+    node->GetOpDesc()->SetId(seq_id++);
+  }
+  graph->ReorderByNodeId();
+  auto sorted_nodes = graph->GetDirectNode();
+  ASSERT_TRUE(sorted_nodes.size() == nodes.size());
+  int32_t id = 0;
+  for (auto &node : nodes) {
+    EXPECT_EQ(node, sorted_nodes.at(id++));
+  }
+}
+
 }

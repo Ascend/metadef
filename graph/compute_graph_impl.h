@@ -211,6 +211,7 @@ class ComputeGraphImpl {
 
   void EmplaceBackToNodeList(const NodePtr &node);
   void ClearNodeList();
+  void ReorderByNodeId();
 
  private:
   void inline AddInputDataNode(const NodePtr &node);

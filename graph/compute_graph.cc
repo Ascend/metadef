@@ -1787,6 +1787,17 @@ void ComputeGraphImpl::ClearNodeList() {
   direct_nodes_size_ = 0UL;
 }
 
+void ComputeGraphImpl::ReorderByNodeId() {
+  std::vector<NodePtr> node_vec(nodes_.begin(), nodes_.end());
+  std::sort(node_vec.begin(), node_vec.end(), [](const NodePtr &lhs, const NodePtr &rhs) {
+    return lhs->GetOpDesc()->GetId() < rhs->GetOpDesc()->GetId();
+  });
+  ClearNodeList();
+  for (const auto &node : node_vec) {
+    PushBackToNodeList(node);
+  }
+}
+
 GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY ComputeGraph::ComputeGraph(const std::string &name)
     : enable_shared_from_this(),
       AttrHolder(),
@@ -2309,5 +2320,9 @@ GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY bool ComputeGraph::IsSummaryGraph
 
 GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY void ComputeGraph::SetSummaryFlag(const bool is_summary_graph) {
   impl_->SetSummaryFlag(is_summary_graph);
+}
+
+GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY void ComputeGraph::ReorderByNodeId() {
+  impl_->ReorderByNodeId();
 }
 }  // namespace ge
