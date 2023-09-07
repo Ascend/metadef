@@ -233,6 +233,7 @@ class ComputeGraph : public std::enable_shared_from_this<ComputeGraph>, public A
    */
   graphStatus ReorderEventNodes();
   void ClearNodeList();
+  void ReorderByNodeId();
 
  protected:
   ProtoAttrMap &MutableAttrMap() override;
