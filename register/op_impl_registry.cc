@@ -45,6 +45,12 @@ void RegisterOpImplToRegistry(const OpImplRegisterV2Impl *rd) {
   if (rd->functions.inputs_dependency != 0U) {
     funcs.inputs_dependency = rd->functions.inputs_dependency;
   }
+  if (rd->functions.host_inputs != 0U) {
+    funcs.host_inputs = rd->functions.host_inputs;
+  }
+  if (rd->functions.op_execute_func != nullptr) {
+    funcs.op_execute_func = rd->functions.op_execute_func;
+  }
   if (rd->functions.tiling_parse != nullptr) {
     funcs.tiling_parse = rd->functions.tiling_parse;
     funcs.compile_info_creator = rd->functions.compile_info_creator;
@@ -85,6 +91,7 @@ OpImplRegister &OpImplRegister::Tiling(OpImplKernelRegistry::TilingKernelFunc ti
   functions_.max_tiling_data_size = max_tiling_data_size;
   return *this;
 }
+
 OpImplRegister &OpImplRegister::InputsDataDependency(std::initializer_list<int32_t> inputs) {
   functions_.inputs_dependency = 0UL;
   for (const int32_t index : inputs) {
@@ -169,7 +176,8 @@ OpImplRegisterV2::OpImplRegisterV2(const ge::char_t *op_type) : impl_(new(std::n
     impl_->functions.infer_shape_range = nullptr;
     impl_->functions.infer_datatype = nullptr;
     impl_->functions.inputs_dependency = 0U;
-
+    impl_->functions.op_execute_func = nullptr;
+    impl_->functions.host_inputs = 0U;
     // two fields controlled by tiling func
     impl_->functions.tiling = nullptr;
     impl_->functions.max_tiling_data_size = std::numeric_limits<size_t>::max();
@@ -200,12 +208,14 @@ OpImplRegisterV2 &OpImplRegisterV2::TilingParse(OpImplKernelRegistry::KernelFunc
   }
   return *this;
 }
+
 OpImplRegisterV2 &OpImplRegisterV2::InferShape(OpImplKernelRegistry::InferShapeKernelFunc infer_shape_func) {
   if (impl_ != nullptr) {
     impl_->functions.infer_shape = infer_shape_func;
   }
   return *this;
 }
+
 OpImplRegisterV2 &OpImplRegisterV2::InferShapeRange(
     OpImplKernelRegistry::InferShapeRangeKernelFunc infer_shape_range_func) {
   if (impl_ != nullptr) {
@@ -242,6 +252,7 @@ OpImplRegisterV2 &OpImplRegisterV2::InputsDataDependency(std::initializer_list<i
   }
   return *this;
 }
+
 OpImplRegisterV2 &OpImplRegisterV2::PrivateAttr(const ge::char_t *private_attr, ge::AnyValue private_attr_av) {
   if (private_attr == nullptr) {
     GELOGW("Failed to set private attr name using nullptr!");
@@ -285,6 +296,25 @@ OpImplRegisterV2 &OpImplRegisterV2::PrivateAttr(const ge::char_t *private_attr,
                                                 const std::vector<ge::float32_t> &private_attr_val) {
   return PrivateAttr(private_attr, ge::AnyValue::CreateFrom<std::vector<ge::float32_t>>(private_attr_val));
 }
+OpImplRegisterV2 &OpImplRegisterV2::OpExecuteFunc(OpImplKernelRegistry::OpExecuteFunc op_execute_func) {
+  if (impl_ != nullptr) {
+    impl_->functions.op_execute_func = op_execute_func;
+  }
+  return *this;
+}
+OpImplRegisterV2 &OpImplRegisterV2::HostInputs(std::initializer_list<int32_t> inputs) {
+  if (impl_ != nullptr) {
+    impl_->functions.host_inputs = 0UL;
+    for (const int32_t index : inputs) {
+      if (impl_->functions.SetHostInputs(static_cast<size_t>(index)) != ge::GRAPH_SUCCESS) {
+        GELOGE(ge::FAILED, "Failed to set host input for node %s, the input index %d", impl_->op_type.GetString(),
+               index);
+        return *this;
+      }
+    }
+  }
+  return *this;
+}
 }  // namespace gert
 
 #ifdef __cplusplus
@@ -309,7 +339,6 @@ int32_t GetOpImplFunctions(TypesToImpl *impl, size_t impl_num) {
   }
   return static_cast<int32_t>(ge::GRAPH_SUCCESS);
 }
-
 #ifdef __cplusplus
 }
 #endif
