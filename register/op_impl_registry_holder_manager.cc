@@ -25,6 +25,7 @@
 namespace gert {
 namespace {
 constexpr const ge::char_t *kHomeEnvName = "HOME";
+constexpr const ge::char_t *kAscendWorkPathEnvName = "ASCEND_WORK_PATH";
 constexpr size_t kGByteSize = 1073741824U; // 1024 * 1024 * 1024
 static thread_local uint32_t load_so_count = 0;
 using GetImplNum = size_t (*)();
@@ -53,6 +54,23 @@ void ReleaseOperatorFactoryBeforeCloseHandle() {
   ge::OperatorFactoryImpl::operator_creators_v2_ = nullptr;
   ge::OperatorFactoryImpl::operator_creators_ = nullptr;
 }
+
+ge::Status GetAscendWorkPath(std::string &ascend_work_path) {
+  ge::char_t work_path[MMPA_MAX_PATH] = {'\0'};
+  const int32_t work_path_ret = mmGetEnv(kAscendWorkPathEnvName, work_path, MMPA_MAX_PATH);
+  if (work_path_ret == EN_OK) {
+    ascend_work_path = ge::RealPath(work_path);
+    if (ascend_work_path.empty()) {
+      GELOGE(ge::FAILED, "[Call][RealPath] File path %s is invalid.", work_path);
+      return ge::FAILED;
+    }
+    GELOGD("Get ASCEND_WORK_PATH success, path = %s, real path = %s", work_path, ascend_work_path.c_str());
+    return ge::SUCCESS;
+  }
+  ascend_work_path = "";
+  GELOGD("Get ASCEND_WORK_PATH fail");
+  return ge::SUCCESS;
+}
 }
 
 OpImplRegistryHolder::~OpImplRegistryHolder() {
@@ -61,19 +79,23 @@ OpImplRegistryHolder::~OpImplRegistryHolder() {
 }
 
 ge::graphStatus OmOpImplRegistryHolder::CreateOmOppDir(std::string &opp_dir) const {
-  ge::char_t path_env[MMPA_MAX_PATH] = {'\0'};
-  const int32_t ret = mmGetEnv(kHomeEnvName, path_env, MMPA_MAX_PATH);
-  if ((ret != EN_OK) || (strnlen(path_env, static_cast<size_t>(MMPA_MAX_PATH)) == 0U)) {
-    GELOGE(ge::FAILED, "Get %s path failed.", kHomeEnvName);
-    return ge::GRAPH_FAILED;
-  }
+  opp_dir.clear();
+  GE_ASSERT_SUCCESS(GetAscendWorkPath(opp_dir));
+  if (opp_dir.empty()) {
+    ge::char_t path_env[MMPA_MAX_PATH] = {'\0'};
+    const int32_t ret = mmGetEnv(kHomeEnvName, path_env, MMPA_MAX_PATH);
+    if ((ret != EN_OK) || (strnlen(path_env, static_cast<size_t>(MMPA_MAX_PATH)) == 0U)) {
+      GELOGE(ge::FAILED, "Get %s path failed.", kHomeEnvName);
+      return ge::GRAPH_FAILED;
+    }
 
-  const std::string file_path = ge::RealPath(path_env);
-  if (file_path.empty()) {
-    GELOGE(ge::FAILED, "[Call][RealPath] File path %s is invalid.", opp_dir.c_str());
-    return ge::GRAPH_FAILED;
+    const std::string file_path = ge::RealPath(path_env);
+    if (file_path.empty()) {
+      GELOGE(ge::FAILED, "[Call][RealPath] File path %s is invalid.", opp_dir.c_str());
+      return ge::GRAPH_FAILED;
+    }
+    opp_dir = file_path;
   }
-  opp_dir = file_path;
   if (opp_dir.back() != '/') {
     opp_dir += '/';
   }
