@@ -1444,6 +1444,7 @@ const std::string ATTR_NAME_OPTIMIZER_GRAPH_FLAG = "_optimizer_graph_flag";
 const std::string ATTR_NAME_EMBEDDING_GRAPH_FLAG = "_embedding_graph_flag";
 const std::string ATTR_NAME_DATA_TRANSFER_TYPE = "_data_transfer_type";
 const std::string ATTR_NAME_COMM_GROUP_NAMES = "_comm_group_names";
+const std::string ATTR_NAME_USE_COUNTER_FILTER = "_use_counter_filter";
 
 const std::string ATTR_MODEL_HOST_ENV_OS = "host_env_os";
 const std::string ATTR_MODEL_HOST_ENV_CPU = "host_env_cpu";

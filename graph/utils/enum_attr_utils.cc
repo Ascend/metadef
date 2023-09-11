@@ -30,7 +30,6 @@ void EnumAttrUtils::GetEnumAttrName(vector<string> &enum_attr_names, const strin
     position = static_cast<uint32_t>(enum_attr_names.size());
     enum_attr_names.emplace_back(attr_name);
   }
-  GELOGD("position[%u] attr_name[%s].", position, attr_name.c_str());
   Encode(position, enum_attr_name);
 }
 
@@ -78,7 +77,6 @@ graphStatus EnumAttrUtils::GetAttrName(const vector<string> &enum_attr_names, co
   } else {
     attr_name = enum_attr_name;
     is_value_string = false;
-    GELOGD("attr[%s] convert from member variables.", attr_name.c_str());
     return GRAPH_SUCCESS;
   }
   return GRAPH_SUCCESS;
@@ -114,16 +112,14 @@ graphStatus EnumAttrUtils::GetAttrValues(const vector<string> &enum_attr_values,
 void EnumAttrUtils::Encode(const uint32_t src, string &dst) {
   // 按照上述字符范围获取源数据的位数
   uint32_t src_num = static_cast<uint32_t>(log(src) / log(kMaxValueOfEachDigit)) + 1U;
-  GELOGD("[Encode] src[%u] src_num[%u].", src, src_num);
 
-  // 每个ENUM化字符串编码的前缀为‘\0’, 用于区分哪些字符串未做ENUM化
+  // 每个ENUM化字符串编码的前缀为'\0', 用于区分哪些字符串未做ENUM化
   dst.append(kAppendNum, prefix);
   char_t data;
   for (uint32_t i = 0U; i < src_num; i++) {
     // 获取每一位的值，取位数后会加1，防止编码中出现'\0'字符
     data = static_cast<char_t>((src / static_cast<uint32_t>(pow(kMaxValueOfEachDigit, i))) % kMaxValueOfEachDigit);
     dst.append(kAppendNum, data + 1);
-    GELOGD("[Encode] i[%u] data[%u].", i, static_cast<uint32_t>(data));
   }
 }
 
@@ -133,7 +129,6 @@ void EnumAttrUtils::Decode(const string &src, size_t &dst) {
   for (size_t i = 1U; i < src.size(); i++) {
     dst += static_cast<size_t>(src[i] - 1) * static_cast<size_t>(pow(kMaxValueOfEachDigit, (i - 1U)));
   }
-  GELOGD("[Decode] src size[%zu] dst[%zu].", src.size(), dst);
 }
 
 } // namespace ge
