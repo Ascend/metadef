@@ -75,9 +75,15 @@ class PluginManager {
 
   static Status GetConstantFoldingOpsPath(const std::string &path_base, std::string &constant_folding_ops_path);
 
+  Status LoadSoWithFlags(const std::string &path, const int32_t flags,
+      const std::vector<std::string> &func_check_list = std::vector<std::string>());
+
   Status LoadSo(const std::string &path, const std::vector<std::string> &func_check_list = std::vector<std::string>());
 
   Status Load(const std::string &path, const std::vector<std::string> &func_check_list = std::vector<std::string>());
+
+  Status LoadWithFlags(const std::string &path, const int32_t flags,
+      const std::vector<std::string> &func_check_list = std::vector<std::string>());
 
   static void GetOppSupportedOsAndCpuType(
       std::unordered_map<std::string, std::unordered_set<std::string>> &opp_supported_os_cpu,

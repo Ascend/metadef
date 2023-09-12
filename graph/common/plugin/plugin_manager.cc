@@ -30,7 +30,6 @@
 #include "common/ge_common/debug/log.h"
 #include "common/ge_common/util.h"
 #include "graph/def_types.h"
-#include "mmpa/mmpa_api.h"
 
 namespace ge {
 namespace {
@@ -526,6 +525,13 @@ void PluginManager::SplitPath(const std::string &mutil_path, std::vector<std::st
 }
 
 Status PluginManager::LoadSo(const std::string &path, const std::vector<std::string> &func_check_list) {
+  const int32_t flags = static_cast<int32_t>(static_cast<uint32_t>(MMPA_RTLD_NOW) |
+      static_cast<uint32_t>(MMPA_RTLD_GLOBAL));
+  return LoadSoWithFlags(path, flags, func_check_list);
+}
+
+Status PluginManager::LoadSoWithFlags(const std::string &path, const int32_t flags,
+    const std::vector<std::string> &func_check_list) {
   uint32_t num_of_loaded_so = 0U;
   int64_t size_of_loaded_so = 0;
   so_list_.clear();
@@ -557,12 +563,10 @@ Status PluginManager::LoadSo(const std::string &path, const std::vector<std::str
       continue;
     }
 
-    GELOGI("dlopen path: %s.", file_path_dlopen.c_str());
+    GELOGI("dlopen path: %s, flags is %d", file_path_dlopen.c_str(), flags);
 
     // load continue when dlopen is failed
-    const auto handle = mmDlopen(file_path_dlopen.c_str(),
-                                 static_cast<int32_t>(static_cast<uint32_t>(MMPA_RTLD_NOW) |
-                                 static_cast<uint32_t>(MMPA_RTLD_GLOBAL)));
+    const auto handle = mmDlopen(file_path_dlopen.c_str(), flags);
     if (handle == nullptr) {
       const char_t *error = mmDlerror();
       GE_IF_BOOL_EXEC(error == nullptr, error = "");
@@ -649,6 +653,13 @@ Status PluginManager::ValidateSo(const std::string &file_path,
 }
 
 Status PluginManager::Load(const std::string &path, const std::vector<std::string> &func_check_list) {
+  const int32_t flags = static_cast<int32_t>(static_cast<uint32_t>(MMPA_RTLD_NOW) |
+      static_cast<uint32_t>(MMPA_RTLD_GLOBAL));
+  return LoadWithFlags(path, flags, func_check_list);
+}
+
+Status PluginManager::LoadWithFlags(const std::string &path, const int32_t flags,
+    const std::vector<std::string> &func_check_list) {
   uint32_t num_of_loaded_so = 0U;
   int64_t size_of_loaded_so = 0;
   const uint32_t is_folder = 0x4U;
@@ -714,12 +725,10 @@ Status PluginManager::Load(const std::string &path, const std::vector<std::strin
       continue;
     }
 
-    GELOGI("Dlopen path: %s.", file_path_dlopen.c_str());
+    GELOGI("Dlopen path: %s. flags is %d", file_path_dlopen.c_str(), flags);
 
     // load continue when dlopen is failed
-    const auto handle = mmDlopen(file_path_dlopen.c_str(),
-                                 static_cast<int32_t>(static_cast<uint32_t>(MMPA_RTLD_NOW) |
-                                 static_cast<uint32_t>(MMPA_RTLD_GLOBAL)));
+    const auto handle = mmDlopen(file_path_dlopen.c_str(), flags);
     if (handle == nullptr) {
       const char_t *error = mmDlerror();
       GE_IF_BOOL_EXEC(error == nullptr, error = "");
