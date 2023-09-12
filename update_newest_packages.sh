@@ -27,6 +27,9 @@ REPO_TYPE="CANN"
 FILE_NAME="ai_cann_x86.tar.gz"
 HTTP_OK="200"
 
+# Directly download the newest opensdk package from hdfs server.
+HDFS_HOST="https://hdfs-ngx0.turing-ci.hisilicon.com"
+
 usage() {
   echo "Usage:"
   echo "    bash update_newest_packages.sh [-k] [-d <path>] [-t <YearMonthDay>]"
@@ -34,6 +37,7 @@ usage() {
   echo "    -k, Allow insecure server connections when using SSL."
   echo "    -d <dir_name>, Extract files into dir_name."
   echo "    -t <YearMonthDay>, Specify the package version. (e.g., -t 20230821)"
+  echo "    -Y Download opensdk from HDFS server directly. (Yellow Zone only)"
 }
 
 checkopts(){
@@ -41,16 +45,20 @@ checkopts(){
   NEWEST_DATE=""
   INSTALL_DIR=""
   CA_OPTION=""
-  while getopts 'd:t:k' opt; do
+  ENABLE_HDFS="off"
+  while getopts 'd:t:kY' opt; do
     case "${opt}" in
       k)
         CA_OPTION="-k"
         ;;
       d)
-        PREFIX="$(realpath ${OPTARG})"
+        PREFIX=$(realpath ${OPTARG})
         ;;
       t)
-        NEWEST_DATE="${OPTARG}"
+        NEWEST_DATE=${OPTARG}
+        ;;
+      Y)
+        ENABLE_HDFS="on"
         ;;
       *)
         echo "Undefined option: ${opt}"
@@ -68,7 +76,7 @@ build_download_url() {
 
 build_install_dir() {
   local base_dir=$1
-  local pkg_name=${2}_newest
+  local pkg_name="${2}_newest"
   local path="${base_dir}/${pkg_name}"
   echo ${path}
 }
@@ -89,7 +97,7 @@ probe_newest_package() {
   local end=$(date -d "-28 day ${start}" +%Y%m%d)
   echo "Start to probe the newest package from ${start} to ${end}"
   while [ ${start} -ge ${end} ]; do
-    url="$(build_download_url ${start})"
+    url=$(build_download_url ${start})
     if [[ $(verify_url ${url}) -eq ${HTTP_OK} ]]; then
       # find the latest package and update the global variable 
       NEWEST_DATE=${start}
@@ -113,29 +121,54 @@ extract_and_install_package() {
   local tar_name=$2
   echo "Extracting..."
   cd ${install_path}
-  tar -xf ${tar_name}
-  # the newest opensdk is a .run package
-  local pkg="$(ls ./ai_cann_x86 | grep opensdk)"
-  cp ai_cann_x86/${pkg} ./
+  # extract tar.gz first if downloaded from Blue Zone
+  if [[ "X${ENABLE_HDFS}" = "Xoff" ]]; then
+    tar -xf ${tar_name}
+    cp ai_cann_x86/*opensdk*.run ./
+    rm -rf ai_cann_x86
+  fi
+  # the newest opensdk is a run package
+  local pkg=$(ls ./ | grep opensdk)
   # run the package
+  echo ${pkg}
   chmod u+x ${pkg}
   if test -x ${pkg}; then
     ./${pkg} --noexec --extract=./opensdk
   fi
-  rm -rf ai_cann_x86
-  # create symbolic link
+  # create symbolic link in Prefix/ 
   cd ../
   rm -rf latest
   ln -s ${install_path} latest
 }
 
+search_hdfs_file_list() {
+  # YearMonthDay
+  local version=$1
+  local year_month=$(echo ${version} | cut -c 1-6)
+  local regex="^${version}_[^_]*_newest$"
+  local key="pathSuffix"
+  # Step1: download file list (opensdk packages are grouped by YearMonth)
+  local info_path="webhdfs/v1/compilepackage/CI_Version/cann/br_hisi_trunk_ai/${year_month}"
+  local op_user="op=LISTSTATUS&user.name=balong"
+  local file_list_url="${HDFS_HOST}/${info_path}?${op_user}"
+  local json=$(curl -s ${CA_OPTION} ${file_list_url})
+  # Step2: find the package version from file list
+  version=$(echo ${json} | awk -F"[,:}]" '{for(i=1;i<=NF;i++){if($i~/'${key}'\042/){print $(i+1)}}}' | \
+            tr -d '"' | grep ${regex} | tail -1)
+  file_list_url="${HDFS_HOST}/${info_path}/${version}?${op_user}"
+  json=$(curl -s ${CA_OPTION} ${file_list_url})
+  local package_name=$(echo ${json} | awk -F"[,:}]" '{for(i=1;i<=NF;i++){if($i~/'${key}'\042/){print $(i+1)}}}' | \
+                       tr -d '"' | grep "^CANN-opensdk" | grep "x86_64")
+  local download_url="${HDFS_HOST}/${info_path}/${version}/${package_name}?op=OPEN&user.name=balong"
+  echo ${download_url}
+}
 
 checkopts "$@"
 
 if [[ ${NEWEST_DATE} =~ ^20 ]]; then
   # user-specified package version
   echo "Download package with user-specified version ${NEWEST_DATE}"
-  DOWNLOAD_URL="$(build_download_url ${NEWEST_DATE})"
+  DOWNLOAD_URL=$(build_download_url ${NEWEST_DATE})
   if [[ $(verify_url ${DOWNLOAD_URL}) -ne ${HTTP_OK} ]]; then
     echo "Invalid package version: ${NEWEST_DATE}_newest. Please check..."
     exit 1
@@ -143,10 +176,26 @@ if [[ ${NEWEST_DATE} =~ ^20 ]]; then
 else
   # automatically probe package version
   probe_newest_package
-  DOWNLOAD_URL="$(build_download_url ${NEWEST_DATE})"
+  DOWNLOAD_URL=$(build_download_url ${NEWEST_DATE})
 fi
 
-INSTALL_DIR="$(build_install_dir ${PREFIX} ${NEWEST_DATE})"
+if [[ "X${ENABLE_HDFS}" = "Xon" ]]; then
+  # only enabled in Yellow Zone
+  if [[ $(verify_url ${HDFS_HOST}) -ne ${HTTP_OK} ]]; then
+    echo "The HDFS_HOST(${HDFS_HOST}) is unavailable. Please check..."
+    exit 1
+  fi
+  DOWNLOAD_URL=$(search_hdfs_file_list ${NEWEST_DATE})
+  FILE_NAME="CANN-opensdk-x86_64.run"
+fi
+
+if [[ -z ${PREFIX} ]]; then 
+  echo "Please specified the path to download and install the package."
+  usage
+  exit 1
+fi
+
+INSTALL_DIR=$(build_install_dir ${PREFIX} ${NEWEST_DATE})
 
 echo "-- Download url: ${DOWNLOAD_URL}"
 echo "-- Prefix: ${PREFIX}"
