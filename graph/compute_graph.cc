@@ -1214,9 +1214,11 @@ graphStatus GetOutNodeIndex(std::vector<NodePtr> &nodes, size_t &index, size_t &
   }
 
   if (delay_node != nullptr) {
-    index = min_index;
-    GELOGD("Node:%s id:%ld delay to:%s id:%ld", node->GetName().c_str(), op_desc->GetId(),
-           delay_node->GetName().c_str(), index);
+    index = static_cast<size_t >(min_index);
+    if (index > (static_cast<size_t>(op_desc->GetId()) + 1U)) {
+      GELOGD("Node:%s id:%ld delay to:%s id:%zu", node->GetName().c_str(), op_desc->GetId(),
+             delay_node->GetName().c_str(), index);
+    }
     return GRAPH_SUCCESS;
   }
   return GRAPH_FAILED;
@@ -1261,8 +1263,8 @@ void DelayTopoSort(std::vector<NodePtr> &nodes) {
         nodes.insert(nodes.end(), delay_nodes[i].second.begin(), delay_nodes[i].second.end());
       }
     }
+    GELOGI("Delay %zu nodes.", delay_node_count);
   }
-  GELOGI("Delay %zu nodes.", delay_node_count);
 }
 
 graphStatus ComputeGraphImpl::TopologicalSortingGraph(const ConstComputeGraphPtr &compute_graph,
