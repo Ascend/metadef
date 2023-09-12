@@ -22,6 +22,7 @@
 #include "graph/ge_error_codes.h"
 #include "graph/types.h"
 #include "graph/compiler_def.h"
+#include "register/op_impl_kernel_registry_types.h"
 #include "op_impl_kernel_registry.h"
 
 namespace gert {

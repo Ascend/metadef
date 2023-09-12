@@ -274,4 +274,74 @@ TEST_F(OpImplRegistryHolderManagerUT, OpImplRegistryManager_UpdateOpImplRegistri
   EXPECT_EQ(tmp_registry_holder, nullptr);
   EXPECT_EQ(gert::OpImplRegistryHolderManager::GetInstance().GetOpImplRegistrySize(), 0);
 }
+
+TEST_F(OpImplRegistryHolderManagerUT, OmOpImplRegistryHolder_LoadSo_HomeEnv_Null_Invalid) {
+  ge::char_t home_env[MMPA_MAX_PATH] = {'\0'};
+  mmGetEnv(kHomeEnvName, home_env, MMPA_MAX_PATH);
+  mmSetEnv(kHomeEnvName, "", 1);
+  ge::MmpaStub::GetInstance().SetImpl(std::make_shared<MockMmpa>());
+  mock_handle = (void *) 0xffffffff;
+  g_impl_num = 1;
+
+  std::string so_name("libopmaster.so");
+  std::string vendor_name("MDC");
+  ge::OpSoBinPtr so_bin_ptr = CreateSoBinPtr(so_name, vendor_name);
+  gert::OmOpImplRegistryHolder om_op_impl_registry_holder;
+  auto ret = om_op_impl_registry_holder.LoadSo(so_bin_ptr);
+  EXPECT_NE(ret, ge::GRAPH_SUCCESS);
+  mmSetEnv(kHomeEnvName, home_env, MMPA_MAX_PATH);
+}
+
+TEST_F(OpImplRegistryHolderManagerUT, OmOpImplRegistryHolder_LoadSo_HomeEnv_Invalid) {
+  ge::char_t home_env[MMPA_MAX_PATH] = {'\0'};
+  mmGetEnv(kHomeEnvName, home_env, MMPA_MAX_PATH);
+  mmSetEnv("HOME", "*&()", 1);
+  ge::MmpaStub::GetInstance().SetImpl(std::make_shared<MockMmpa>());
+  mock_handle = (void *) 0xffffffff;
+  g_impl_num = 1;
+
+  std::string so_name("libopmaster.so");
+  std::string vendor_name("MDC");
+  ge::OpSoBinPtr so_bin_ptr = CreateSoBinPtr(so_name, vendor_name);
+  gert::OmOpImplRegistryHolder om_op_impl_registry_holder;
+  auto ret = om_op_impl_registry_holder.LoadSo(so_bin_ptr);
+  EXPECT_NE(ret, ge::GRAPH_SUCCESS);
+  mmSetEnv(kHomeEnvName, home_env, MMPA_MAX_PATH);
+}
+
+TEST_F(OpImplRegistryHolderManagerUT, OmOpImplRegistryHolder_LoadSo_AscendWorkPathEnv_Invalid) {
+  mmSetEnv("ASCEND_WORK_PATH", "*&()", 1);
+  ge::MmpaStub::GetInstance().SetImpl(std::make_shared<MockMmpa>());
+  mock_handle = (void *) 0xffffffff;
+  g_impl_num = 1;
+
+  std::string so_name("libopmaster.so");
+  std::string vendor_name("MDC");
+  ge::OpSoBinPtr so_bin_ptr = CreateSoBinPtr(so_name, vendor_name);
+  gert::OmOpImplRegistryHolder om_op_impl_registry_holder;
+  auto ret = om_op_impl_registry_holder.LoadSo(so_bin_ptr);
+  EXPECT_NE(ret, ge::GRAPH_SUCCESS);
+  unsetenv("ASCEND_WORK_PATH");
+}
+
+TEST_F(OpImplRegistryHolderManagerUT, OmOpImplRegistryHolder_LoadSo_AscendWorkPathEnv_Valid) {
+  ge::char_t current_path[MMPA_MAX_PATH] = {'\0'};
+  getcwd(current_path, MMPA_MAX_PATH);
+  mmSetEnv("ASCEND_WORK_PATH", current_path, 1);
+  ge::MmpaStub::GetInstance().SetImpl(std::make_shared<MockMmpa>());
+  mock_handle = (void *) 0xffffffff;
+  g_impl_num = 1;
+
+  std::string so_name("libopmaster.so");
+  std::string vendor_name("MDC");
+  ge::OpSoBinPtr so_bin_ptr = CreateSoBinPtr(so_name, vendor_name);
+  gert::OmOpImplRegistryHolder om_op_impl_registry_holder;
+  auto ret = om_op_impl_registry_holder.LoadSo(so_bin_ptr);
+  EXPECT_EQ(ret, ge::GRAPH_SUCCESS);
+  std::string opp_dir = current_path;
+  opp_dir += "/.ascend_temp/.om_exe_data";
+  auto real_opp_dir = ge::RealPath(opp_dir.c_str());
+  EXPECT_EQ(real_opp_dir, opp_dir);
+  unsetenv("ASCEND_WORK_PATH");
+}
 }  // namespace gert_test
