@@ -313,19 +313,19 @@ NodePtr ComputeGraphImpl::FindNode(const std::string &name) const {
     if (node == nullptr) {
       continue;
     }
-    if (node->GetName() == name) {
+    if (NodeUtils::IsNameEqual(node, name.c_str())) {
       return node;
     }
   }
   return nullptr;
 }
 
-NodePtr ComputeGraphImpl::FindFirstNodeMatchType(const std::string &name) const {
+NodePtr ComputeGraphImpl::FindFirstNodeMatchType(const std::string &type) const {
   for (const auto &node : nodes_) {
     if (node == nullptr) {
       continue;
     }
-    if (node->GetType() == name) {
+    if (NodeUtils::IsTypeEqual(node, type.c_str())) {
       return node;
     }
   }

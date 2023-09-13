@@ -2826,7 +2826,10 @@ TEST_F(UtestGraphUtils, GetRefMappingWithSubgraphOp) {
   root_graph->AddSubgraph("partitioncall_0_sub", sub_graph);
   partitioncall_0->GetOpDesc()->AddSubgraphName("partitioncall_0_sub");
   partitioncall_0->GetOpDesc()->SetSubgraphInstanceName(0, "partitioncall_0_sub");
-
+  NodePtr node = GraphUtils::FindNodeFromAllNodes(const_cast<ComputeGraphPtr &>(root_graph), "partitioncall_0_cast");
+  EXPECT_NE(node, nullptr);
+  node = GraphUtils::FindNodeFromAllNodes(const_cast<ComputeGraphPtr &>(sub_graph), "partitioncall_0_cast");
+  EXPECT_NE(node, nullptr);
   SymbolToAnchors symbol_to_anchors;
   AnchorToSymbol anchor_to_symbol;
   int ret = GraphUtils::GetRefMapping(root_graph, symbol_to_anchors, anchor_to_symbol);

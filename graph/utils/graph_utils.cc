@@ -2723,15 +2723,32 @@ NodePtr GraphUtils::FindNodeFromAllNodes(ComputeGraphPtr &graph, const std::stri
     return nullptr;
   }
 
-  for (const auto &node : root_graph->GetAllNodes()) {
+  std::deque<NodePtr> candidates;
+
+  (void) candidates.insert(candidates.begin(), graph->impl_->nodes_.begin(), graph->impl_->nodes_.end());
+  while (!candidates.empty()) {
+    NodePtr node = candidates.front();
+    candidates.pop_front();
     if (node == nullptr) {
       continue;
     }
-    if (node->GetName() == name) {
+    if (NodeUtils::IsNameEqual(node, name.c_str())) {
       return node;
     }
+    const auto op_desc = node->GetOpDescBarePtr();
+    if (op_desc != nullptr) {
+      const auto &subgraph_names = op_desc->GetSubgraphInstanceNames();
+      auto name_iter = subgraph_names.rbegin();
+      while (name_iter != subgraph_names.rend()) {
+        const auto subgraph = root_graph->GetSubgraph(*name_iter);
+        if (subgraph != nullptr) {
+          (void) (candidates.insert(candidates.begin(), subgraph->impl_->nodes_.begin(),
+                                    subgraph->impl_->nodes_.end()));
+        }
+        ++name_iter;
+      }
+    }
   }
-
   return nullptr;
 }
 
@@ -2749,7 +2766,7 @@ std::vector<NodePtr> GraphUtils::FindNodesByTypeFromAllNodes(ComputeGraphPtr &gr
     if (node == nullptr) {
       continue;
     }
-    if (node->GetType() == type) {
+    if (NodeUtils::IsTypeEqual(node, type.c_str())) {
       nodes.emplace_back(node);
     }
   }

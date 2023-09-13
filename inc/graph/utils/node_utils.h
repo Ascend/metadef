@@ -239,6 +239,20 @@ class NodeUtils {
   * @return 失败时代表内部流程错误，成功时不代表一定获取到了权重
   */
   static graphStatus TryGetWeightByDataNode(const NodePtr &node_ptr, ConstGeTensorPtr &ge_tensor);
+  /**
+   * 判断`node`的名称是否是`name`
+   * @param node
+   * @param name
+   * @return 如果是的话，返回true，否则 false
+   */
+  static bool IsNameEqual(const NodePtr &node, const ge::char_t *const name);
+  /**
+   * 判断`node`的类型是否是`type`
+   * @param node
+   * @param type
+   * @return
+   */
+  static bool IsTypeEqual(const NodePtr &node, const ge::char_t *const type);
 };
 
 struct NodeCompareKey {

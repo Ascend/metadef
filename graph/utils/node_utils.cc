@@ -1312,4 +1312,10 @@ graphStatus NodeUtils::TryGetWeightByDataNode(const NodePtr &node_ptr, ConstGeTe
   GELOGI("op [%s %s] get not any weight attr", op_desc->GetType().c_str(), op_desc->GetName().c_str());
   return GRAPH_SUCCESS;
 }
+bool NodeUtils::IsNameEqual(const NodePtr &node, const ge::char_t *const name) {
+  return strcmp(node->GetNamePtr(), name) == 0;
+}
+bool NodeUtils::IsTypeEqual(const NodePtr &node, const ge::char_t *const type) {
+  return strcmp(node->GetTypePtr(), type) == 0;
+}
 }  // namespace ge
