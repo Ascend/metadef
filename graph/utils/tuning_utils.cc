@@ -348,7 +348,7 @@ Status TuningUtils::GetOrSaveReusableFileConst(const GeTensorPtr &tensor, std::s
   const std::string file_buff_str(data, data + file_buff_len);
   const size_t hash_value = std::hash<std::string>{}(file_buff_str);
   GELOGD("Get hash of file[%s] success, value[%zu]", file_path.c_str(), hash_value);
-  if (hash_to_files_.count(hash_value) == 0U) {
+  if (hash_to_files_.find(hash_value) == hash_to_files_.end()) {
     GE_ASSERT_SUCCESS(SaveBinToFile(data, data_length, file_path));
     reusable_weight_files_.emplace(file_path);
     hash_to_files_[hash_value].emplace_back(file_path);
