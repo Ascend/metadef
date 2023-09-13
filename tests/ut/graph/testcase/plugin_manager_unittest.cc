@@ -89,6 +89,7 @@ TEST_F(UtestPluginManager, test_plugin_manager_load_so_fail) {
   const std::string path = "./tests/depends/mmpa/libmmpa.so";
   funcs.push_back("invalid_func");
   EXPECT_EQ(manager.LoadSo(path, funcs), SUCCESS);
+  EXPECT_EQ(manager.Load("./tests/depends/mmpa/", funcs), SUCCESS);
 }
 
 TEST_F(UtestPluginManager, test_plugin_manager_getopp_plugin_vendors_01) {
