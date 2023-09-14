@@ -62,7 +62,7 @@ class ComputeGraphImpl {
   Vistor<NodePtr> GetInputNodes(const ConstComputeGraphPtr &compute_graph) const;
   Vistor<NodePtr> GetOutputNodes(const ConstComputeGraphPtr &compute_graph) const;
   NodePtr FindNode(const std::string &name) const;
-  NodePtr FindFirstNodeMatchType(const std::string &name) const;
+  NodePtr FindFirstNodeMatchType(const std::string &type) const;
 
   bool GraphAttrsAreEqual(const ComputeGraphImpl &r_graph) const;
   bool VectorInputNodePtrIsEqual(const std::vector<NodePtr> &left_nodes, const std::vector<NodePtr> &right_nodes) const;

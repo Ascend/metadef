@@ -78,7 +78,8 @@ int64_t ModelSerializeImp::GenCtrlInputInfo(const OutControlAnchorPtr &src_ancho
   return kInvalidIndex;
 }
 
-bool ModelSerializeImp::SerializeEdge(const NodePtr &node, proto::OpDef *const op_def_proto) const {
+bool ModelSerializeImp::SerializeEdge(const NodePtr &node, proto::OpDef *const op_def_proto,
+                                      const bool is_dump_graph) const {
   GE_CHK_BOOL_EXEC(node != nullptr, REPORT_INNER_ERROR("E18888", "param node is nullptr, check invalid.");
                    return false, "[Check][Param] node is null.");
   GE_CHK_BOOL_EXEC(op_def_proto != nullptr, REPORT_INNER_ERROR("E18888", "param op_def_proto is null, check invalid.");
@@ -111,8 +112,12 @@ bool ModelSerializeImp::SerializeEdge(const NodePtr &node, proto::OpDef *const o
       }
     }
   }
-  auto const op_desc_attr = op_def_proto->mutable_attr();
-  (void)op_desc_attr->insert({kSrcOutPeerIndex, src_out_peer_index});
+  if (is_dump_graph) {
+    GELOGD("Save src out peer index for %s.", node->GetName().c_str());
+    auto const op_desc_attr = op_def_proto->mutable_attr();
+    (void)op_desc_attr->insert({kSrcOutPeerIndex, src_out_peer_index});
+  }
+
   return true;
 }
 
@@ -124,7 +129,7 @@ void ModelSerializeImp::FixOpDefSubgraphInstanceName(const ConstOpDescPtr &op_de
 }
 
 bool ModelSerializeImp::SerializeOpDesc(const ConstOpDescPtr &op_desc, proto::OpDef *const op_def_proto,
-                                        const bool is_dump) const {
+                                        const bool not_dump_all) const {
   GE_CHK_BOOL_EXEC(op_desc != nullptr, REPORT_INNER_ERROR("E18888", "param op_desc is nullptr. check invalid.");
                    return false, "[Check][Param] op_desc is null.");
   GE_CHK_BOOL_EXEC(op_def_proto != nullptr, REPORT_INNER_ERROR("E18888", "param op_def_proto is null, check invalid.");
@@ -160,7 +165,7 @@ bool ModelSerializeImp::SerializeOpDesc(const ConstOpDescPtr &op_desc, proto::Op
   }
 
   op_def_proto->set_id(op_desc->GetId());
-  OpDescToAttrDef(op_desc, op_def_proto, is_dump);
+  OpDescToAttrDef(op_desc, op_def_proto, not_dump_all);
 
   return true;
 }
@@ -187,7 +192,7 @@ void ModelSerializeImp::OpDescIrDefToAttrDef(const ConstOpDescPtr &op_desc,
 }
 
 void ModelSerializeImp::OpDescToAttrDef(const ConstOpDescPtr &op_desc, proto::OpDef *const op_def_proto,
-                                        const bool is_dump) const {
+                                        const bool not_dump_all) const {
   auto const op_desc_attr = op_def_proto->mutable_attr();
   if ((op_desc == nullptr) || (op_desc->impl_ == nullptr)) {
     GELOGE(FAILED, "[Check][Param] op desc or impl is nullptr.");
@@ -227,7 +232,7 @@ void ModelSerializeImp::OpDescToAttrDef(const ConstOpDescPtr &op_desc, proto::Op
     return;
   }
 
-  if (is_dump) {
+  if (not_dump_all) {
     (void) op_desc_attr->erase(ATTR_NAME_FRAMEWORK_NODE_DEF);
     (void) op_desc_attr->erase(ATTR_NAME_FRAMEWORK_OP_DEF);
     (void) op_desc_attr->erase(ATTR_NAME_FRAMEWORK_FUNC_DEF);
@@ -236,21 +241,32 @@ void ModelSerializeImp::OpDescToAttrDef(const ConstOpDescPtr &op_desc, proto::Op
   }
 }
 
-bool ModelSerializeImp::SerializeNode(const NodePtr &node, proto::OpDef *const op_def_proto, const bool is_dump) const {
+bool ModelSerializeImp::SerializeNode(const NodePtr &node, proto::OpDef *const op_def_proto,
+                                      const bool not_dump_all) const {
+  return SerializeNode(node, false, op_def_proto, not_dump_all);
+}
+
+bool ModelSerializeImp::SerializeNode(const NodePtr &node, const bool is_dump_graph, proto::OpDef *const op_def_proto,
+                                      const bool not_dump_all) const {
   if ((node == nullptr) || (op_def_proto == nullptr)) {
     REPORT_INNER_ERROR("E18888", "param node or op_def_proto is nullptr, check invalid.");
     GELOGE(GRAPH_FAILED, "[Check][Param] param node or op_def_proto is nullptr, check invalid.");
     return false;
   }
-  if (!SerializeOpDesc(node->GetOpDesc(), op_def_proto, is_dump)) {
+  if (!SerializeOpDesc(node->GetOpDesc(), op_def_proto, not_dump_all)) {
     GELOGE(GRAPH_FAILED, "[Serialize][OpDesc] failed, node:%s", node->GetName().c_str());
     return false;
   }
-  return SerializeEdge(node, op_def_proto);
+  return SerializeEdge(node, op_def_proto, is_dump_graph);
 }
 
 GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY bool ModelSerializeImp::SerializeGraph(const ConstComputeGraphPtr &graph,
-    proto::GraphDef *const graph_proto, const bool is_dump) const {
+    proto::GraphDef *const graph_proto, const bool not_dump_all) const {
+  return SerializeGraph(graph, false, graph_proto, not_dump_all);
+}
+
+GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY bool ModelSerializeImp::SerializeGraph(const ConstComputeGraphPtr &graph,
+    const bool is_dump_graph, proto::GraphDef *const graph_proto, const bool not_dump_all) const {
   if ((graph == nullptr) || (graph_proto == nullptr)) {
     REPORT_INNER_ERROR("E18888", "param graph or graph_proto is nullptr, check invalid.");
     GELOGE(GRAPH_FAILED, "[Check][Param] param graph or graph_proto is nullptr, check invalid.");
@@ -277,7 +293,7 @@ GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY bool ModelSerializeImp::Serialize
   }
 
   for (const auto &node : graph->GetDirectNode()) {
-    if (!SerializeNode(node, graph_proto->add_op(), is_dump)) {
+    if (!SerializeNode(node, is_dump_graph, graph_proto->add_op(), not_dump_all)) {
       return false;
     }
   }
@@ -285,7 +301,12 @@ GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY bool ModelSerializeImp::Serialize
 }
 
 bool ModelSerializeImp::SerializeModel(const Model &model, proto::ModelDef *const model_proto,
-                                       const bool is_dump) const {
+                                       const bool not_dump_all) const {
+  return SerializeModel(model, false, model_proto, not_dump_all);
+}
+
+bool ModelSerializeImp::SerializeModel(const Model &model, const bool is_dump_graph, proto::ModelDef *const model_proto,
+                                       const bool not_dump_all) const {
   if (model_proto == nullptr) {
     REPORT_INNER_ERROR("E18888", "param model_proto is nullptr, check invalid.");
     GELOGE(GRAPH_FAILED, "[Check][Param] param model_proto is nullptr, check Invalid");
@@ -307,7 +328,7 @@ bool ModelSerializeImp::SerializeModel(const Model &model, proto::ModelDef *cons
     GELOGE(GRAPH_FAILED, "[Get][ComputeGraph] return nullptr");
     return false;
   }
-  if (!SerializeGraph(compute_graph, model_proto->add_graph(), is_dump)) {
+  if (!SerializeGraph(compute_graph, is_dump_graph, model_proto->add_graph(), not_dump_all)) {
     GELOGE(GRAPH_FAILED, "[Serialize][Graph] failed");
     return false;
   }
@@ -326,7 +347,7 @@ bool ModelSerializeImp::SerializeModel(const Model &model, proto::ModelDef *cons
     }
   }
   for (const auto &subgraph : subgraphs) {
-    if (!SerializeGraph(subgraph, model_proto->add_graph(), is_dump)) {
+    if (!SerializeGraph(subgraph, is_dump_graph, model_proto->add_graph(), not_dump_all)) {
       GELOGE(GRAPH_FAILED, "[Serialize][Subgraph] failed");
       return false;
     }
@@ -921,16 +942,16 @@ bool ModelSerializeImp::SerializeToBuffer(const proto::ModelDef &model_def, Buff
   return model_def.SerializeToCodedStream(&output_stream);
 }
 
-Buffer ModelSerialize::SerializeModel(const Model &model, const bool is_dump) const {
+Buffer ModelSerialize::SerializeModel(const Model &model, const bool not_dump_all) const {
   std::string path;
-  return SerializeModel(model, path, true, is_dump);
+  return SerializeModel(model, path, true, not_dump_all);
 }
 
 Buffer ModelSerialize::SerializeModel(const Model &model, const std::string &path,
-                                      const bool is_need_separate, const bool is_dump) const {
+                                      const bool is_need_separate, const bool not_dump_all) const {
   proto::ModelDef model_def;
   ModelSerializeImp model_imp;
-  if (!model_imp.SerializeModel(model, &model_def, is_dump)) {
+  if (!model_imp.SerializeModel(model, &model_def, not_dump_all)) {
     return Buffer();
   }
 #if !defined(__ANDROID__) && !defined(ANDROID)
@@ -947,9 +968,9 @@ Buffer ModelSerialize::SerializeModel(const Model &model, const std::string &pat
   return buffer;
 }
 
-Status ModelSerialize::SerializeModel(const Model &model, const bool is_dump, proto::ModelDef &model_def) const {
+Status ModelSerialize::SerializeModel(const Model &model, const bool not_dump_all, proto::ModelDef &model_def) const {
   ModelSerializeImp model_imp;
-  if (!model_imp.SerializeModel(model, &model_def, is_dump)) {
+  if (!model_imp.SerializeModel(model, true, &model_def, not_dump_all)) {
     return FAILED;
   }
   return SUCCESS;

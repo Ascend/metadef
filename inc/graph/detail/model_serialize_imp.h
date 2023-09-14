@@ -74,18 +74,23 @@ struct NodeNameNodeReq {
 
 class ModelSerializeImp {
  public:
-  bool SerializeModel(const Model &model, proto::ModelDef *const model_proto, const bool is_dump = false) const;
+  bool SerializeModel(const Model &model, proto::ModelDef *const model_proto, const bool not_dump_all = false) const;
+  bool SerializeModel(const Model &model, const bool is_dump_graph, proto::ModelDef *const model_proto,
+                      const bool not_dump_all = false) const;
 
-  bool SerializeGraph(const ConstComputeGraphPtr &graph,
-                      proto::GraphDef *const graph_proto,
-                      const bool is_dump = false) const;
+  bool SerializeGraph(const ConstComputeGraphPtr &graph, proto::GraphDef *const graph_proto,
+                      const bool not_dump_all = false) const;
+  bool SerializeGraph(const ConstComputeGraphPtr &graph, const bool is_dump_graph, proto::GraphDef *const graph_proto,
+                      const bool not_dump_all = false) const;
 
-  bool SerializeEdge(const NodePtr &node, proto::OpDef *const op_def_proto) const;
+  bool SerializeEdge(const NodePtr &node, proto::OpDef *const op_def_proto, const bool is_dump_graph = false) const;
 
   bool SerializeOpDesc(const ConstOpDescPtr &op_desc, proto::OpDef *const op_def_proto,
-                       const bool is_dump = false) const;
+                       const bool not_dump_all = false) const;
 
-  bool SerializeNode(const NodePtr &node, proto::OpDef *const op_def_proto, const bool is_dump = false) const;
+  bool SerializeNode(const NodePtr &node, proto::OpDef *const op_def_proto, const bool not_dump_all = false) const;
+  bool SerializeNode(const NodePtr &node, const bool is_dump_graph, proto::OpDef *const op_def_proto,
+                     const bool not_dump_all = false) const;
 
   bool SeparateModelDef(Buffer &buffer, const std::string &path,
                         proto::ModelDef &model_def, const bool is_need_separate) const;
@@ -108,7 +113,7 @@ class ModelSerializeImp {
   void AttrDefToOpDesc(OpDescPtr &op_desc, std::vector<std::string> &key_out, std::vector<uint32_t> &value_out,
                        const std::vector<std::string> &opt_input) const;
   void OpDescToAttrDef(const ConstOpDescPtr &op_desc, proto::OpDef *const op_def_proto,
-                       const bool is_dump = false) const;
+                       const bool not_dump_all = false) const;
   void OpDescIrDefToAttrDef(const ConstOpDescPtr &op_desc,
                             google::protobuf::Map<std::string, ge::proto::AttrDef> *op_desc_attr) const;
   bool UnserializeNode(ComputeGraphPtr &graph, proto::OpDef &op_def_proto);
