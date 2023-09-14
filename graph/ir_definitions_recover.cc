@@ -41,6 +41,7 @@ struct IrDefinition {
   std::map<std::string, ge::AnyValue> attr_value;
   InputIrDefs inputs;
   OutputIrDefs outputs;
+  ge::OpDescPtr op_desc;
 };
 void InitIrDefinitionsIfNeed(const std::string &op_type, IrDefinition &ir_def) {
   if (!ir_def.inited) {
@@ -59,6 +60,7 @@ void InitIrDefinitionsIfNeed(const std::string &op_type, IrDefinition &ir_def) {
     ir_def.attr_value = ge::AttrUtils::GetAllAttrs(op_desc);
     ir_def.has_ir_definition = true;
     ir_def.inited = true;
+    ir_def.op_desc = op_desc;
   }
 }
 
@@ -183,6 +185,8 @@ ge::graphStatus RecoverNodeIrDefinitions(const ge::NodePtr &node, std::string &o
     GELOGE(ge::FAILED, "recover ir outputs failed.");
     return ge::FAILED;
   }
+  // sym store
+  node->GetOpDesc()->ShareDtypeSymbolsFrom(*ir_def.op_desc);
   // attr
   const auto node_all_attrs = ge::AttrUtils::GetAllAttrs(node->GetOpDesc());
   for (const auto &name : ir_def.attr_names) {

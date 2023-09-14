@@ -21,6 +21,7 @@
 #include "graph/debug/ge_log.h"
 #include "graph/types.h"
 #include "graph/def_types.h"
+#include "graph/operator_factory_impl.h"
 #include "mmpa/mmpa_api.h"
 #include "common/plugin/plugin_manager.h"
 
@@ -142,8 +143,15 @@ void OpsProtoManager::LoadOpsProtoPluginSo(const std::string &path) {
 
   // Load .so file
   for (const auto &elem : file_list) {
+#ifdef ONLY_COMPILE_OPEN_SRC
+    OperatorFactoryImpl::SetRegisterOverridable(false);
+#else
+    OperatorFactoryImpl::SetRegisterOverridable(true);
+    GELOGD("OpsProtoManager plugin load %s in overridable mode.", elem.c_str());
+#endif
     void *const handle = mmDlopen(elem.c_str(), static_cast<int32_t>(static_cast<uint32_t>(MMPA_RTLD_NOW) |
         static_cast<uint32_t>(MMPA_RTLD_GLOBAL)));
+    OperatorFactoryImpl::SetRegisterOverridable(false);
     if (handle == nullptr) {
       const char_t *error = mmDlerror();
       error = (error == nullptr) ? "" : error;

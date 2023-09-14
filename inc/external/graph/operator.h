@@ -613,6 +613,7 @@ class GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY Operator {
 
   void DataTypeRegister(const char_t *datatype_symbol, const TensorType &type_range);
   void DataTypeRegister(const char_t *datatype_symbol, const ListTensorType &list_type_range);
+  void DataTypeRegister(const char_t *datatype_symbol, const Promote &promote_rule);
 
   graphStatus VerifyAll();
 

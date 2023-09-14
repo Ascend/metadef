@@ -16,6 +16,7 @@
 
 #include "external/graph/types.h"
 #include <cmath>
+#include <utility>
 #include "graph/ge_error_codes.h"
 #include "common/ge_common/debug/ge_log.h"
 #include "inc/common/util/error_manager/error_manager.h"
@@ -135,4 +136,38 @@ int64_t GetSizeInBytes(int64_t element_count, DataType data_type) {
     return element_count * type_size;
   }
 }
+
+std::vector<const char *> Promote::Syms() const {
+  std::vector<const char *> result;
+  if (data_ == nullptr) {
+    return result;
+  }
+  auto &syms = *static_cast<std::vector<std::string> *>(data_.get());
+  result.reserve(syms.size());
+  for (const auto &sym : syms) {
+    result.push_back(sym.c_str());
+  }
+  return result;
 }
+
+Promote::Promote(const std::initializer_list<const char *> &syms) {
+  data_ = std::shared_ptr<void>(new (std::nothrow) std::vector<std::string>(),
+                                [](void *ptr) { delete static_cast<std::vector<std::string> *>(ptr); });
+  if (data_ != nullptr) {
+    for (const auto &sym : syms) {
+      static_cast<std::vector<std::string> *>(data_.get())->emplace_back((sym == nullptr) ? "" : sym);
+    }
+  }
+}
+
+Promote::Promote(Promote &&other) noexcept {
+  data_ = std::move(other.data_);
+}
+
+Promote &Promote::operator=(Promote &&other) noexcept {
+  if (this != &other) {
+    data_ = std::move(other.data_);
+  }
+  return *this;
+}
+}  // namespace ge

@@ -1043,7 +1043,7 @@ void Operator::InputRegister(const char_t *name, const char_t *datatype_symbol) 
   GE_RETURN_IF_NULL(operator_impl_, "[Check][Param] Operator impl is nullptr.");
   GE_RETURN_IF_NULL(operator_impl_->GetOpDescImpl(), "[Get][OpDescImpl] is nullptr.");
   InputRegister(name);
-  operator_impl_->GetOpDescImpl()->RegisterIrInputDataTypeSymbol(name, datatype_symbol);
+  operator_impl_->GetOpDescImpl()->SetInputDtypeSymbol(name, kIrInputRequired, datatype_symbol);
 }
 
 void Operator::OptionalInputRegister(const std::string &name) {
@@ -1073,7 +1073,7 @@ void Operator::OptionalInputRegister(const char_t *name, const char_t *datatype_
   GE_RETURN_IF_NULL(operator_impl_, "[Check][Param] Operator impl is nullptr.");
   GE_RETURN_IF_NULL(operator_impl_->GetOpDescImpl(), "[Get][OpDescImpl] is nullptr.");
   OptionalInputRegister(name);
-  operator_impl_->GetOpDescImpl()->RegisterIrInputDataTypeSymbol(name, datatype_symbol);
+  operator_impl_->GetOpDescImpl()->SetInputDtypeSymbol(name, kIrInputOptional, datatype_symbol);
 }
 
 void Operator::InferFuncRegister(const std::function<graphStatus(Operator &)> &func) {
@@ -1132,7 +1132,7 @@ void Operator::OutputRegister(const char_t *name, const char_t *datatype_symbol)
   GE_RETURN_IF_NULL(operator_impl_, "[Check][Param] Operator impl is nullptr.");
   GE_RETURN_IF_NULL(operator_impl_->GetOpDescImpl(), "[Get][OpDescImpl] is nullptr.");
   OutputRegister(name);
-  operator_impl_->GetOpDescImpl()->RegisterIrOutputDataTypeSymbol(name, datatype_symbol);
+  operator_impl_->GetOpDescImpl()->SetOutputDtypeSymbol(name, kIrOutputRequired, datatype_symbol);
 }
 
 void Operator::DynamicInputRegister(const std::string &name, const uint32_t num, bool is_push_back) {
@@ -1291,14 +1291,21 @@ void Operator::DataTypeRegister(const char_t *datatype_symbol, const TensorType 
   GE_RETURN_IF_NULL(datatype_symbol, "[Check][Param] Operator datatype_symbol is nullptr.");
   GE_RETURN_IF_NULL(operator_impl_, "[Check][Param] Operator impl is nullptr.");
   GE_RETURN_IF_NULL(operator_impl_->GetOpDescImpl(), "[Get][OpDescImpl] is nullptr.");
-  operator_impl_->GetOpDescImpl()->RegisterDataTypeSymbol(datatype_symbol, type_range);
+  operator_impl_->GetOpDescImpl()->DeclareDtypeSymbol(datatype_symbol, type_range);
 }
 
 void Operator::DataTypeRegister(const char_t *datatype_symbol, const ListTensorType &list_type_range) {
   GE_RETURN_IF_NULL(datatype_symbol, "[Check][Param] Operator datatype_symbol is nullptr.");
   GE_RETURN_IF_NULL(operator_impl_, "[Check][Param] Operator impl is nullptr.");
   GE_RETURN_IF_NULL(operator_impl_->GetOpDescImpl(), "[Get][OpDescImpl] is nullptr.");
-  operator_impl_->GetOpDescImpl()->RegisterDataTypeSymbol(datatype_symbol, list_type_range);
+  operator_impl_->GetOpDescImpl()->DeclareDtypeSymbol(datatype_symbol, list_type_range);
+}
+
+void Operator::DataTypeRegister(const char_t *datatype_symbol, const Promote &promote_rule) {
+  GE_RETURN_IF_NULL(datatype_symbol, "[Check][Param] Operator datatype_symbol is nullptr.");
+  GE_RETURN_IF_NULL(operator_impl_, "[Check][Param] Operator impl is nullptr.");
+  GE_RETURN_IF_NULL(operator_impl_->GetOpDescImpl(), "[Get][OpDescImpl] is nullptr.");
+  operator_impl_->GetOpDescImpl()->DeclareDtypeSymbol(datatype_symbol, promote_rule);
 }
 
 graphStatus Operator::VerifyAll() {
@@ -2936,7 +2943,7 @@ void Operator::DynamicInputRegister(const char_t *name,
   GE_RETURN_IF_NULL(operator_impl_, "[Check][Param] Operator impl is nullptr.");
   GE_RETURN_IF_NULL(operator_impl_->GetOpDescImpl(), "[Get][OpDescImpl] is nullptr.");
   DynamicInputRegister(name, num, is_push_back);
-  operator_impl_->GetOpDescImpl()->RegisterIrInputDataTypeSymbol(name, datatype_symbol);
+  operator_impl_->GetOpDescImpl()->SetInputDtypeSymbol(name, kIrInputDynamic, datatype_symbol);
 }
 
 void Operator::DynamicOutputRegister(const char_t *name,
@@ -2948,7 +2955,7 @@ void Operator::DynamicOutputRegister(const char_t *name,
   GE_RETURN_IF_NULL(operator_impl_, "[Check][Param] Operator impl is nullptr.");
   GE_RETURN_IF_NULL(operator_impl_->GetOpDescImpl(), "[Get][OpDescImpl] is nullptr.");
   DynamicOutputRegister(name, num, is_push_back);
-  operator_impl_->GetOpDescImpl()->RegisterIrOutputDataTypeSymbol(name, datatype_symbol);
+  operator_impl_->GetOpDescImpl()->SetOutputDtypeSymbol(name, kIrOutputDynamic, datatype_symbol);
 }
 
 static inline bool HasSameNameNode(const ComputeGraphPtr &compute_graph) {

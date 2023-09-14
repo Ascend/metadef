@@ -80,13 +80,9 @@ class IRMetaData {
   IRDataTypeSymbolStore &MutableIRDataTypeSymbolStore();
   const IRDataTypeSymbolStore &GetIRDataTypeSymbolStore() const;
 
-  graphStatus VerifyIR() const;
-  graphStatus VerifyDataTypeSymbol() const;
-
   bool operator==(const IRMetaData &other) const;
 
  private:
-  bool IsOutputSymbolValid(const std::string &output_symbol) const;
   std::string op_name_;
   IrInputs ir_inputs_;
   IrOutputs ir_outputs_;

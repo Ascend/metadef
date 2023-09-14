@@ -345,6 +345,21 @@ struct ListTensorType {
   explicit ListTensorType(const TensorType &type) : tensor_type(type) {};
   TensorType tensor_type;
 };
+
+class Promote {
+ public:
+  Promote(const std::initializer_list<const char *> &syms);
+  std::vector<const char *> Syms() const;
+
+  Promote(const Promote &other) = delete;
+  Promote &operator=(const Promote &other) = delete;
+
+  Promote(Promote &&other) noexcept;
+  Promote &operator=(Promote &&other) noexcept;
+
+ private:
+  std::shared_ptr<void> data_;
+};
 }  // namespace ge
 
 namespace domi {
