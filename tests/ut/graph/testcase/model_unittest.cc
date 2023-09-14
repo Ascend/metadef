@@ -28,6 +28,7 @@
 #include "graph/utils/graph_utils_ex.h"
 #include "graph/utils/node_utils.h"
 #include "graph/debug/ge_attr_define.h"
+#include "mmpa/mmpa_api.h"
 
 namespace ge {
 namespace {
@@ -353,5 +354,19 @@ TEST_F(ModelUt, LoadLargeModelWithWrongWeight) {
   EXPECT_NE(model_back.LoadFromFile("./model.air"), GRAPH_SUCCESS);
   system("rm -rf ./air_weight");
   system("rm -rf ./model.air");
+}
+
+TEST_F(ModelUt, SaveModelWithAscendWorkPath) {
+  ge::char_t current_path[MMPA_MAX_PATH] = {'\0'};
+  getcwd(current_path, MMPA_MAX_PATH);
+  mmSetEnv("ASCEND_WORK_PATH", current_path, 1);
+  auto md = BuildModelWithLargeConst();
+  std::string file_name = "model.air";
+  EXPECT_EQ(md.SaveToFile(file_name), GRAPH_SUCCESS);
+  Model model_back;
+  std::string file_path = current_path;
+  file_path += "/" + file_name;
+  EXPECT_EQ(model_back.LoadFromFile(file_path), GRAPH_SUCCESS);
+  unsetenv("ASCEND_WORK_PATH");
 }
 }  // namespace ge
