@@ -27,6 +27,7 @@
 namespace {
   const int32_t kFileSuccess = 0;
   const uint32_t kMaxWriteSize = 1 * 1024 * 1024 * 1024U; // 1G
+  constexpr const ge::char_t *kAscendWorkPathEnvName = "ASCEND_WORK_PATH";
 }
 namespace ge {
 std::string RealPath(const char_t *path) {
@@ -274,5 +275,22 @@ graphStatus SaveBinToFile(const char * const data, size_t length, const std::str
     return GRAPH_FAILED;
   }
   return ret;
+}
+
+Status GetAscendWorkPath(std::string &ascend_work_path) {
+  char_t work_path[MMPA_MAX_PATH] = {'\0'};
+  const int32_t work_path_ret = mmGetEnv(kAscendWorkPathEnvName, work_path, MMPA_MAX_PATH);
+  if (work_path_ret == EN_OK) {
+    ascend_work_path = RealPath(work_path);
+    if (ascend_work_path.empty()) {
+      GELOGE(FAILED, "[Call][RealPath] File path %s is invalid.", work_path);
+      return FAILED;
+    }
+    GELOGD("Get ASCEND_WORK_PATH success, path = %s, real path = %s", work_path, ascend_work_path.c_str());
+    return SUCCESS;
+  }
+  ascend_work_path = "";
+  GELOGD("Get ASCEND_WORK_PATH fail");
+  return SUCCESS;
 }
 }

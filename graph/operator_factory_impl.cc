@@ -22,6 +22,9 @@
 #include "common/util/mem_utils.h"
 
 namespace ge {
+namespace {
+  std::atomic<bool> is_register_overridable(false);
+}
 std::shared_ptr<std::map<std::string, OpCreator>> OperatorFactoryImpl::operator_creators_;
 std::shared_ptr<std::map<std::string, OpCreatorV2>> OperatorFactoryImpl::operator_creators_v2_;
 std::shared_ptr<std::map<std::string, InferShapeFunc>> OperatorFactoryImpl::operator_infershape_funcs_;
@@ -174,6 +177,10 @@ InferDataSliceFunc OperatorFactoryImpl::GetInferDataSliceFunc(const std::string 
   return it->second;
 }
 
+void OperatorFactoryImpl::SetRegisterOverridable(const bool &is_overridable) {
+  is_register_overridable.store(is_overridable);
+}
+
 graphStatus OperatorFactoryImpl::RegisterOperatorCreator(const std::string &operator_type,
                                                          OpCreator const &op_creator) {
   if (operator_creators_ == nullptr) {
@@ -195,8 +202,13 @@ graphStatus OperatorFactoryImpl::RegisterOperatorCreator(const std::string &oper
     operator_creators_v2_ = MakeShared<std::map<std::string, OpCreatorV2>>();
     GE_CHECK_NOTNULL(operator_creators_v2_);
   }
-  const std::map<std::string, ge::OpCreatorV2>::const_iterator it = operator_creators_v2_->find(operator_type);
+  auto it = operator_creators_v2_->find(operator_type);
   if (it != operator_creators_v2_->cend()) {
+    if (is_register_overridable.load()) {
+      GELOGD("Override operator creator v2 for %s.", operator_type.c_str());
+      it->second = op_creator;
+      return GRAPH_SUCCESS;
+    }
     return GRAPH_FAILED;
   }
   (void)operator_creators_v2_->emplace(operator_type, op_creator);

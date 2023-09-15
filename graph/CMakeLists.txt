@@ -16,6 +16,7 @@ set(GRAPH_BASE_SOURCE_LIST
     "op_desc.cc"
     "ir_meta.cc"
     "ir_data_type_symbol_store.cc"
+    "sym_dtype.cc"
     "ge_attr_define.cc"
     "ge_tensor.cc"
     "common/large_bm.cc"

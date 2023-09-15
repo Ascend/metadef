@@ -16,575 +16,565 @@
 
 #include <gtest/gtest.h>
 #include <memory>
+#include <dlfcn.h>
 
-#define protected public
-#define private public
 #include "graph/op_desc.h"
-#include "graph/op_desc_impl.h"  // to test inner func
-#define protected public
-#define private public
+#include "graph/op_desc_impl.h"
 #include "graph_builder_utils.h"
 #include "graph/operator_reg.h"
 #include "graph/utils/op_desc_utils.h"
+#include "graph/utils/type_utils.h"
+#include "graph/operator_factory_impl.h"
+#include "graph/compute_graph.h"
+#include "graph/ir_definitions_recover.h"
+#include "toolchain/slog.h"
 
 namespace ge {
 class UTInferDataType : public testing::Test {
  protected:
-  void SetUp() {}
+  void SetUp() {
+    dlog_setlevel(0, 0, 0);
+  }
 
-  void TearDown() {}
+  void TearDown() {
+    dlog_setlevel(0, 3, 0);
+  }
 };
-// 输出由输入推导
-// 校验fix_input1、fix_input2数据类型一致
-REG_OP(FixIOOpWithT)
-    .INPUT(fix_input1, "T")
-    .INPUT(fix_input2, "T")
-    .OUTPUT(fix_output, "T")
-    .OP_END_FACTORY_REG(FixIOOpWithT);
 
-// 输出由输入推导
-// 校验fix_input1、fix_input2数据类型一致
-// 校验fix_input1数据类型在range内
-REG_OP(FixIOOpWithTRange)
-    .INPUT(fix_input1, "T")
-    .INPUT(fix_input2, "T")
-    .OUTPUT(fix_output, "T")
-    .DATATYPE(T, TensorType({DT_INT64, DT_INT32}))
-    .OP_END_FACTORY_REG(FixIOOpWithTRange);
+class OpDtypeInfer {
+ public:
+  struct TypeOrTypes {
+    explicit TypeOrTypes(const DataType &expect_type) : types({expect_type}), dynamic(false) {}
+    explicit TypeOrTypes(const std::vector<DataType> &expect_types) : types(expect_types), dynamic(true) {}
 
-// 输出由输入推导
-// 校验fix_input1、fix_input2数据类型一致
-// 校验fix_input1数据类型在range内
-REG_OP(FixIOOpWithTwoTRange)
-    .INPUT(fix_input1, "T")
-    .INPUT(fix_input2, "T2")
-    .OUTPUT(fix_output, "T2")
-    .DATATYPE(T, TensorType({DT_INT64, DT_INT32}))
-    .DATATYPE(T2, TensorType({DT_FLOAT16, DT_BOOL}))
-    .OP_END_FACTORY_REG(FixIOOpWithTwoTRange);
+    bool dynamic = false;
+    std::vector<DataType> types;
+  };
 
-// 输出由输入推导
-// 有可选输入的情况下，校验opt_input1在T1 rang内
-// 校验fix_input1在range内
-REG_OP(OptionalInputOpWithTRange2)
-    .INPUT(fix_input1, "T")
-    .OPTIONAL_INPUT(opt_input1, "T1")
-    .OUTPUT(fix_output, "T")
-    .DATATYPE(T, TensorType({DT_INT64, DT_INT32}))
-    .DATATYPE(T1, TensorType({DT_INT64, DT_INT32, DT_BOOL}))
-    .OP_END_FACTORY_REG(OptionalInputOpWithTRange2);
+  explicit OpDtypeInfer(const std::string &type) {
+    auto op = OperatorFactory::CreateOperator(type, type);
+    desc_ = OpDescUtils::GetOpDescFromOperator(op);
+  }
 
-//===========================================================================================
-// 固定输入固定输出-无range校验
-TEST_F(UTInferDataType, infer_from_fix_input_without_range_success) {
-  auto op = OperatorFactory::CreateOperator("test1", "FixIOOpWithT");
-  auto op_desc = OpDescUtils::GetOpDescFromOperator(op);
-  ASSERT_NE(op_desc, nullptr);
-  auto input_fix_1 = op_desc->MutableInputDesc("fix_input1");
-  auto input_fix_2 = op_desc->MutableInputDesc("fix_input2");
-  ASSERT_NE(input_fix_1, nullptr);
-  ASSERT_NE(input_fix_2, nullptr);
-  input_fix_1->SetDataType(DT_FLOAT16);
-  input_fix_2->SetDataType(DT_FLOAT16);
+  explicit OpDtypeInfer(const OpDescPtr &desc) : desc_(desc) {}
 
-  auto output_fix = op_desc->GetOutputDesc("fix_output");
-  ASSERT_EQ(output_fix.GetDataType(), DT_FLOAT);
-  ASSERT_EQ(op_desc->VerifyIR(), GRAPH_SUCCESS);
-  ASSERT_EQ(op_desc->DefaultInferDataType(), GRAPH_SUCCESS);
-  output_fix = op_desc->GetOutputDesc("fix_output");
-  ASSERT_EQ(output_fix.GetDataType(), DT_FLOAT16);
+  OpDtypeInfer &Input(const DataType &type) {
+    int32_t ir_index = ++index_;
+    auto format = FORMAT_ND;
+    if (type == DT_UNDEFINED) {
+      format = FORMAT_RESERVED;
+    }
+    desc_->UpdateInputDesc("input" + std::to_string(ir_index), GeTensorDesc(GeShape(), format, type));
+    return *this;
+  }
+
+  OpDtypeInfer &Input(const std::initializer_list<DataType> &raw_types) {
+    std::vector<DataType> types(raw_types);
+    int32_t ir_index = ++index_;
+    desc_->AddDynamicInputDesc("input" + std::to_string(ir_index), types.size());
+    for (size_t i = 0U; i < types.size(); ++i) {
+      desc_->UpdateInputDesc("input" + std::to_string(ir_index) + std::to_string(i),
+                             GeTensorDesc(GeShape(), FORMAT_ND, types[i]));
+    }
+    return *this;
+  }
+
+  OpDtypeInfer &Attr(const std::string &attr, const std::vector<DataType> &types) {
+    AttrUtils::SetListDataType(desc_, attr, types);
+    return *this;
+  }
+
+  OpDtypeInfer &Attr(const std::string &attr, const std::vector<int32_t> &types) {
+    AttrUtils::SetListInt(desc_, attr, types);
+    return *this;
+  }
+
+  OpDtypeInfer &Attr(const std::string &attr, int32_t type) {
+    AttrUtils::SetInt(desc_, attr, type);
+    return *this;
+  }
+
+  OpDtypeInfer &Attr(const std::string &attr, DataType type) {
+    AttrUtils::SetDataType(desc_, attr, type);
+    return *this;
+  }
+
+  OpDtypeInfer &Expect(const DataType &type) {
+    expect_dtypes_.emplace_back(type);
+    return *this;
+  }
+
+  OpDtypeInfer &Expect(const std::vector<DataType> &types) {
+    desc_->AddDynamicOutputDesc("output" + std::to_string(expect_dtypes_.size() + 1U), types.size());
+    expect_dtypes_.emplace_back(types);
+    return *this;
+  }
+
+  void AssertSucceed() {
+    ASSERT_EQ(desc_->DefaultInferDataType(), GRAPH_SUCCESS);
+    for (size_t i = 0U; i < expect_dtypes_.size(); ++i) {
+      std::string ir_output = "output" + std::to_string(i + 1);
+      if (!expect_dtypes_[i].dynamic) {
+        ASSERT_EQ(TypeUtils::DataTypeToSerialString(desc_->GetOutputDesc(ir_output).GetDataType()),
+                  TypeUtils::DataTypeToSerialString(expect_dtypes_[i].types[0]));
+      } else {
+        for (size_t j = 0U; j < expect_dtypes_[i].types.size(); ++j) {
+          std::string ir_output_index = ir_output + std::to_string(j);
+          ASSERT_EQ(TypeUtils::DataTypeToSerialString(desc_->GetOutputDesc(ir_output_index).GetDataType()),
+                    TypeUtils::DataTypeToSerialString(expect_dtypes_[i].types[j]));
+        }
+      }
+    }
+  }
+
+  void AssertFailed() {
+    ASSERT_NE(desc_->DefaultInferDataType(), GRAPH_SUCCESS);
+  }
+
+ private:
+  std::vector<TypeOrTypes> expect_dtypes_;
+  int32_t index_ = 0;
+  OpDescPtr desc_;
+};
+
+/* ---------- 基于符号进行推导的基础用例 ---------- */
+REG_OP(Op1)
+    .OPTIONAL_INPUT(input1, "T")
+    .INPUT(input2, "T")
+    .DYNAMIC_INPUT(input3, "T")
+    .OUTPUT(output1, "T")
+    .DYNAMIC_OUTPUT(output2, "T")
+    .DATATYPE(T, TensorType({DT_FLOAT16, DT_FLOAT}))
+    .OP_END_FACTORY_REG(Op1);
+TEST_F(UTInferDataType, sym_infer_from_regular_input_succeed) {
+  OpDtypeInfer("Op1")  // T全部全部传入
+      .Input(DT_FLOAT16)
+      .Input(DT_FLOAT16)
+      .Input({DT_FLOAT16, DT_FLOAT16})
+      .Expect(DT_FLOAT16)
+      .Expect({DT_FLOAT16, DT_FLOAT16})
+      .AssertSucceed();
+}
+TEST_F(UTInferDataType, sym_infer_from_regular_input_unfed_opt) {
+  OpDtypeInfer("Op1")  // 可选输入不传入，根据其他输入推导
+      .Input(DT_UNDEFINED)
+      .Input(DT_FLOAT16)
+      .Input({DT_FLOAT16, DT_FLOAT16})
+      .Expect(DT_FLOAT16)
+      .Expect({DT_FLOAT16, DT_FLOAT16})
+      .AssertSucceed();
+}
+TEST_F(UTInferDataType, sym_infer_from_regular_input_only_require) {
+  OpDtypeInfer("Op1")  // 可选和动态都不传入，根据其他输入推导
+      .Input(DT_UNDEFINED)
+      .Input(DT_FLOAT16)
+      .Input({})
+      .Expect(DT_FLOAT16)
+      .Expect({DT_FLOAT16, DT_FLOAT16})
+      .AssertSucceed();
+}
+TEST_F(UTInferDataType, sym_infer_from_regular_input_dtype_out_of_range) {
+  OpDtypeInfer("Op1")  // 类型不在可选范围内
+      .Input(DT_INT32)
+      .Input(DT_INT32)
+      .Input({DT_INT32, DT_INT32})
+      .AssertFailed();
+}
+TEST_F(UTInferDataType, sym_infer_from_regular_input_dtype_mismatch_between_ir_inputs) {
+  OpDtypeInfer("Op1")  // 两个IR输入类型不一致
+      .Input(DT_FLOAT16)
+      .Input(DT_FLOAT)
+      .Input({DT_FLOAT16, DT_FLOAT16})
+      .AssertFailed();
+}
+TEST_F(UTInferDataType, sym_infer_from_regular_input_dtype_mismatch_in_dyn) {
+  OpDtypeInfer("Op1")  // 动态输入中的多个类型不一致
+      .Input(DT_FLOAT16)
+      .Input(DT_FLOAT16)
+      .Input({DT_FLOAT16, DT_FLOAT})
+      .AssertFailed();
 }
 
-// 固定输入固定输出-无range校验-输入一致性校验失败
-TEST_F(UTInferDataType, infer_from_fix_input_without_range_input_consistant_check_failed) {
-  auto op = OperatorFactory::CreateOperator("test1", "FixIOOpWithT");
-  auto op_desc = OpDescUtils::GetOpDescFromOperator(op);
-  ASSERT_NE(op_desc, nullptr);
-  auto input_fix_1 = op_desc->MutableInputDesc("fix_input1");
-  auto input_fix_2 = op_desc->MutableInputDesc("fix_input2");
-  ASSERT_NE(input_fix_1, nullptr);
-  ASSERT_NE(input_fix_2, nullptr);
-  input_fix_1->SetDataType(DT_FLOAT16);
-  input_fix_2->SetDataType(DT_INT32);
-
-  auto output_fix = op_desc->GetOutputDesc("fix_output");
-  ASSERT_EQ(output_fix.GetDataType(), DT_FLOAT);
-  ASSERT_EQ(op_desc->VerifyIR(), GRAPH_SUCCESS);
-  ASSERT_EQ(op_desc->impl_->VerifyInputDataType(), GRAPH_PARAM_INVALID);
-  ASSERT_EQ(op_desc->DefaultInferDataType(), GRAPH_PARAM_INVALID);
+/* ---------- 基于可选输入进行推导 ---------- */
+REG_OP(Op2)
+    .OPTIONAL_INPUT(input1, "T")
+    .OUTPUT(output1, "T")
+    .DYNAMIC_OUTPUT(output2, "T")
+    .DATATYPE(T, TensorType({DT_FLOAT16}))
+    .OP_END_FACTORY_REG(Op2);
+TEST_F(UTInferDataType, sym_infer_from_optional_input_succeed) {
+  OpDtypeInfer("Op2")  // 可选输入传入
+      .Input(DT_FLOAT16)
+      .Expect(DT_FLOAT16)
+      .Expect({DT_FLOAT16, DT_FLOAT16})
+      .AssertSucceed();
+}
+TEST_F(UTInferDataType, sym_infer_from_optional_input_unfed_opt) {
+  OpDtypeInfer("Op2")  // 可选不传入，无法推导
+      .Input(DT_UNDEFINED)
+      .AssertFailed();
 }
 
-// 固定输入固定输出-有range校验
-TEST_F(UTInferDataType, infer_from_fix_input_with_range_success) {
-  auto op = OperatorFactory::CreateOperator("test1", "FixIOOpWithTwoTRange");
-  auto op_desc = OpDescUtils::GetOpDescFromOperator(op);
-  ASSERT_NE(op_desc, nullptr);
-  auto input_fix_1 = op_desc->MutableInputDesc("fix_input1");
-  auto input_fix_2 = op_desc->MutableInputDesc("fix_input2");
-  ASSERT_NE(input_fix_1, nullptr);
-  ASSERT_NE(input_fix_2, nullptr);
-  input_fix_1->SetDataType(DT_INT32);
-  input_fix_2->SetDataType(DT_FLOAT16);
-
-  auto output_fix = op_desc->GetOutputDesc("fix_output");
-  ASSERT_EQ(output_fix.GetDataType(), DT_FLOAT);
-  ASSERT_EQ(op_desc->VerifyIR(), GRAPH_SUCCESS);
-  ASSERT_EQ(op_desc->DefaultInferDataType(), GRAPH_SUCCESS);
-  output_fix = op_desc->GetOutputDesc("fix_output");
-  ASSERT_EQ(output_fix.GetDataType(), DT_FLOAT16);
+/* ---------- 基于动态输入进行推导 ---------- */
+REG_OP(Op3)
+    .DYNAMIC_INPUT(input1, "T")
+    .OUTPUT(output1, "T")
+    .DYNAMIC_OUTPUT(output2, "T")
+    .DATATYPE(T, TensorType({DT_FLOAT16}))
+    .OP_END_FACTORY_REG(Op3);
+TEST_F(UTInferDataType, sym_infer_from_dynamic_input_succeed) {
+  OpDtypeInfer("Op3")  // 动态输入不为空
+      .Input({DT_FLOAT16})
+      .Expect(DT_FLOAT16)
+      .Expect({DT_FLOAT16, DT_FLOAT16})
+      .AssertSucceed();
 }
-// 固定输入固定输出-有range校验-输入1超range
-// fix_input1 out of range
-TEST_F(UTInferDataType, infer_from_fix_input_with_T_range_check_failed) {
-  auto op = OperatorFactory::CreateOperator("test1", "FixIOOpWithTwoTRange");
-  auto op_desc = OpDescUtils::GetOpDescFromOperator(op);
-  ASSERT_NE(op_desc, nullptr);
-  auto input_fix_1 = op_desc->MutableInputDesc("fix_input1");
-  auto input_fix_2 = op_desc->MutableInputDesc("fix_input2");
-  ASSERT_NE(input_fix_1, nullptr);
-  ASSERT_NE(input_fix_2, nullptr);
-  input_fix_1->SetDataType(DT_FLOAT16);
-  input_fix_2->SetDataType(DT_FLOAT16);
-
-  auto output_fix = op_desc->GetOutputDesc("fix_output");
-  ASSERT_EQ(output_fix.GetDataType(), DT_FLOAT);
-  ASSERT_EQ(op_desc->VerifyIR(), GRAPH_SUCCESS);
-  ASSERT_EQ(op_desc->DefaultInferDataType(), GRAPH_PARAM_INVALID);
-}
-// 固定输入固定输出-有range校验-输入2超range
-// fix_input2 out of range
-TEST_F(UTInferDataType, infer_from_fix_input_with_T2_range_check_failed) {
-  auto op = OperatorFactory::CreateOperator("test1", "FixIOOpWithTwoTRange");
-  auto op_desc = OpDescUtils::GetOpDescFromOperator(op);
-  ASSERT_NE(op_desc, nullptr);
-  auto input_fix_1 = op_desc->MutableInputDesc("fix_input1");
-  auto input_fix_2 = op_desc->MutableInputDesc("fix_input2");
-  ASSERT_NE(input_fix_1, nullptr);
-  ASSERT_NE(input_fix_2, nullptr);
-  input_fix_1->SetDataType(DT_INT32);
-  input_fix_2->SetDataType(DT_INT32);
-
-  auto output_fix = op_desc->GetOutputDesc("fix_output");
-  ASSERT_EQ(output_fix.GetDataType(), DT_FLOAT);
-  ASSERT_EQ(op_desc->VerifyIR(), GRAPH_SUCCESS);
-  ASSERT_EQ(op_desc->DefaultInferDataType(), GRAPH_PARAM_INVALID);
+TEST_F(UTInferDataType, sym_infer_from_dynamic_input_unfed_dyn) {
+  OpDtypeInfer("Op3")  // 可选不传入，无法推导
+      .Input({})
+      .AssertFailed();
 }
 
-// 输出由输入推导
-// 校验fix_input1和opt_input1数据类型一致，有可选输入的情况下
-// 校验fix_input1在range内
-REG_OP(OptionalInputOpWithTRange)
-    .INPUT(fix_input1, "T")
-    .OPTIONAL_INPUT(opt_input1, "T")
-    .OUTPUT(fix_output, "T")
-    .DATATYPE(T, TensorType({DT_INT64, DT_INT32}))
-    .OP_END_FACTORY_REG(OptionalInputOpWithTRange);
-// 固定输入+可选输入-有range校验
-// 可选输入没连边
-TEST_F(UTInferDataType, infer_from_fix_input_validate_optional_input) {
-  auto op = OperatorFactory::CreateOperator("test1", "OptionalInputOpWithTRange");
-  auto op_desc = OpDescUtils::GetOpDescFromOperator(op);
-  ASSERT_NE(op_desc, nullptr);
-  auto input_fix_1 = op_desc->MutableInputDesc("fix_input1");
-  ASSERT_NE(input_fix_1, nullptr);
-  input_fix_1->SetDataType(DT_INT32);
-
-  auto output_fix = op_desc->GetOutputDesc("fix_output");
-  ASSERT_EQ(output_fix.GetDataType(), DT_FLOAT);
-  ASSERT_EQ(op_desc->VerifyIR(), GRAPH_SUCCESS);
-  ASSERT_EQ(op_desc->DefaultInferDataType(), GRAPH_SUCCESS);
-  output_fix = op_desc->GetOutputDesc("fix_output");
-  ASSERT_EQ(output_fix.GetDataType(), DT_INT32);
+/* ---------- 基于属性进行推导 ---------- */
+REG_OP(Op4)
+    .REQUIRED_ATTR(dtype1, Int)
+    .REQUIRED_ATTR(dtype2, Type)
+    .REQUIRED_ATTR(dtype3, ListInt)
+    .REQUIRED_ATTR(dtype4, ListType)
+    .OUTPUT(output1, "dtype1")
+    .OUTPUT(output2, "dtype2")
+    .DYNAMIC_OUTPUT(output3, "dtype3")  // 动态输出被List属性指定
+    .DYNAMIC_OUTPUT(output4, "dtype4")
+    .DYNAMIC_OUTPUT(output5, "dtype1")  // 动态输出被单个属性指定
+    .DYNAMIC_OUTPUT(output6, "dtype2")
+    .DATATYPE(dtype1, TensorType({DT_FLOAT16, DT_FLOAT}))
+    .DATATYPE(dtype2, TensorType({DT_FLOAT16, DT_FLOAT}))
+    .DATATYPE(dtype3, ListTensorType({DT_FLOAT16, DT_FLOAT}))
+    .DATATYPE(dtype4, ListTensorType({DT_FLOAT16, DT_FLOAT}))
+    .OP_END_FACTORY_REG(Op4);
+TEST_F(UTInferDataType, sym_infer_from_attr_succeed) {
+  OpDtypeInfer("Op4")  // 根据属性进行推导
+      .Attr("dtype1", int32_t(DT_FLOAT16))
+      .Attr("dtype2", DT_FLOAT16)
+      .Attr("dtype3", std::vector<int32_t>{DT_FLOAT16, DT_FLOAT})
+      .Attr("dtype4", std::vector<DataType>{DT_FLOAT16, DT_FLOAT})
+      .Expect(DT_FLOAT16)
+      .Expect(DT_FLOAT16)
+      .Expect({DT_FLOAT16, DT_FLOAT})  // 动态输出被List属性指定
+      .Expect({DT_FLOAT16, DT_FLOAT})
+      .Expect({DT_FLOAT16, DT_FLOAT16})  // 动态输出被单个属性指定
+      .Expect({DT_FLOAT16, DT_FLOAT16})
+      .AssertSucceed();
+}
+TEST_F(UTInferDataType, sym_infer_from_attr_dtype_out_of_range) {
+  OpDtypeInfer("Op4")  // 属性不在允许范围内
+      .Attr("dtype1", int32_t(DT_FLOAT16))
+      .Attr("dtype2", DT_INT32)  // 非法输入类型
+      .Attr("dtype3", std::vector<int32_t>{DT_FLOAT16, DT_FLOAT})
+      .Attr("dtype4", std::vector<DataType>{DT_FLOAT16, DT_FLOAT})
+      .AssertFailed();
+}
+TEST_F(UTInferDataType, sym_infer_from_attr_list_dtype_out_of_range) {
+  OpDtypeInfer("Op4")  // 属性不在允许范围内
+      .Attr("dtype1", int32_t(DT_FLOAT16))
+      .Attr("dtype2", DT_FLOAT16)
+      .Attr("dtype3", std::vector<int32_t>{DT_FLOAT16, DT_FLOAT})
+      .Attr("dtype4", std::vector<DataType>{DT_FLOAT16, DT_INT32})  // 非法输入类型
+      .AssertFailed();
 }
 
-// 固定输入+可选输入-有range校验
-TEST_F(UTInferDataType, infer_from_fix_input_validate_optional_input_consistant_failed) {
-  auto builder = ut::GraphBuilder("root");
-  const auto &input1 = builder.AddNode("data1", "Data", 1, 1);
-  const auto &input2 = builder.AddNode("data2", "Data", 1, 1);
-  auto graph = builder.GetGraph();
-  auto op = OperatorFactory::CreateOperator("test1", "OptionalInputOpWithTRange");
-  auto op_desc = OpDescUtils::GetOpDescFromOperator(op);
-  ASSERT_NE(op_desc, nullptr);
-  auto test_node = graph->AddNode(op_desc);
-  builder.AddDataEdge(input1, 0, test_node, 0);
-  builder.AddDataEdge(input2, 0, test_node, 1);
-
-  auto input_fix_1 = op_desc->MutableInputDesc("fix_input1");
-  auto input_opt_1 = op_desc->MutableInputDesc("opt_input1");
-  ASSERT_NE(input_fix_1, nullptr);
-  input_fix_1->SetDataType(DT_INT32);
-  op_desc->UpdateInputDesc("opt_input1", GeTensorDesc(GeShape(), FORMAT_ND, DT_INT64));
-
-  auto output_fix = op_desc->GetOutputDesc("fix_output");
-  ASSERT_EQ(output_fix.GetDataType(), DT_FLOAT);
-  ASSERT_EQ(op_desc->VerifyIR(), GRAPH_SUCCESS);
-  ASSERT_EQ(op_desc->impl_->VerifyInputDataType(), GRAPH_PARAM_INVALID);
-  ASSERT_EQ(op_desc->DefaultInferDataType(), GRAPH_PARAM_INVALID);
+/* ---------- 输出类型唯一场景，支持推导（类似Equal算子固定输出bool） ---------- */
+REG_OP(Op6)
+    .OUTPUT(output1, "T")
+    .DYNAMIC_OUTPUT(output2, "T")
+    .DATATYPE(T, TensorType({DT_FLOAT16}))
+    .OP_END_FACTORY_REG(Op6);
+TEST_F(UTInferDataType, sym_infer_for_const_output_dtype) {  // 老旧方式注册，但是输出类型唯一
+  OpDtypeInfer("Op6").Expect(DT_FLOAT16).Expect({DT_FLOAT16, DT_FLOAT16}).AssertSucceed();
 }
 
-// 输出由输入推导
-// 校验fix_input1在T range内
-// 校验dy_input1-n 数据类型一致
-// 校验dy_input1 在T1 range内
-REG_OP(DynamicInputOpWithT)
-    .INPUT(fix_input1, "T")
-    .DYNAMIC_INPUT(dy_input, "T1")
-    .OUTPUT(fix_output, "T1")
-    .DATATYPE(T, TensorType({DT_INT64, DT_INT32}))
-    .DATATYPE(T1, TensorType({DT_INT64, DT_INT32, DT_BOOL}))
-    .OP_END_FACTORY_REG(DynamicInputOpWithT);
-
-// 固定输入+动态输入，输出由动态输入推导
-TEST_F(UTInferDataType, infer_from_dynamic_input) {
-  auto op = OperatorFactory::CreateOperator("test1", "DynamicInputOpWithT");
-  auto op_desc = OpDescUtils::GetOpDescFromOperator(op);
-  ASSERT_NE(op_desc, nullptr);
-  op_desc->AddDynamicInputDesc("dy_input", 2, true);
-  auto input_fix_1 = op_desc->MutableInputDesc("fix_input1");
-  auto dy_input0 = op_desc->MutableInputDesc("dy_input0");
-  auto dy_input1 = op_desc->MutableInputDesc("dy_input1");
-  ASSERT_NE(input_fix_1, nullptr);
-  ASSERT_NE(dy_input0, nullptr);
-  ASSERT_NE(dy_input1, nullptr);
-  input_fix_1->SetDataType(DT_INT32);
-  dy_input0->SetDataType(DT_BOOL);
-  dy_input1->SetDataType(DT_BOOL);
-
-  auto output_fix = op_desc->GetOutputDesc("fix_output");
-  ASSERT_EQ(output_fix.GetDataType(), DT_FLOAT);
-  ASSERT_EQ(op_desc->VerifyIR(), GRAPH_SUCCESS);
-  ASSERT_EQ(op_desc->DefaultInferDataType(), GRAPH_SUCCESS);
-  output_fix = op_desc->GetOutputDesc("fix_output");
-  ASSERT_EQ(output_fix.GetDataType(), DT_BOOL);
+/* ---------- ListTensorType的类型推导 ---------- */
+REG_OP(Op7)
+    .DYNAMIC_INPUT(input1, "T")
+    .DYNAMIC_INPUT(input2, "T")
+    .DYNAMIC_OUTPUT(output1, "T")
+    .DATATYPE(T, ListTensorType({DT_FLOAT16, DT_FLOAT}))
+    .OP_END_FACTORY_REG(Op7);
+TEST_F(UTInferDataType, sym_infer_for_list_dtype_succeed) {
+  OpDtypeInfer("Op7")  // 正常推导
+      .Input({DT_FLOAT16, DT_FLOAT, DT_FLOAT, DT_FLOAT16})
+      .Input({DT_FLOAT16, DT_FLOAT, DT_FLOAT, DT_FLOAT16})
+      .Expect({DT_FLOAT16, DT_FLOAT, DT_FLOAT, DT_FLOAT16})
+      .AssertSucceed();
+}
+TEST_F(UTInferDataType, sym_infer_for_list_dtype_dtype_mismatch_between_dyn) {
+  OpDtypeInfer("Op7")  // 对应同一个ListType sym的两个输入，类型合法但是不一致
+      .Input({DT_FLOAT16, DT_FLOAT, DT_FLOAT, DT_FLOAT16})
+      .Input({DT_FLOAT16, DT_FLOAT, DT_FLOAT16, DT_FLOAT16})  // 第三个输入类型不一致
+      .Expect({DT_FLOAT16, DT_FLOAT, DT_FLOAT, DT_FLOAT16})
+      .AssertFailed();
+}
+TEST_F(UTInferDataType, sym_infer_for_list_dtype_dtype_out_of_range) {
+  OpDtypeInfer("Op7")  // 数据类型不在范围内
+      .Input({DT_FLOAT16, DT_INT32})
+      .Input({DT_FLOAT16, DT_INT32})
+      .AssertFailed();
 }
 
-// 固定输入+动态输入，输出由动态输入推导
-TEST_F(UTInferDataType, infer_from_dynamic_input_consistant_check_failed) {
-  auto op = OperatorFactory::CreateOperator("test1", "DynamicInputOpWithT");
-  auto op_desc = OpDescUtils::GetOpDescFromOperator(op);
-  ASSERT_NE(op_desc, nullptr);
-  op_desc->AddDynamicInputDesc("dy_input", 2, true);
-  auto input_fix_1 = op_desc->MutableInputDesc("fix_input1");
-  auto dy_input0 = op_desc->MutableInputDesc("dy_input0");
-  auto dy_input1 = op_desc->MutableInputDesc("dy_input1");
-  ASSERT_NE(input_fix_1, nullptr);
-  ASSERT_NE(dy_input0, nullptr);
-  ASSERT_NE(dy_input1, nullptr);
-  input_fix_1->SetDataType(DT_INT32);
-  dy_input0->SetDataType(DT_BOOL);
-  dy_input1->SetDataType(DT_INT32);
-
-  ASSERT_EQ(op_desc->VerifyIR(), GRAPH_SUCCESS);
-  ASSERT_EQ(op_desc->impl_->VerifyInputDataType(), GRAPH_PARAM_INVALID);
-  ASSERT_EQ(op_desc->DefaultInferDataType(), GRAPH_PARAM_INVALID);
+/* ---------- 类型提升方式推导 ---------- */
+// 基础类型间提升
+REG_OP(Op8)
+    .INPUT(input1, "T1")
+    .DYNAMIC_INPUT(input2, "T2")
+    .INPUT(input3, "T3")
+    .OUTPUT(output1, "T4")
+    .DYNAMIC_OUTPUT(output2, "T5")
+    .DATATYPE(T1, TensorType({DT_INT32, DT_FLOAT}))
+    .DATATYPE(T2, TensorType({DT_INT64, DT_FLOAT}))
+    .DATATYPE(T3, TensorType({DT_FLOAT, DT_FLOAT16}))
+    .DATATYPE(T4, Promote({"T1", "T2"}))
+    .DATATYPE(T5, Promote({"T1", "T2", "T3"}))
+    .OP_END_FACTORY_REG(Op8);
+TEST_F(UTInferDataType, sym_infer_for_dtype_promotion_succeed) {
+  OpDtypeInfer("Op8")
+      .Input(DT_INT32)
+      .Input({DT_INT64, DT_INT64})
+      .Input(DT_FLOAT)
+      .Expect(DT_INT64)              // T1和T2间提升为DT_INT64
+      .Expect({DT_FLOAT, DT_FLOAT})  // T1，T2和T3间提升为DT_FLOAT
+      .AssertSucceed();
 }
 
-// 输出由输入推导
-// 校验fix_input1在T range内
-// 校验dy_input1-n 数据类型一致
-// 校验dy_input1 在T1 range内
-REG_OP(DynamicInputOpWithListT)
-    .DYNAMIC_INPUT(dy_input, "T")
-    .DYNAMIC_OUTPUT(dy_output, "T")
-    .DATATYPE(T, ListTensorType({DT_INT64, DT_INT32}))
-    .OP_END_FACTORY_REG(DynamicInputOpWithListT);
-
-TEST_F(UTInferDataType, infer_from_dynamic_input_list_tensor_type) {
-  auto op = OperatorFactory::CreateOperator("test1", "DynamicInputOpWithListT");
-  auto op_desc = OpDescUtils::GetOpDescFromOperator(op);
-  ASSERT_NE(op_desc, nullptr);
-  op_desc->AddDynamicInputDesc("dy_input", 2, true);
-  op_desc->AddDynamicOutputDesc("dy_output", 2, true);
-  auto dy_input0 = op_desc->MutableInputDesc("dy_input0");
-  auto dy_input1 = op_desc->MutableInputDesc("dy_input1");
-  ASSERT_NE(dy_input0, nullptr);
-  ASSERT_NE(dy_input1, nullptr);
-  dy_input0->SetDataType(DT_INT32);
-  dy_input1->SetDataType(DT_INT64);
-
-  auto dyn_output0 = op_desc->GetOutputDesc("dy_output0");
-  ASSERT_EQ(dyn_output0.GetDataType(), DT_FLOAT);
-  ASSERT_EQ(op_desc->VerifyIR(), GRAPH_SUCCESS);
-  ASSERT_EQ(op_desc->DefaultInferDataType(), GRAPH_SUCCESS);
-  dyn_output0 = op_desc->GetOutputDesc("dy_output0");
-  auto dyn_output1 = op_desc->GetOutputDesc("dy_output1");
-  ASSERT_EQ(dyn_output0.GetDataType(), DT_INT32);
-  ASSERT_EQ(dyn_output1.GetDataType(), DT_INT64);
+// ListTensorType间提升
+REG_OP(Op9)
+    .DYNAMIC_INPUT(input1, "T1")
+    .DYNAMIC_INPUT(input2, "T2")
+    .DYNAMIC_INPUT(input3, "T3")
+    .DYNAMIC_OUTPUT(output1, "T4")
+    .DYNAMIC_OUTPUT(output2, "T5")
+    .DATATYPE(T1, ListTensorType({DT_INT32, DT_FLOAT}))
+    .DATATYPE(T2, ListTensorType({DT_INT64, DT_FLOAT}))
+    .DATATYPE(T3, ListTensorType({DT_FLOAT, DT_FLOAT16}))
+    .DATATYPE(T4, Promote({"T1", "T2"}))
+    .DATATYPE(T5, Promote({"T1", "T2", "T3"}))
+    .OP_END_FACTORY_REG(Op9);
+TEST_F(UTInferDataType, sym_infer_for_dtype_promotion_list_type_succeed) {
+  OpDtypeInfer("Op9")
+      .Input({DT_INT32, DT_FLOAT})    // T1
+      .Input({DT_INT64, DT_INT64})    // T2
+      .Input({DT_FLOAT, DT_FLOAT16})  // T3
+      .Expect({DT_INT64, DT_FLOAT})   // T1和T2间逐个提升
+      .Expect({DT_FLOAT, DT_FLOAT})   // T1，T2和T3间逐个提升
+      .AssertSucceed();
+}
+TEST_F(UTInferDataType, sym_infer_for_dtype_promotion_list_type_dtype_size_mismatch) {
+  OpDtypeInfer("Op9")                         // 提升失败，数量不一致
+      .Input({DT_INT32, DT_FLOAT, DT_FLOAT})  // T1
+      .Input({DT_INT64, DT_INT64})            // T2
+      .Input({DT_FLOAT, DT_FLOAT16})          // T3
+      .AssertFailed();
 }
 
-// 输出由输入推导
-// 校验fix_input1在T range内
-// 校验dy_input1-n 数据类型一致
-// 校验dy_input1 在T1 range内
-REG_OP(DynamicInputOutputOpWithT)
-    .DYNAMIC_INPUT(dy_input, "T")
-    .DYNAMIC_OUTPUT(dy_output, "T")
-    .OP_END_FACTORY_REG(DynamicInputOutputOpWithT);
-
-TEST_F(UTInferDataType, infer_from_dynamic_input_without_list_tensor_type) {
-  auto op = OperatorFactory::CreateOperator("test1", "DynamicInputOutputOpWithT");
-  auto op_desc = OpDescUtils::GetOpDescFromOperator(op);
-  ASSERT_NE(op_desc, nullptr);
-  op_desc->AddDynamicInputDesc("dy_input", 2, true);
-  op_desc->AddDynamicOutputDesc("dy_output", 2, true);
-  auto dy_input0 = op_desc->MutableInputDesc("dy_input0");
-  auto dy_input1 = op_desc->MutableInputDesc("dy_input1");
-  ASSERT_NE(dy_input0, nullptr);
-  ASSERT_NE(dy_input1, nullptr);
-  dy_input0->SetDataType(DT_INT32);
-  dy_input1->SetDataType(DT_INT32);
-
-  auto dyn_output0 = op_desc->GetOutputDesc("dy_output0");
-  ASSERT_EQ(dyn_output0.GetDataType(), DT_FLOAT);
-  ASSERT_EQ(op_desc->VerifyIR(), GRAPH_SUCCESS);
-  ASSERT_EQ(op_desc->DefaultInferDataType(), GRAPH_SUCCESS);
-  dyn_output0 = op_desc->GetOutputDesc("dy_output0");
-  auto dyn_output1 = op_desc->GetOutputDesc("dy_output1");
-  ASSERT_EQ(dyn_output0.GetDataType(), DT_INT32);
-  ASSERT_EQ(dyn_output1.GetDataType(), DT_INT32);
+// 试图在无提升规则的单类型间提升
+REG_OP(Op14)
+    .INPUT(input1, "T1")
+    .INPUT(input2, "T2")
+    .OUTPUT(output1, "T3")
+    .DATATYPE(T1, ListTensorType({DT_INT32, DT_FLOAT}))
+    .DATATYPE(T2, ListTensorType({DT_INT64, DT_FLOAT}))
+    .DATATYPE(T3, Promote({"T1", "T2"}))
+    .OP_END_FACTORY_REG(Op14);
+TEST_F(UTInferDataType, sym_infer_for_dtype_promotion_unpromotable_types) {
+  OpDtypeInfer("Op14")     // 提升失败，无提升规则
+      .Input(DT_VARIANT)   // T1
+      .Input(DT_RESOURCE)  // T2
+      .AssertFailed();
+}
+// 试图在无提升规则的List类型间提升
+REG_OP(Op15)
+    .DYNAMIC_INPUT(input1, "T1")
+    .DYNAMIC_INPUT(input2, "T2")
+    .OUTPUT(output1, "T3")
+    .DATATYPE(T1, ListTensorType({DT_FLOAT16, DT_VARIANT}))
+    .DATATYPE(T2, ListTensorType({DT_FLOAT, DT_RESOURCE}))
+    .DATATYPE(T3, Promote({"T1", "T2"}))
+    .OP_END_FACTORY_REG(Op15);
+TEST_F(UTInferDataType, sym_infer_for_dtype_promotion_unpromotable_list_types) {
+  OpDtypeInfer("Op15")                  // 提升失败，ListType中的某个无提升规则
+      .Input({DT_FLOAT16, DT_VARIANT})  // T1
+      .Input({DT_FLOAT, DT_RESOURCE})   // T2
+      .AssertFailed();
 }
 
-// dynamic输入若无listT定义，则退化为T，需要横向校验一致性
-TEST_F(UTInferDataType, infer_from_dynamic_input_without_list_tensor_type_consistant_check_fail) {
-  auto op = OperatorFactory::CreateOperator("test1", "DynamicInputOutputOpWithT");
-  auto op_desc = OpDescUtils::GetOpDescFromOperator(op);
-  ASSERT_NE(op_desc, nullptr);
-  op_desc->AddDynamicInputDesc("dy_input", 2, true);
-  op_desc->AddDynamicOutputDesc("dy_output", 2, true);
-  auto dy_input0 = op_desc->MutableInputDesc("dy_input0");
-  auto dy_input1 = op_desc->MutableInputDesc("dy_input1");
-  ASSERT_NE(dy_input0, nullptr);
-  ASSERT_NE(dy_input1, nullptr);
-  dy_input0->SetDataType(DT_INT32);
-  dy_input1->SetDataType(DT_INT64);
-
-  auto dyn_output0 = op_desc->GetOutputDesc("dy_output0");
-  ASSERT_EQ(dyn_output0.GetDataType(), DT_FLOAT);
-  ASSERT_EQ(op_desc->VerifyIR(), GRAPH_SUCCESS);
-  ASSERT_EQ(op_desc->impl_->VerifyInputDataType(), GRAPH_PARAM_INVALID);
-  ASSERT_EQ(op_desc->DefaultInferDataType(), GRAPH_PARAM_INVALID);
+/* ---------- 异常IR注册校验能力 ---------- */
+REG_OP(Op10)
+    .INPUT(input1, "T1")
+    .OUTPUT(output1, "T2")  // 异常IR注册，PromoteDtype中只有一个类型
+    .DATATYPE(T1, TensorType({DT_FLOAT16, DT_FLOAT}))
+    .DATATYPE(T2, Promote({"T1"}))
+    .OP_END_FACTORY_REG(Op10);
+TEST_F(UTInferDataType, sym_infer_for_dtype_promotion_3) {
+  OpDtypeInfer("Op10").Input(DT_FLOAT16).AssertFailed();
 }
 
-//================================================================================================
-// infer from attr, dst_type属性的类型为Int
-REG_OP(FixIOOpWithAttr)
-    .INPUT(fix_input1, "T")
-    .REQUIRED_ATTR(dst_type, Int)
-    .OUTPUT(fix_output1, "dst_type")
-    .DATATYPE(dst_type, TensorType({DT_BOOL, DT_INT64}))
-    .DATATYPE(T, TensorType({DT_INT32, DT_INT64}))
-    .OP_END_FACTORY_REG(FixIOOpWithAttr);
-
-TEST_F(UTInferDataType, infer_from_required_attr_success) {
-  auto op = OperatorFactory::CreateOperator("test1", "FixIOOpWithAttr");
-  auto op_desc = OpDescUtils::GetOpDescFromOperator(op);
-  ASSERT_NE(op_desc, nullptr);
-  auto input_fix_1 = op_desc->MutableInputDesc("fix_input1");
-  AttrUtils::SetInt(op_desc, "dst_type", 12);
-  ASSERT_NE(input_fix_1, nullptr);
-  input_fix_1->SetDataType(DT_INT32);
-
-  auto output_fix = op_desc->GetOutputDesc("fix_output1");
-  ASSERT_EQ(output_fix.GetDataType(), DT_FLOAT);
-  ASSERT_EQ(op_desc->VerifyIR(), GRAPH_SUCCESS);
-  ASSERT_EQ(op_desc->DefaultInferDataType(), GRAPH_SUCCESS);
-  output_fix = op_desc->GetOutputDesc("fix_output1");
-  ASSERT_EQ(output_fix.GetDataType(), DT_BOOL);
+REG_OP(Op11)
+    .INPUT(input1, "T1")
+    .DYNAMIC_INPUT(input2, "T2")
+    .OUTPUT(output1, "T3")  // 异常IR注册，TensorType和ListTensorType间试图提升
+    .DATATYPE(T1, TensorType({DT_FLOAT16, DT_FLOAT}))
+    .DATATYPE(T2, ListTensorType({DT_INT64, DT_FLOAT}))
+    .DATATYPE(T3, Promote({"T1", "T2"}))
+    .OP_END_FACTORY_REG(Op11);
+TEST_F(UTInferDataType, sym_infer_for_dtype_promotion_4) {
+  OpDtypeInfer("Op11").Input(DT_FLOAT16).Input({DT_INT64, DT_FLOAT}).AssertFailed();
 }
 
-TEST_F(UTInferDataType, infer_from_attr_check_attr_out_of_range) {
-  auto op = OperatorFactory::CreateOperator("test1", "FixIOOpWithAttr");
-  auto op_desc = OpDescUtils::GetOpDescFromOperator(op);
-  ASSERT_NE(op_desc, nullptr);
-  auto input_fix_1 = op_desc->MutableInputDesc("fix_input1");
-  AttrUtils::SetInt(op_desc, "dst_type", 15);
-  ASSERT_NE(input_fix_1, nullptr);
-  input_fix_1->SetDataType(DT_INT32);
-
-  auto output_fix = op_desc->GetOutputDesc("fix_output1");
-  ASSERT_EQ(output_fix.GetDataType(), DT_FLOAT);
-  ASSERT_EQ(op_desc->VerifyIR(), GRAPH_SUCCESS);
-  ASSERT_EQ(op_desc->impl_->VerifyInputDataType(), GRAPH_SUCCESS);
-  ASSERT_EQ(op_desc->DefaultInferDataType(), GRAPH_PARAM_INVALID);
+REG_OP(Op12)
+    .OUTPUT(output1, ListTensorType({DT_FLOAT16, DT_FLOAT}))  // 输出为老旧方式注册的ListTensorType
+    .OP_END_FACTORY_REG(Op12);
+TEST_F(UTInferDataType, sym_infer_for_legacy_list_type_output) {
+  OpDtypeInfer("Op12").AssertFailed();
 }
 
-TEST_F(UTInferDataType, infer_from_attr_check_input_out_of_range) {
-  auto op = OperatorFactory::CreateOperator("test1", "FixIOOpWithAttr");
-  auto op_desc = OpDescUtils::GetOpDescFromOperator(op);
-  ASSERT_NE(op_desc, nullptr);
-  auto input_fix_1 = op_desc->MutableInputDesc("fix_input1");
-  AttrUtils::SetInt(op_desc, "dst_type", 12);
-  ASSERT_NE(input_fix_1, nullptr);
-  input_fix_1->SetDataType(DT_BOOL);
-
-  ASSERT_EQ(op_desc->VerifyIR(), GRAPH_SUCCESS);
-  ASSERT_EQ(op_desc->impl_->VerifyInputDataType(), GRAPH_PARAM_INVALID);
-  ASSERT_EQ(op_desc->DefaultInferDataType(), GRAPH_PARAM_INVALID);
+/* ---------- 符号方式注册时的类型校验能力 ---------- */
+// 符号不用于任何类型推导
+REG_OP(Op13)
+    .INPUT(input1, "T1")
+    .OPTIONAL_INPUT(input2, "T2")
+    .DYNAMIC_INPUT(input3, "T3")
+    .DYNAMIC_INPUT(input4, "T4")
+    .DATATYPE(T1, TensorType({DT_FLOAT16}))
+    .DATATYPE(T2, TensorType({DT_FLOAT16}))
+    .DATATYPE(T3, TensorType({DT_FLOAT16, DT_FLOAT}))
+    .DATATYPE(T4, ListTensorType({DT_FLOAT16, DT_FLOAT}))
+    .OP_END_FACTORY_REG(Op13);
+TEST_F(UTInferDataType, sym_infer_for_type_check_for_unused_sym_succeed) {
+  OpDtypeInfer("Op13")
+      .Input(DT_FLOAT16)
+      .Input(DT_FLOAT16)
+      .Input({DT_FLOAT16, DT_FLOAT16})
+      .Input({DT_FLOAT16, DT_FLOAT})
+      .AssertSucceed();
+}
+TEST_F(UTInferDataType, sym_infer_for_type_check_for_unused_sym_required_input_dtype_out_of_range) {
+  OpDtypeInfer("Op13")
+      .Input(DT_FLOAT)
+      .Input(DT_FLOAT16)
+      .Input({DT_FLOAT16, DT_FLOAT16})
+      .Input({DT_FLOAT16, DT_FLOAT})
+      .AssertFailed();
+}
+TEST_F(UTInferDataType, sym_infer_for_type_check_for_unused_sym_opt_input_dtype_out_of_range) {
+  OpDtypeInfer("Op13")
+      .Input(DT_FLOAT16)
+      .Input(DT_FLOAT)
+      .Input({DT_FLOAT16, DT_FLOAT16})
+      .Input({DT_FLOAT16, DT_FLOAT})
+      .AssertFailed();
+}
+TEST_F(UTInferDataType, sym_infer_for_type_check_for_unused_sym_dyn_input_dtype_out_of_range) {
+  OpDtypeInfer("Op13")
+      .Input(DT_FLOAT16)
+      .Input(DT_FLOAT16)
+      .Input({DT_FLOAT16, DT_INT32})
+      .Input({DT_FLOAT16, DT_FLOAT})
+      .AssertFailed();
+}
+TEST_F(UTInferDataType, sym_infer_for_type_check_for_unused_sym_dyn_input_dtype_mismatch) {
+  OpDtypeInfer("Op13")
+      .Input(DT_FLOAT16)
+      .Input(DT_FLOAT16)
+      .Input({DT_FLOAT16, DT_FLOAT})
+      .Input({DT_FLOAT16, DT_FLOAT})
+      .AssertFailed();
+}
+TEST_F(UTInferDataType, sym_infer_for_type_check_for_unused_sym_dyn_list_input_dtype_out_of_range) {
+  OpDtypeInfer("Op13")
+      .Input(DT_FLOAT16)
+      .Input(DT_FLOAT16)
+      .Input({DT_FLOAT16, DT_FLOAT16})
+      .Input({DT_FLOAT16, DT_INT32})
+      .AssertFailed();
 }
 
-// infer from attr, dst_type属性的类型为Type
-REG_OP(FixIOOpWithAttrType)
-    .INPUT(fix_input1, "T")
-    .ATTR(dst_type, Type, DT_BOOL)
-    .OUTPUT(fix_output1, "dst_type")
-    .DATATYPE(dst_type, TensorType({DT_BOOL, DT_INT64}))
-    .DATATYPE(T, TensorType({DT_INT32, DT_INT64}))
-    .OP_END_FACTORY_REG(FixIOOpWithAttrType);
+/* 测试IR改造后，基于老旧头文件编译的IR能基于CANN中的新IR使用符号化推导的能力
+ OpLegacy的IR为老旧IR，不支持类型推导，
+ CompatOpCurrent模拟当前版本的cann包，其中OpLegacy的IR改造为支持类型推导
+ CompatOpFeature模拟未来版本的cann包，其中OpLegacy的IR改造为支持类型推导及新增类型DT_INT32支持
+*/
+namespace {
+REG_OP(CompatOpCurrent)
+    .INPUT(input1, "T")
+    .OUTPUT(output1, "T")
+    .DATATYPE(T, TensorType({DT_FLOAT16, DT_FLOAT}))
+    .OP_END_FACTORY_REG(CompatOpCurrent);
 
-// 从属性值推导
-TEST_F(UTInferDataType, infer_from_attr_type_success) {
-  auto op = OperatorFactory::CreateOperator("test1", "FixIOOpWithAttrType");
-  auto op_desc = OpDescUtils::GetOpDescFromOperator(op);
-  ASSERT_NE(op_desc, nullptr);
-  auto input_fix_1 = op_desc->MutableInputDesc("fix_input1");
-  AttrUtils::SetDataType(op_desc, "dst_type", DT_INT64);
-  ASSERT_NE(input_fix_1, nullptr);
-  input_fix_1->SetDataType(DT_INT32);
+REG_OP(CompatOpFeature)
+    .INPUT(input1, "T")
+    .OUTPUT(output1, "T")
+    .DATATYPE(T, TensorType({DT_FLOAT16, DT_FLOAT, DT_INT32}))
+    .OP_END_FACTORY_REG(CompatOpFeature);
 
-  auto output_fix = op_desc->GetOutputDesc("fix_output1");
-  ASSERT_EQ(output_fix.GetDataType(), DT_FLOAT);
-  ASSERT_EQ(op_desc->VerifyIR(), GRAPH_SUCCESS);
-  ASSERT_EQ(op_desc->DefaultInferDataType(), GRAPH_SUCCESS);
-  output_fix = op_desc->GetOutputDesc("fix_output1");
-  ASSERT_EQ(output_fix.GetDataType(), DT_INT64);
+void MockLoadOpsProtoCurrent() {
+  OperatorFactoryImpl::SetRegisterOverridable(true);
+  static const OperatorCreatorRegister g_register_compat_feature(
+      "OpLegacy", [](const AscendString &name) { return op::CompatOpCurrent(name); });
+  OperatorFactoryImpl::SetRegisterOverridable(false);
 }
 
-// 从属性默认值推导
-TEST_F(UTInferDataType, infer_from_attr_type_default_value_success) {
-  auto op = OperatorFactory::CreateOperator("test1", "FixIOOpWithAttrType");
-  auto op_desc = OpDescUtils::GetOpDescFromOperator(op);
-  ASSERT_NE(op_desc, nullptr);
-  auto input_fix_1 = op_desc->MutableInputDesc("fix_input1");
-  ASSERT_NE(input_fix_1, nullptr);
-  input_fix_1->SetDataType(DT_INT32);
+void MockLoadOpsProtoFeature() {
+  OperatorFactoryImpl::SetRegisterOverridable(true);
+  static const OperatorCreatorRegister g_register_compat_feature(
+      "OpLegacy", [](const AscendString &name) { return op::CompatOpFeature(name); });
+  OperatorFactoryImpl::SetRegisterOverridable(false);
+}
+}  // namespace
 
-  auto output_fix = op_desc->GetOutputDesc("fix_output1");
-  ASSERT_EQ(output_fix.GetDataType(), DT_FLOAT);
-  ASSERT_EQ(op_desc->VerifyIR(), GRAPH_SUCCESS);
-  ASSERT_EQ(op_desc->DefaultInferDataType(), GRAPH_SUCCESS);
-  output_fix = op_desc->GetOutputDesc("fix_output1");
-  ASSERT_EQ(output_fix.GetDataType(), DT_BOOL);
+REG_OP(OpLegacy)
+    .INPUT(input1, TensorType({DT_FLOAT16, DT_FLOAT}))
+    .OUTPUT(output1, TensorType({DT_FLOAT16, DT_FLOAT}))
+    .OP_END_FACTORY_REG(OpLegacy);
+
+TEST_F(UTInferDataType, sym_infer_for_compat_with_legacy_ir) {
+  // 原始OpLegacy不支持类型推导
+  OpDtypeInfer("OpLegacy").Input(DT_FLOAT16).AssertFailed();
+  OpDtypeInfer("OpLegacy").Input(DT_INT32).AssertFailed();
+
+  // 模拟在老的app中加载新的ops proto，其中的IR相较于Legacy支持了类型推导
+  MockLoadOpsProtoCurrent();
+
+  // 验证新创建的OpLegacy能正常类型推导，但是不支持新增类型DT_INT32
+  OpDtypeInfer("OpLegacy").Input(DT_FLOAT16).Expect(DT_FLOAT16).AssertSucceed();
+  OpDtypeInfer("OpLegacy").Input(DT_INT32).AssertFailed();  // 此时仍不支持DT_INT32
+
+  // 模拟将来已经支持符号推导编译后，加载未来版本ops proto, IR新增支持类型场景，其中的IR相较于Legacy支持了类型推导及新增类型DT_INT32支持
+  MockLoadOpsProtoFeature();
+
+  // 验证新创建的OpLegacy能正常类型推导，同时支持新增类型DT_INT32
+  OpDtypeInfer("OpLegacy").Input(DT_FLOAT16).Expect(DT_FLOAT16).AssertSucceed();
+  OpDtypeInfer("OpLegacy").Input(DT_INT32).Expect(DT_INT32).AssertSucceed();
 }
 
-// infer from attr, dst_type属性的类型为Tensor，错误的IR应该报错
-REG_OP(FixIOOpWithAttrWrongIr)
-    .INPUT(fix_input1, "T")
-    .ATTR(dst_type, Bool, false)
-    .OUTPUT(fix_output1, "dst_type")
-    .DATATYPE(dst_type, TensorType({DT_BOOL, DT_INT64}))
-    .DATATYPE(T, TensorType({DT_INT32, DT_INT64}))
-    .OP_END_FACTORY_REG(FixIOOpWithAttrWrongIr);
+REG_OP(OpRecover)
+    .INPUT(input1, "T")
+    .OUTPUT(output1, "T")
+    .DATATYPE(T, TensorType({DT_FLOAT16, DT_FLOAT}))
+    .OP_END_FACTORY_REG(OpRecover);
 
-TEST_F(UTInferDataType, infer_from_attr_type_failed_wrong_ir) {
-  auto op = OperatorFactory::CreateOperator("test1", "FixIOOpWithAttrWrongIr");
-  auto op_desc = OpDescUtils::GetOpDescFromOperator(op);
-  ASSERT_NE(op_desc, nullptr);
-  auto input_fix_1 = op_desc->MutableInputDesc("fix_input1");
-  ASSERT_NE(input_fix_1, nullptr);
-  input_fix_1->SetDataType(DT_INT32);
+TEST_F(UTInferDataType, sym_infer_after_recover) {
+  auto desc = std::make_shared<OpDesc>();
+  desc->SetType("OpRecover");
+  desc->AddInputDesc("input1", GeTensorDesc(GeShape(), FORMAT_ND, DT_FLOAT16));
+  desc->AddOutputDesc("output1", GeTensorDesc(GeShape(), FORMAT_ND, DT_FLOAT16));
+  desc->AppendIrInput("input1", IrInputType::kIrInputRequired);
+  desc->AppendIrOutput("output1", IrOutputType::kIrOutputRequired);
 
-  auto output_fix = op_desc->GetOutputDesc("fix_output1");
-  ASSERT_EQ(output_fix.GetDataType(), DT_FLOAT);
-  ASSERT_EQ(op_desc->DefaultInferDataType(), GRAPH_INVALID_IR_DEF);
-}
-//================================================================================================
-// infer from output
-REG_OP(FixIOOp_OutputIsFix)
-    .INPUT(fix_input1, "T")
-    .INPUT(fix_input2, "T")
-    .OUTPUT(fix_output, "T2")
-    .DATATYPE(T2, TensorType({DT_BOOL}))
-    .OP_END_FACTORY_REG(FixIOOp_OutputIsFix);
-TEST_F(UTInferDataType, infer_from_output_success) {
-  auto op = OperatorFactory::CreateOperator("test1", "FixIOOp_OutputIsFix");
-  auto op_desc = OpDescUtils::GetOpDescFromOperator(op);
-  ASSERT_NE(op_desc, nullptr);
-  auto fix_input1 = op_desc->MutableInputDesc("fix_input1");
-  auto fix_input2 = op_desc->MutableInputDesc("fix_input2");
-  ASSERT_NE(fix_input1, nullptr);
-  ASSERT_NE(fix_input2, nullptr);
-  fix_input1->SetDataType(DT_INT32);
-  fix_input2->SetDataType(DT_INT32);
+  OpDtypeInfer(desc).Input(DT_FLOAT16).AssertFailed();
 
-  auto output_fix = op_desc->GetOutputDesc("fix_output");
-  ASSERT_EQ(output_fix.GetDataType(), DT_FLOAT);
-  ASSERT_EQ(op_desc->VerifyIR(), GRAPH_SUCCESS);
-  ASSERT_EQ(op_desc->DefaultInferDataType(), GRAPH_SUCCESS);
-  output_fix = op_desc->GetOutputDesc("fix_output");
-  ASSERT_EQ(output_fix.GetDataType(), DT_BOOL);
-}
+  auto graph = std::make_shared<ComputeGraph>("test");
+  graph->AddNode(desc);
+  RecoverIrDefinitions(graph);
 
-//================================================================================================
-// validate IR
-// 输出由输入推导
-REG_OP(FixIOOp_OutputNoMapping)
-    .INPUT(fix_input1, "T")
-    .INPUT(fix_input2, "T")
-    .OUTPUT(fix_output, "T2")
-    .OP_END_FACTORY_REG(FixIOOp_OutputNoMapping);
-
-TEST_F(UTInferDataType, validate_ir_output_no_mapping) {
-  auto op = OperatorFactory::CreateOperator("test1", "FixIOOp_OutputNoMapping");
-  auto op_desc = OpDescUtils::GetOpDescFromOperator(op);
-  ASSERT_NE(op_desc, nullptr);
-  auto input_fix_1 = op_desc->MutableInputDesc("fix_input1");
-  auto input_fix_2 = op_desc->MutableInputDesc("fix_input2");
-  ASSERT_NE(input_fix_1, nullptr);
-  ASSERT_NE(input_fix_2, nullptr);
-  input_fix_1->SetDataType(DT_FLOAT16);
-  input_fix_2->SetDataType(DT_FLOAT16);
-
-  auto output_fix = op_desc->GetOutputDesc("fix_output");
-
-  ASSERT_EQ(output_fix.GetDataType(), DT_FLOAT);
-  ASSERT_EQ(op_desc->VerifyIR(), GRAPH_INVALID_IR_DEF);
-  ASSERT_EQ(op_desc->DefaultInferDataType(), GRAPH_INVALID_IR_DEF);
-}
-
-REG_OP(DynamicIOOp_OutputNoMapping)
-    .INPUT(fix_input1, "T")
-    .DYNAMIC_INPUT(dy_input2, "T")
-    .DYNAMIC_OUTPUT(dy_output, "T2")
-    .OP_END_FACTORY_REG(DynamicIOOp_OutputNoMapping);
-TEST_F(UTInferDataType, validate_ir_dynamic_output_no_mapping) {
-  auto op = OperatorFactory::CreateOperator("test1", "DynamicIOOp_OutputNoMapping");
-  auto op_desc = OpDescUtils::GetOpDescFromOperator(op);
-  ASSERT_NE(op_desc, nullptr);
-  auto input_fix_1 = op_desc->MutableInputDesc("fix_input1");
-  ASSERT_NE(input_fix_1, nullptr);
-  input_fix_1->SetDataType(DT_FLOAT16);
-
-  ASSERT_EQ(op_desc->VerifyIR(), GRAPH_INVALID_IR_DEF);
-  ASSERT_EQ(op_desc->DefaultInferDataType(), GRAPH_INVALID_IR_DEF);
-}
-
-REG_OP(FixDynamicIOOp_T_conflict)
-    .INPUT(fix_input1, "T")
-    .DYNAMIC_INPUT(dy_input, "T")
-    .DYNAMIC_INPUT(dy_output, "T")
-    .DATATYPE(T, ListTensorType(TensorType::ALL()))
-    .OP_END_FACTORY_REG(FixDynamicIOOp_T_conflict);
-TEST_F(UTInferDataType, validate_ir_fix_input_on_list_tensor_type) {
-  auto op = OperatorFactory::CreateOperator("test1", "FixDynamicIOOp_T_conflict");
-  auto op_desc = OpDescUtils::GetOpDescFromOperator(op);
-  ASSERT_NE(op_desc, nullptr);
-  op_desc->AddDynamicInputDesc("dy_input", 2, true);
-  op_desc->AddDynamicOutputDesc("dy_output", 2, true);
-  auto input_fix_1 = op_desc->MutableInputDesc("fix_input1");
-  auto dy_input0 = op_desc->MutableInputDesc("dy_input0");
-  auto dy_input1 = op_desc->MutableInputDesc("dy_input1");
-  ASSERT_NE(input_fix_1, nullptr);
-  ASSERT_NE(dy_input0, nullptr);
-  ASSERT_NE(dy_input1, nullptr);
-  input_fix_1->SetDataType(DT_INT32);
-  dy_input0->SetDataType(DT_BOOL);
-  dy_input1->SetDataType(DT_BOOL);
-
-  auto dy_output0 = op_desc->GetOutputDesc("dy_output0");
-  auto dy_output1 = op_desc->GetOutputDesc("dy_output1");
-  ASSERT_EQ(dy_output0.GetDataType(), DT_FLOAT);
-  ASSERT_EQ(op_desc->VerifyIR(), GRAPH_INVALID_IR_DEF);
-  ASSERT_EQ(op_desc->DefaultInferDataType(), GRAPH_INVALID_IR_DEF);
+  OpDtypeInfer(desc).Input(DT_FLOAT16).Expect(DT_FLOAT16).AssertSucceed();
 }
 }  // namespace ge

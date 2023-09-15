@@ -82,11 +82,20 @@ void OpImplSpaceRegistry::MergeFunctions(OpImplKernelRegistry::OpImplFunctions &
   MERGE_FUNCTION(merged_funcs, src_funcs, op_type.c_str(), compile_info_creator)
   MERGE_FUNCTION(merged_funcs, src_funcs, op_type.c_str(), compile_info_deleter)
   MERGE_FUNCTION(merged_funcs, src_funcs, op_type.c_str(), tiling)
+  MERGE_FUNCTION(merged_funcs, src_funcs, op_type.c_str(), op_execute_func)
 
   if (merged_funcs.max_tiling_data_size == 0U) {
     merged_funcs.max_tiling_data_size = src_funcs.max_tiling_data_size;
   } else if (src_funcs.max_tiling_data_size != 0U) {
     GELOGW("op type %s max_tiling_data_size has been registered", op_type.c_str());
+  } else {
+    // 已经注册且没有重复注册
+  }
+
+  if (merged_funcs.host_inputs == 0U) {
+    merged_funcs.host_inputs = src_funcs.host_inputs;
+  } else if (src_funcs.host_inputs != 0U) {
+    GELOGW("op type %s host_inputs has been registered", op_type.c_str());
   } else {
     // 已经注册且没有重复注册
   }

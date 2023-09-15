@@ -91,14 +91,6 @@ graphStatus IRMetaData::AddRegisterOptionalInputName(const string &name) {
   return GRAPH_SUCCESS;
 }
 
-graphStatus IRMetaData::VerifyIR() const {
-  auto ret = VerifyDataTypeSymbol();
-  if ((ret != GRAPH_SUCCESS) && (ret != OP_WITHOUT_IR_DATATYPE_INFER_RULE)) {
-    return ret;
-  }
-  return GRAPH_SUCCESS;
-}
-
 bool IRMetaData::operator==(const IRMetaData &other) const {
   return IsEqual(this->optional_input_names_, other.optional_input_names_,
                  "OpDesc.ir_meta.optional_input_names_");
@@ -123,63 +115,5 @@ void IRMetaData::AppendIrOutput(std::string name, IrOutputType output_type) {
 
 const std::vector<std::pair<std::string, IrOutputType>> &IRMetaData::GetIrOutputs() const {
   return ir_outputs_.ir_outputs;
-}
-
-bool IRMetaData::IsOutputSymbolValid(const std::string &output_symbol) const {
-  // output is infer by attr
-  const auto iter = std::find(ir_attr_names_.begin(), ir_attr_names_.end(), output_symbol);
-  if (iter != ir_attr_names_.end()) {
-    return true;
-  }
-
-  // output is infer by input
-  const auto &input_name = dtype_symbol_store_.GetInputNameFromDataTypeSymbol(output_symbol);
-  if (!input_name.empty()) {
-    return true;
-  }
-
-  // fix output datatype
-  const auto &dtype_validator = dtype_symbol_store_.GetSymbolValidator(output_symbol);
-  if (dtype_validator.IsValidSymbol() && dtype_validator.IsFixedRange()) {
-    return true;
-  }
-  return false;
-}
-
-graphStatus IRMetaData::VerifyDataTypeSymbol() const {
-  for (const auto &output_2_type : ir_outputs_.ir_outputs) {
-    const auto &output_name = output_2_type.first;
-    const auto &output_symbol = dtype_symbol_store_.GetOutputDataTypeSymbol(output_name);
-    if (output_symbol.empty()) {
-      // no output symbol, may has user-defined infer rule, skip infer rule verify
-      return OP_WITHOUT_IR_DATATYPE_INFER_RULE;
-    }
-
-    if (IsOutputSymbolValid(output_symbol)) {
-      continue;
-    }
-
-    GELOGE(GRAPH_INVALID_IR_DEF,
-           "Output %s data type symbol %s is not pre-defined. Please check IR.",
-           output_name.c_str(),
-           output_symbol.c_str());
-    return GRAPH_INVALID_IR_DEF;
-  }
-
-  // check input type with datatype symbol type
-  for (const auto &input_2_type : GetIrInputs()) {
-    const auto &ir_input = input_2_type.first;
-    const auto &ir_input_type = input_2_type.second;
-    if ((ir_input_type == kIrInputRequired) || (ir_input_type == kIrInputOptional)) {
-      const auto &dtype_symbol = dtype_symbol_store_.GetInputDataTypeSymbol(ir_input);
-      const auto &dtype_symbol_validator = dtype_symbol_store_.GetSymbolValidator(dtype_symbol);
-      if (dtype_symbol_validator.symbol_type == DataTypeSymbolType::kListTensorType) {
-        GELOGE(GRAPH_INVALID_IR_DEF, "Op %s input %s is fix input, its datatype symbol should not in list type.",
-               op_name_.c_str(), ir_input.c_str());
-        return GRAPH_INVALID_IR_DEF;
-      }
-    }
-  }
-  return GRAPH_SUCCESS;
 }
 } // namespace ge

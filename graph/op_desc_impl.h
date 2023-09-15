@@ -135,7 +135,6 @@ class OpDescImpl {
   void AddVerifierFunc(const std::function<graphStatus(Operator &)> &func);
   void AddInferDataSliceFunc(const std::function<graphStatus(Operator &)> &func);
 
-  graphStatus VerifyIR() const;
   graphStatus DefaultInferDataType(const OpDescPtr &op_desc);
   graphStatus DefaultInferFormat(const ConstOpDescPtr &op_desc) const;
 
@@ -204,22 +203,6 @@ class OpDescImpl {
  private:
   void DeSerializeOpDefToMetaData(const proto::OpDef &op_def);
   void SerializeMetaDataToOpDef(proto::OpDef * const op_def);
-  // infer datatype
-  graphStatus VerifyInputDataType() const;
-  graphStatus CollectInputDataTypeBySymbol(std::unordered_map<std::string, DataType> &symbol_2_input_dtype) const;
-  graphStatus VerifyInputDataTypeConsistent(const std::unordered_map<std::string,
-                                                                     DataType> &symbol_2_input_dtype) const;
-  graphStatus VerifyInputDataTypeInRange(const std::unordered_map<std::string, DataType> &symbol_2_input_dtype) const;
-  DataTypeInferStrategy GetDataTypeInferStrategy(const string &datatype_symbol) const;
-  graphStatus InferDataTypeForOutput(const std::string &ir_output, std::vector<DataType> &dst_types);
-  graphStatus InferDataTypeForOutputs(const OpDescPtr &op_desc);
-  graphStatus TryInferDataTypeFromAttr(const string &datatype_symbol, DataType &dst_type);
-  graphStatus TryInferDataTypeFromInput(const string &datatype_symbol, std::vector<DataType> &dst_types);
-  graphStatus TryInferDataTypeFromRequiredInput(const std::string &ir_input_name, const string &datatype_symbol,
-                                                DataType &dst_type);
-  graphStatus TryInferDataTypeFromDynamicInput(const std::string &ir_input_name, const string &datatype_symbol,
-                                               std::vector<DataType> &dst_types);
-  graphStatus TryInferDataTypeFromOutput(const string &datatype_symbol, DataType &dst_type);
 
   friend class AttrUtils;
   friend class OpDescUtils;

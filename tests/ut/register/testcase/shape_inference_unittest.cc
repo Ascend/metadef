@@ -818,7 +818,7 @@ TEST_F(ShapeInferenceUT, CallInferV2Func_RegisterAndGetReiledOnResource) {
 REG_OP(TestDefaultInferDataType)
     .INPUT(input1, "T")
         .OUTPUT(output1, "T")
-        .DATATYPE(T2, TensorType({DT_DOUBLE}))
+        .DATATYPE(T, TensorType({DT_BOOL}))
         .OP_END_FACTORY_REG(TestDefaultInferDataType);
 TEST_F(ShapeInferenceUT, CallInferV2Func_TestDefaultInferShape) {
   auto op = OperatorFactory::CreateOperator("test7", "TestDefaultInferDataType");

@@ -1090,4 +1090,203 @@ TEST_F(UtestOpDescUtils, GetOutputIrIndexeByInstanceIndexe_UnknownOutputIrType_F
   auto ir_index_to_instance_index_pair_map = OpDescUtils::GetOutputIrIndexes2InstanceIndexesPairMap(op_desc);
   ASSERT_TRUE(ir_index_to_instance_index_pair_map.empty());
 }
+
+#define CHECK_IR_RANGE(Idx, Start, Num)                                                                                \
+  EXPECT_EQ(ir_ranges[Idx].first, Start);                                                                              \
+  EXPECT_EQ(ir_ranges[Idx].second, Num)
+
+REG_OP(DescUtilTestDynamicFirst)
+    .DYNAMIC_INPUT(input0, "T")
+    .INPUT(input1, "T")
+    .INPUT(input2, "T")
+    .DATATYPE(T, TensorType({DT_FLOAT}))
+    .OP_END_FACTORY_REG(DescUtilTestDynamicFirst);
+TEST_F(UtestOpDescUtils, get_input_desc_range_for_dynamic_first_ir_desc_end) {
+  auto op = op::DescUtilTestDynamicFirst();
+  op.create_dynamic_input_input0(2);  // Dynamic desc出现在尾部
+  auto desc = OpDescUtils::GetOpDescFromOperator(op);
+  auto ir_ranges = OpDescUtils::GetInputIrIndexes2InstanceIndexesPairMap(desc);
+
+  EXPECT_EQ(ir_ranges.size(), 3);
+  // |0       |1      |2        |3
+  // [input1, input2, input0:0, input0:1]
+  // dynamic input1
+  CHECK_IR_RANGE(0, 2, 2);
+  // static input2
+  CHECK_IR_RANGE(1, 0, 1);
+  // static input2
+  CHECK_IR_RANGE(2, 1, 1);
 }
+TEST_F(UtestOpDescUtils, get_input_desc_range_for_dynamic_first_ir_desc_begin) {
+  auto op = op::DescUtilTestDynamicFirst();
+  op.create_dynamic_input_input0(2, false); // Dynamic desc出现在头部
+  auto desc = OpDescUtils::GetOpDescFromOperator(op);
+  auto ir_ranges = OpDescUtils::GetInputIrIndexes2InstanceIndexesPairMap(desc);
+
+  EXPECT_EQ(ir_ranges.size(), 3);
+  // |0         |1        |2      |3
+  // [input0:0, input0:1, input1, input2]
+  // dynamic input1
+  CHECK_IR_RANGE(0, 0, 2);
+  // static input2
+  CHECK_IR_RANGE(1, 2, 1);
+  // static input2
+  CHECK_IR_RANGE(2, 3, 1);
+}
+TEST_F(UtestOpDescUtils, get_input_desc_range_for_dynamic_first_ir_desc_middle) {
+  auto op = op::DescUtilTestDynamicFirst();
+  op.create_dynamic_input_byindex_input0(2, 1);  // Dynamic desc出现在中间
+  auto desc = OpDescUtils::GetOpDescFromOperator(op);
+  auto ir_ranges = OpDescUtils::GetInputIrIndexes2InstanceIndexesPairMap(desc);
+
+  EXPECT_EQ(ir_ranges.size(), 3);
+  // |0       |1        |2        |3
+  // [input1, input0:0, input0:1, input2]
+  // dynamic input1
+  CHECK_IR_RANGE(0, 1, 2);
+  // static input2
+  CHECK_IR_RANGE(1, 0, 1);
+  // static input2
+  CHECK_IR_RANGE(2, 3, 1);
+}
+
+REG_OP(DescUtilTestMultiDynamic)
+    .DYNAMIC_INPUT(input0, "T")
+    .DYNAMIC_INPUT(input1, "T")
+    .DATATYPE(T, TensorType({DT_FLOAT}))
+    .OP_END_FACTORY_REG(DescUtilTestMultiDynamic);
+TEST_F(UtestOpDescUtils, get_input_desc_range_for_mulit_dynamic) {
+  auto op = op::DescUtilTestMultiDynamic();
+  op.create_dynamic_input_input0(2);
+  op.create_dynamic_input_input1(2);
+  auto desc = OpDescUtils::GetOpDescFromOperator(op);
+  auto ir_ranges = OpDescUtils::GetInputIrIndexes2InstanceIndexesPairMap(desc);
+
+  EXPECT_EQ(ir_ranges.size(), 2);
+  // |0         |1        |2        |3
+  // [input0:0, input0:1, input1:0, input1:1]
+  // dynamic input0
+  CHECK_IR_RANGE(0, 0, 2);
+  // dynamic input1
+  CHECK_IR_RANGE(1, 2, 2);
+}
+
+TEST_F(UtestOpDescUtils, get_input_desc_range_for_mulit_dynamic_mis_order) {
+  auto op = op::DescUtilTestMultiDynamic();
+  op.create_dynamic_input_input1(2); // 首先创建input2
+  op.create_dynamic_input_input0(2);
+  auto desc = OpDescUtils::GetOpDescFromOperator(op);
+  auto ir_ranges = OpDescUtils::GetInputIrIndexes2InstanceIndexesPairMap(desc);
+
+  EXPECT_EQ(ir_ranges.size(), 2);
+  // |0         |1        |2        |3
+  // [input1:0, input1:1, input0:0, input0:1]
+  // dynamic input0
+  CHECK_IR_RANGE(0, 2, 2);
+  // dynamic input1
+  CHECK_IR_RANGE(1, 0, 2);
+}
+
+REG_OP(DescUtilTestUnfedOptional)
+    .OPTIONAL_INPUT(input0, "T")
+    .OPTIONAL_INPUT(input1, "T")
+    .OPTIONAL_INPUT(input2, "T")
+    .DATATYPE(T, TensorType({DT_FLOAT}))
+    .OP_END_FACTORY_REG(DescUtilTestUnfedOptional);
+TEST_F(UtestOpDescUtils, get_input_desc_instance_range_for_unfed_optional) {
+  auto op = op::DescUtilTestUnfedOptional();
+  auto desc = OpDescUtils::GetOpDescFromOperator(op);  // 全部为optional且未feed
+  auto ir_ranges = OpDescUtils::GetInputIrIndexes2InstanceIndexesPairMap(desc);
+
+  EXPECT_EQ(ir_ranges.size(), 3);
+  CHECK_IR_RANGE(0, 0, 0);
+  CHECK_IR_RANGE(1, 0, 0);
+  CHECK_IR_RANGE(2, 0, 0);
+}
+TEST_F(UtestOpDescUtils, get_input_desc_raw_range_for_unfed_optional) {
+  auto op = op::DescUtilTestUnfedOptional();
+  auto desc = OpDescUtils::GetOpDescFromOperator(op);  // 全部为optional且未feed
+  std::map<size_t, std::pair<size_t, size_t>> ir_ranges;
+  ASSERT_EQ(OpDescUtils::GetIrInputRawDescRange(desc, ir_ranges), GRAPH_SUCCESS);
+
+  EXPECT_EQ(ir_ranges.size(), 3);
+  CHECK_IR_RANGE(0, 0, 0);  // Raw range会存储其desc在数据上的位置
+  CHECK_IR_RANGE(1, 1, 0);
+  CHECK_IR_RANGE(2, 2, 0);
+}
+TEST_F(UtestOpDescUtils, get_input_desc_instance_range_for_unfed_optional_begin) {
+  auto op = op::DescUtilTestUnfedOptional();
+  auto desc = OpDescUtils::GetOpDescFromOperator(op);
+  desc->UpdateInputDesc("input1", GeTensorDesc());
+  desc->UpdateInputDesc("input2", GeTensorDesc());
+  auto ir_ranges = OpDescUtils::GetInputIrIndexes2InstanceIndexesPairMap(desc);
+
+  EXPECT_EQ(ir_ranges.size(), 3);
+  CHECK_IR_RANGE(0, 0, 0);
+  CHECK_IR_RANGE(1, 0, 1);
+  CHECK_IR_RANGE(2, 1, 1);
+}
+TEST_F(UtestOpDescUtils, get_input_desc_raw_range_for_unfed_optional_begin) {
+  auto op = op::DescUtilTestUnfedOptional();
+  auto desc = OpDescUtils::GetOpDescFromOperator(op);
+  desc->UpdateInputDesc("input1", GeTensorDesc());
+  desc->UpdateInputDesc("input2", GeTensorDesc());
+  std::map<size_t, std::pair<size_t, size_t>> ir_ranges;
+  ASSERT_EQ(OpDescUtils::GetIrInputRawDescRange(desc, ir_ranges), GRAPH_SUCCESS);
+
+  EXPECT_EQ(ir_ranges.size(), 3);
+  CHECK_IR_RANGE(0, 0, 0);
+  CHECK_IR_RANGE(1, 1, 1);
+  CHECK_IR_RANGE(2, 2, 1);
+}
+TEST_F(UtestOpDescUtils, get_input_desc_instance_range_for_unfed_optional_middle) {
+  auto op = op::DescUtilTestUnfedOptional();
+  auto desc = OpDescUtils::GetOpDescFromOperator(op);
+  desc->UpdateInputDesc("input0", GeTensorDesc());
+  desc->UpdateInputDesc("input2", GeTensorDesc());
+  auto ir_ranges = OpDescUtils::GetInputIrIndexes2InstanceIndexesPairMap(desc);
+
+  EXPECT_EQ(ir_ranges.size(), 3);
+  CHECK_IR_RANGE(0, 0, 1);
+  CHECK_IR_RANGE(1, 1, 0);
+  CHECK_IR_RANGE(2, 1, 1);
+}
+TEST_F(UtestOpDescUtils, get_input_desc_raw_range_for_unfed_optional_middle) {
+  auto op = op::DescUtilTestUnfedOptional();
+  auto desc = OpDescUtils::GetOpDescFromOperator(op);
+  desc->UpdateInputDesc("input0", GeTensorDesc());
+  desc->UpdateInputDesc("input2", GeTensorDesc());
+  std::map<size_t, std::pair<size_t, size_t>> ir_ranges;
+  ASSERT_EQ(OpDescUtils::GetIrInputRawDescRange(desc, ir_ranges), GRAPH_SUCCESS);
+
+  EXPECT_EQ(ir_ranges.size(), 3);
+  CHECK_IR_RANGE(0, 0, 1);
+  CHECK_IR_RANGE(1, 1, 0);
+  CHECK_IR_RANGE(2, 2, 1);
+}
+TEST_F(UtestOpDescUtils, get_input_desc_instance_range_for_unfed_optional_end) {
+  auto op = op::DescUtilTestUnfedOptional();
+  auto desc = OpDescUtils::GetOpDescFromOperator(op);
+  desc->UpdateInputDesc("input0", GeTensorDesc());
+  desc->UpdateInputDesc("input1", GeTensorDesc());
+  auto ir_ranges = OpDescUtils::GetInputIrIndexes2InstanceIndexesPairMap(desc);
+
+  EXPECT_EQ(ir_ranges.size(), 3);
+  CHECK_IR_RANGE(0, 0, 1);
+  CHECK_IR_RANGE(1, 1, 1);
+  CHECK_IR_RANGE(2, 2, 0);
+}
+TEST_F(UtestOpDescUtils, get_input_desc_raw_range_for_unfed_optional_end) {
+  auto op = op::DescUtilTestUnfedOptional();
+  auto desc = OpDescUtils::GetOpDescFromOperator(op);
+  desc->UpdateInputDesc("input0", GeTensorDesc());
+  desc->UpdateInputDesc("input1", GeTensorDesc());
+  std::map<size_t, std::pair<size_t, size_t>> ir_ranges;
+  ASSERT_EQ(OpDescUtils::GetIrInputRawDescRange(desc, ir_ranges), GRAPH_SUCCESS);
+
+  EXPECT_EQ(ir_ranges.size(), 3);
+  CHECK_IR_RANGE(0, 0, 1);
+  CHECK_IR_RANGE(1, 1, 1);
+  CHECK_IR_RANGE(2, 2, 0);
+}
+}  // namespace ge

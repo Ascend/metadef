@@ -21,7 +21,6 @@
 #include "detail/attributes_holder.h"
 #include "graph/range_vistor.h"
 #include "graph/ge_tensor.h"
-
 namespace ge {
 using std::map;
 using std::pair;
@@ -199,8 +198,6 @@ class OpDesc : public std::enable_shared_from_this<OpDesc>, public AttrHolder {
 
   void SetAtomicTilingFuncInfo(void *atomic_tiling_func_info);
 
-  graphStatus VerifyIR();
-
   graphStatus DefaultInferDataType();
 
   void AddInferFunc(const std::function<graphStatus(Operator &)> &func);
@@ -237,10 +234,12 @@ class OpDesc : public std::enable_shared_from_this<OpDesc>, public AttrHolder {
   void AppendIrOutput(std::string name, IrOutputType output_type);
   const std::vector<std::pair<std::string, IrOutputType>> &GetIrOutputs() const;
 
-  void RegisterDataTypeSymbol(const std::string &datatype_symbol, const TensorType &type_range);
-  void RegisterDataTypeSymbol(const std::string &datatype_symbol, const ListTensorType &type_range);
-  void RegisterIrInputDataTypeSymbol(const std::string &input_name, const std::string &datatype_symbol);
-  void RegisterIrOutputDataTypeSymbol(const std::string &output_name, const std::string &datatype_symbol);
+  void SetInputDtypeSymbol(const std::string &ir_input, IrInputType type, const std::string &sym_id);
+  void SetOutputDtypeSymbol(const std::string &ir_output, IrOutputType type, const std::string &sym_id);
+  void DeclareDtypeSymbol(const std::string &sym_id, const TensorType &type);
+  void DeclareDtypeSymbol(const std::string &sym_id, const ListTensorType &type);
+  void DeclareDtypeSymbol(const std::string &sym_id, const Promote &type);
+  void ShareDtypeSymbolsFrom(const ge::OpDesc &src);
 
   using AttrHolder::AddRequiredAttr;
   using AttrHolder::DelAttr;

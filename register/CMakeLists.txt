@@ -152,7 +152,6 @@ target_include_directories(register_static PUBLIC
 target_include_directories(register_static PRIVATE
     ${CMAKE_CURRENT_LIST_DIR}
     ${METADEF_DIR}
-    ${METADEF_DIR}/..
     ${CMAKE_BINARY_DIR}
     ${CMAKE_BINARY_DIR}/proto/metadef_protos
 )
