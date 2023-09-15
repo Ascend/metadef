@@ -1160,7 +1160,7 @@ bool InputIsLongLifeTimeNode(const NodePtr& node) {
       continue;
     }
     if ((!NodeUtils::IsConst(*peer_node)) && (peer_node->GetType() != VARIABLE)
-        && (peer_node->GetType() != VARIABLEV2)) {
+        && (peer_node->GetType() != VARIABLEV2) && (peer_node->GetType() != REFDATA)) {
       return false;
     } else {
       match = true;
