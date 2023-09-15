@@ -143,12 +143,7 @@ void OpsProtoManager::LoadOpsProtoPluginSo(const std::string &path) {
 
   // Load .so file
   for (const auto &elem : file_list) {
-#ifdef ONLY_COMPILE_OPEN_SRC
     OperatorFactoryImpl::SetRegisterOverridable(false);
-#else
-    OperatorFactoryImpl::SetRegisterOverridable(true);
-    GELOGD("OpsProtoManager plugin load %s in overridable mode.", elem.c_str());
-#endif
     void *const handle = mmDlopen(elem.c_str(), static_cast<int32_t>(static_cast<uint32_t>(MMPA_RTLD_NOW) |
         static_cast<uint32_t>(MMPA_RTLD_GLOBAL)));
     OperatorFactoryImpl::SetRegisterOverridable(false);
