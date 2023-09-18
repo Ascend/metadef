@@ -67,6 +67,8 @@ message TaskDef {
     NpuGetFloatStatusDef npu_get_float_status = 46;
     NpuClearFloatStatusDef npu_clear_float_status = 47;
     DvppTaskDef dvpp_task = 48;
+    NpuGetFloatDebugStatusDef npu_get_float_debug_status = 49;
+    NpuClearFloatDebugStatusDef npu_clear_float_debug_status = 50;
 }
 
 message KernelDef {
@@ -864,6 +866,18 @@ message NpuGetFloatStatusDef {
 }
 
 message NpuClearFloatStatusDef {
+    uint32 mode = 1;
+    uint32 op_index = 2;
+}
+
+message NpuGetFloatDebugStatusDef {
+    uint64 output_addr = 1;
+    uint32 output_size = 2;
+    uint32 mode = 3;
+    uint32 op_index = 4;
+}
+
+message NpuClearFloatDebugStatusDef {
     uint32 mode = 1;
     uint32 op_index = 2;
 }
