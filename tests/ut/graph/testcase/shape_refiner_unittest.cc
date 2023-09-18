@@ -25,15 +25,10 @@
 #include "graph/utils/op_desc_utils.h"
 #include "graph_builder_utils.h"
 #include "graph/debug/ge_op_types.h"
+#include "graph/debug/ge_attr_define.h"
 
 namespace ge {
-class UtestShapeRefiner : public testing::Test {
- protected:
-  void SetUp() {}
-
-  void TearDown() {}
-};
-
+namespace {
 static NodePtr CreateNode(const ComputeGraphPtr &graph, const string &name, const string &type, int in_num, int out_num) {
   OpDescPtr op_desc = std::make_shared<OpDesc>(name, type);
   op_desc->SetStreamId(0);
@@ -224,7 +219,168 @@ ComputeGraphPtr CreateGraphWithSubgraphDataToNetoutput() {
   return root_graph;
 }
 
-TEST_F(UtestShapeRefiner, infer_shape_and_type_for_running) {
+/*
+ *                      +-------------+   +-------------+
+ *                      | Cond Graph  |   | Body Graph  |
+ *                      | NetOutput(0)|   | NetOutput(1)|
+ *                      |    |        |   |    |        |
+ *   NetOutput          | LessThan_5  |   |  Add_1      |
+ *      | 0,1           |   |         |   |   |         |
+ *    while  ---------> | input1      |   | input2      |
+ *    /    \            +-------------+   +-------------+
+ * input1  input2
+ */
+
+ComputeGraphPtr BuildSimpleWhileGraph() {
+  const auto stub_func = [](Operator &op) { return GRAPH_SUCCESS; };
+  const std::vector<int64_t> shape{-1, -1, 224, 224};
+  // build main graph
+  ut::GraphBuilder main_builder("main_graph");
+  auto data_1 = main_builder.AddNode("data_1", "Data", 1, 1);
+  auto data_2 = main_builder.AddNode("data_2", "Data", 1, 1);
+  auto while_1 = main_builder.AddNode("while_1", "While", 2, 2);
+  auto output_1 = main_builder.AddNode("output_1", "NetOutput", 2, 1);
+  main_builder.AddDataEdge(data_1, 0, while_1, 0);
+  main_builder.AddDataEdge(data_2, 0, while_1, 1);
+  main_builder.AddDataEdge(while_1, 0, output_1, 0);
+  main_builder.AddDataEdge(while_1, 1, output_1, 1);
+  while_1->GetOpDesc()->AddInferFunc(stub_func);
+  auto main_graph = main_builder.GetGraph();
+  AttrUtils::SetInt(data_1->GetOpDesc(), ATTR_NAME_INDEX, 0);
+  output_1->GetOpDesc()->SetSrcName({"while_1"});
+  output_1->GetOpDesc()->SetSrcIndex({0, 1});
+
+  // build condition graph
+  ut::GraphBuilder cond_builder("cond_graph");
+  auto cond_data_1 = cond_builder.AddNode("cond_data_1", "Data", 1, 1);
+  auto cond_less_1 = cond_builder.AddNode("foo", "LessThan_5", 1, 1);
+  auto cond_output_1 = cond_builder.AddNode("cond_output_1", "NetOutput", 1, 1);
+  cond_builder.AddDataEdge(cond_data_1, 0, cond_less_1, 0);
+  cond_builder.AddDataEdge(cond_less_1, 0, cond_output_1, 0);
+  auto cond_graph = cond_builder.GetGraph();
+  cond_output_1->GetOpDesc()->SetSrcName({"foo"});
+  cond_output_1->GetOpDesc()->SetSrcIndex({0});
+  AttrUtils::SetInt(cond_data_1->GetOpDesc(), ATTR_NAME_INDEX, 0);
+  AttrUtils::SetInt(cond_data_1->GetOpDesc(), ATTR_NAME_PARENT_NODE_INDEX, 0);
+  AttrUtils::SetInt(cond_output_1->GetOpDesc()->MutableInputDesc(0), ATTR_NAME_PARENT_NODE_INDEX, 0);
+
+  // build body graph
+  ut::GraphBuilder body_builder("body_graph");
+  auto body_data_1 = body_builder.AddNode("body_data_1", "Data", 1, 1);
+  auto body_add_1 = body_builder.AddNode("bar", "Add_1", 1, 1);
+  // out_shape contains unknown dims (-1)
+  auto body_output_1 = body_builder.AddNode("body_output_1", "NetOutput", 1, 1, FORMAT_NCHW, DT_FLOAT, shape);
+  body_builder.AddDataEdge(body_data_1, 0, body_add_1, 0);
+  body_builder.AddDataEdge(body_add_1, 0, body_output_1, 0);
+  auto body_graph = body_builder.GetGraph();
+  AttrUtils::SetInt(body_data_1->GetOpDesc(), ATTR_NAME_INDEX, 0);
+  AttrUtils::SetInt(body_data_1->GetOpDesc(), ATTR_NAME_PARENT_NODE_INDEX, 1);
+  AttrUtils::SetInt(body_output_1->GetOpDesc()->MutableInputDesc(0), ATTR_NAME_PARENT_NODE_INDEX, 1);
+
+  // setup parent graph and sub-graphs
+  cond_graph->SetParentGraph(main_graph);
+  cond_graph->SetParentNode(main_graph->FindNode("while_1"));
+  body_graph->SetParentGraph(main_graph);
+  body_graph->SetParentNode(main_graph->FindNode("while_1"));
+  main_graph->FindNode("while_1")->GetOpDesc()->AddSubgraphName("cond");
+  main_graph->FindNode("while_1")->GetOpDesc()->SetSubgraphInstanceName(0, cond_graph->GetName());
+  main_graph->AddSubgraph("cond_graph", cond_graph);
+  main_graph->FindNode("while_1")->GetOpDesc()->AddSubgraphName("body");
+  main_graph->FindNode("while_1")->GetOpDesc()->SetSubgraphInstanceName(1, body_graph->GetName());
+  main_graph->AddSubgraph("body_graph", body_graph);
+
+  main_graph->SetGraphUnknownFlag(true);
+  for (auto &subgraph : main_graph->GetAllSubgraphs()) {
+    subgraph->SetGraphUnknownFlag(true);
+  }
+
+  return main_graph;
+}
+
+/* cond_graph and body_graph share the same input tensor
+ *             +-------------+   +-------------+
+ *             | Cond Graph  |   | Body Graph  |
+ *             | NetOutput   |   | NetOutput   |
+ *             |    |        |   |    |        |
+ * NetOutput   | LessThan_5  |   |  Add_1      |
+ *   |         |   |         |   |   |         |
+ * while  -----+ input       |   + input       |
+ *   |         +-------------+   +-------------+
+ * input
+ */
+
+ComputeGraphPtr BuildSimpleWhileGraph2() {
+  const auto stub_func = [](Operator &op) { return GRAPH_SUCCESS; };
+  const std::vector<int64_t> shape{-1, -1, 224, 224};
+  // build main graph
+  ut::GraphBuilder main_builder("main_graph");
+  auto data_1 = main_builder.AddNode("data_1", "Data", 1, 1);
+  auto data_2 = main_builder.AddNode("data_2", "Data", 1, 1);
+  auto while_1 = main_builder.AddNode("while_1", "While", 1, 1);
+  auto output_1 = main_builder.AddNode("output_1", "NetOutput", 1, 1);
+  main_builder.AddDataEdge(data_1, 0, while_1, 0);
+  main_builder.AddDataEdge(while_1, 0, output_1, 0);
+  while_1->GetOpDesc()->AddInferFunc(stub_func);
+  auto main_graph = main_builder.GetGraph();
+  AttrUtils::SetInt(data_1->GetOpDesc(), ATTR_NAME_INDEX, 0);
+  output_1->GetOpDesc()->SetSrcName({"while_1"});
+  output_1->GetOpDesc()->SetSrcIndex({0, 1});
+
+  // build condition graph
+  ut::GraphBuilder cond_builder("cond_graph");
+  auto cond_data_1 = cond_builder.AddNode("cond_data_1", "Data", 1, 1);
+  auto cond_less_1 = cond_builder.AddNode("foo", "LessThan_5", 1, 1);
+  auto cond_output_1 = cond_builder.AddNode("cond_output_1", "NetOutput", 1, 1);
+  cond_builder.AddDataEdge(cond_data_1, 0, cond_less_1, 0);
+  cond_builder.AddDataEdge(cond_less_1, 0, cond_output_1, 0);
+  auto cond_graph = cond_builder.GetGraph();
+  cond_output_1->GetOpDesc()->SetSrcName({"foo"});
+  cond_output_1->GetOpDesc()->SetSrcIndex({0});
+  cond_output_1->GetOpDesc()->UpdateInputDesc(0, GeTensorDesc(GeShape(), FORMAT_ND, DT_BOOL));
+  AttrUtils::SetInt(cond_data_1->GetOpDesc(), ATTR_NAME_INDEX, 0);
+  AttrUtils::SetInt(cond_data_1->GetOpDesc(), ATTR_NAME_PARENT_NODE_INDEX, 0);
+
+  // build body graph
+  ut::GraphBuilder body_builder("body_graph");
+  auto body_data_1 = body_builder.AddNode("body_data_1", "Data", 1, 1);
+  auto body_add_1 = body_builder.AddNode("bar", "Add_1", 1, 1);
+  // out_shape contains unknown dims (-1)
+  auto body_output_1 = body_builder.AddNode("body_output_1", "NetOutput", 1, 1, FORMAT_NCHW, DT_FLOAT, shape);
+  body_builder.AddDataEdge(body_data_1, 0, body_add_1, 0);
+  body_builder.AddDataEdge(body_add_1, 0, body_output_1, 0);
+  auto body_graph = body_builder.GetGraph();
+  AttrUtils::SetInt(body_data_1->GetOpDesc(), ATTR_NAME_INDEX, 0);
+  AttrUtils::SetInt(body_data_1->GetOpDesc(), ATTR_NAME_PARENT_NODE_INDEX, 0);
+  AttrUtils::SetInt(body_output_1->GetOpDesc()->MutableInputDesc(0), ATTR_NAME_PARENT_NODE_INDEX, 0);
+
+  // setup parent graph and sub-graphs
+  cond_graph->SetParentGraph(main_graph);
+  cond_graph->SetParentNode(main_graph->FindNode("while_1"));
+  body_graph->SetParentGraph(main_graph);
+  body_graph->SetParentNode(main_graph->FindNode("while_1"));
+  main_graph->FindNode("while_1")->GetOpDesc()->AddSubgraphName("cond");
+  main_graph->FindNode("while_1")->GetOpDesc()->SetSubgraphInstanceName(0, cond_graph->GetName());
+  main_graph->AddSubgraph("cond_graph", cond_graph);
+  main_graph->FindNode("while_1")->GetOpDesc()->AddSubgraphName("body");
+  main_graph->FindNode("while_1")->GetOpDesc()->SetSubgraphInstanceName(1, body_graph->GetName());
+  main_graph->AddSubgraph("body_graph", body_graph);
+
+  main_graph->SetGraphUnknownFlag(true);
+  for (auto &subgraph : main_graph->GetAllSubgraphs()) {
+    subgraph->SetGraphUnknownFlag(true);
+  }
+
+  return main_graph;
+}
+} // namespace
+
+class UtestShapeRefiner : public testing::Test {
+ protected:
+  void SetUp() {}
+  void TearDown() {}
+};
+
+TEST_F(UtestShapeRefiner, InferShapeAndTypeForRunning_Success) {
   const auto graph = std::make_shared<ComputeGraph>("test_infer_shape");
   auto enter1 = CreateNode(graph, "enter", "Enter", 1, 1);
 
@@ -241,7 +397,7 @@ TEST_F(UtestShapeRefiner, infer_shape_and_type_for_running) {
   OperatorFactoryImpl::operator_infershape_funcs_ = infershape_funcs_back;
 }
 
-TEST_F(UtestShapeRefiner, infer_shape_func_null) {
+TEST_F(UtestShapeRefiner, InferShapeAndTypeForRunning_Failure_NullInferFunc) {
   const auto graph = std::make_shared<ComputeGraph>("test_infer_shape");
   
   OperatorFactoryImpl::operator_infershape_funcs_.reset(new (std::nothrow) std::map<string, InferShapeFunc>());
@@ -251,7 +407,7 @@ TEST_F(UtestShapeRefiner, infer_shape_func_null) {
   EXPECT_EQ(ShapeRefiner::InferShapeAndTypeForRunning(merge1, op, true), GRAPH_FAILED);
 }
 
-TEST_F(UtestShapeRefiner, CreateInferenceContext_cross_subgraph) {
+TEST_F(UtestShapeRefiner, CreateInferenceContext_Success_CrossSubgraph) {
   auto graph = CreateGraphWithMultiSubgraph();
   graph->SetGraphUnknownFlag(false);
   auto subgraph = graph->GetSubgraph("sub_graph1");
@@ -269,7 +425,7 @@ TEST_F(UtestShapeRefiner, CreateInferenceContext_cross_subgraph) {
   }
 }
 
-TEST_F(UtestShapeRefiner, CreateInferenceContext_cross_subgraph_data_to_netoutput) {
+TEST_F(UtestShapeRefiner, CreateInferenceContext_Success_CrossSubgraphDataToNetoutput) {
   auto graph = CreateGraphWithSubgraphDataToNetoutput();
   auto relu = graph->FindNode("relu2");
 
@@ -285,7 +441,7 @@ TEST_F(UtestShapeRefiner, CreateInferenceContext_cross_subgraph_data_to_netoutpu
   }
 }
 
-TEST_F(UtestShapeRefiner, Infer_shape_and_type_failed) {
+TEST_F(UtestShapeRefiner, InferShapeAndType_Failure_InvalidNode) {
   const auto graph = std::make_shared<ComputeGraph>("test_infer_shape");
   auto enter1 = CreateNode(graph, "enter", "Enter", 1, 1);
 
@@ -304,7 +460,7 @@ TEST_F(UtestShapeRefiner, UpdateOutputForMultiBatch) {
   EXPECT_EQ(ret, GRAPH_PARAM_INVALID);
 }
 
-TEST_F(UtestShapeRefiner, InferShapeAndType) {
+TEST_F(UtestShapeRefiner, InferShapeAndType_Success_WithMultiSubgraphs) {
   auto graph = CreateGraphWithMultiSubgraph();
   graph->SetGraphUnknownFlag(false);
   auto subgraph = graph->GetSubgraph("sub_graph1");
@@ -323,7 +479,7 @@ TEST_F(UtestShapeRefiner, InferShapeAndType) {
   EXPECT_EQ(ret, GRAPH_SUCCESS);
 }
 
-TEST_F(UtestShapeRefiner, InferShapeAndType2) {
+TEST_F(UtestShapeRefiner, InferShapeAndType_Success_SingleNode) {
   auto graph = std::make_shared<ComputeGraph>("test_infer_shape");
   auto node = CreateNode(graph, "enter", "Enter", 1, 1);
   auto op = OpDescUtils::CreateOperatorFromNode(node);
@@ -333,7 +489,7 @@ TEST_F(UtestShapeRefiner, InferShapeAndType2) {
   EXPECT_EQ(ret, GRAPH_SUCCESS);
 }
 
-TEST_F(UtestShapeRefiner, InferShapeAndType3) {
+TEST_F(UtestShapeRefiner, InferShapeAndType_Success_WithEmptySubgraph) {
   auto root_graph = std::make_shared<ComputeGraph>("test_infer_shape");
   auto root_node = CreateNode(root_graph, "enter", "Enter", 1, 1);
   auto op_desc = root_node->GetOpDesc();
@@ -351,7 +507,7 @@ TEST_F(UtestShapeRefiner, InferShapeAndType3) {
   EXPECT_NE(ret, GRAPH_SUCCESS);
 }
 
-TEST_F(UtestShapeRefiner, InferShapeAndType4) {
+TEST_F(UtestShapeRefiner, InferShapeAndType_Success_WithSubgraph) {
   auto root_graph = std::make_shared<ComputeGraph>("test_infer_shape");
   NodePtr root_node = CreateNode(root_graph, "enter", "Enter", 1, 1);
   auto op_desc = root_node->GetOpDesc();
@@ -371,5 +527,17 @@ TEST_F(UtestShapeRefiner, InferShapeAndType4) {
 
   auto ret = ShapeRefiner::InferShapeAndType(root_node, op, false);
   EXPECT_EQ(ret, GRAPH_SUCCESS);
+}
+
+TEST_F(UtestShapeRefiner, InferShapeAndType_Success_CheckRangeForWhile) {
+  auto root_graph = BuildSimpleWhileGraph2();
+  auto while_node = root_graph->FindNode("while_1");
+  auto op = OpDescUtils::CreateOperatorFromNode(while_node);
+  EXPECT_EQ(ShapeRefiner::InferShapeAndType(while_node, op, false), GRAPH_SUCCESS);
+  // verify the shape ranges of While's output tensor
+  std::vector<std::pair<int64_t, int64_t>> x_range;
+  std::vector<std::pair<int64_t, int64_t>> expected_range = {{0, -1}, {0, -1}, {224, 224}, {224, 224}};
+  while_node->GetOpDesc()->MutableOutputDesc(0)->GetShapeRange(x_range);
+  EXPECT_EQ(x_range, expected_range);
 }
 } // namespace ge
