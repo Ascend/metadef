@@ -1081,7 +1081,7 @@ class DescEnv {
     std::string str = "Env for ";
     str += op_->GetName() + " ";
     str += op_->GetType() + " ";
-    str = for_input_ ? "input" : "output";
+    str += for_input_ ? "input" : "output";
     return str;
   }
 
@@ -1164,7 +1164,7 @@ size_t GetIrDescStartIndex(std::map<size_t, std::pair<size_t, size_t>> &ir_2_ran
 graphStatus MappingDynamicIrDesc(const std::vector<IrIOSpec> &ir_specs, const DescEnv &desc_env,
                                  const std::map<std::string, uint32_t> &name2idx,
                                  std::map<size_t, std::pair<size_t, size_t>> &ir_2_range) {
-  (void) desc_env;
+  GELOGD("Start mapping dynamic ir desc for %s", desc_env.DebugString().c_str());
   for (size_t ir_io_idx = 0U; ir_io_idx < ir_specs.size(); ir_io_idx++) {
     const auto &ir_spec = ir_specs[ir_io_idx];
     GE_ASSERT(ir_spec.IsValid(), "Invalid ir spec %s", ir_spec.DebugString().c_str());
@@ -1208,6 +1208,7 @@ graphStatus MappingNonDynamicIrDesc(const std::vector<IrIOSpec> &ir_specs, const
                                     const std::vector<std::pair<std::string, uint32_t>> &name2index_left,
                                     const bool &require_raw_index,
                                     std::map<size_t, std::pair<size_t, size_t>> &ir_2_range) {
+  GELOGD("Start mapping non-dynamic ir desc for %s", desc_env.DebugString().c_str());
   std::vector<size_t> desc_instance_shifts;
   desc_instance_shifts.resize(desc_env.NumDescs(), 0U);
 
@@ -1219,7 +1220,10 @@ graphStatus MappingNonDynamicIrDesc(const std::vector<IrIOSpec> &ir_specs, const
     }
 
     if (iter == name2index_left.end()) {  // 只允许Optional的IR输入没有对应的desc，对应Optional在IR最后且没有Desc信息
-      GE_ASSERT(ir_spec.IsOptional(), "No desc left for %s", ir_spec.DebugString().c_str());
+      if (!ir_spec.IsOptional()) {
+        GELOGW("No desc left for %s", ir_spec.DebugString().c_str());
+        return GRAPH_SUCCESS;
+      }
       ir_2_range.emplace(ir_io_idx, std::make_pair(GetIrDescStartIndex(ir_2_range, ir_io_idx), 0U));
       continue;
     }
