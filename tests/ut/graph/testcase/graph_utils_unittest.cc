@@ -1120,6 +1120,31 @@ TEST_F(UtestGraphUtils, CopyComputeGraphWithNodeAndGraphFilter) {
   ASSERT_EQ(dst_compute_graph->GetSubgraph("sub2"), nullptr);
 }
 
+TEST_F(UtestGraphUtils, CopyComputeGraphWithoutSubGraphRepeat) {
+  auto graph = BuildGraphWithSubGraph();
+  ComputeGraphPtr dst_compute_graph = std::make_shared<ComputeGraph>(ComputeGraph("dst"));
+  auto graph_filter = [](const Node &node, const char *, const ComputeGraphPtr &sub_graph) {
+    // all graph not copy
+    return false;
+  };
+  // test copy root graph success
+  auto ret = GraphUtils::CopyComputeGraph(graph, nullptr, graph_filter, nullptr, dst_compute_graph);
+  ASSERT_EQ(ret, GRAPH_SUCCESS);
+  ASSERT_EQ(dst_compute_graph->GetDirectNodesSize(), graph->GetDirectNodesSize());
+  NodePtr case0_node = dst_compute_graph->FindNode("case0");
+  ASSERT_NE(case0_node, nullptr);
+  const auto &names = case0_node->GetOpDesc()->GetSubgraphInstanceNames();
+  for (const auto &name:names) {
+    EXPECT_EQ(name, "");
+  }
+  ASSERT_EQ(dst_compute_graph->GetSubgraph("sub1"), nullptr);
+  ASSERT_EQ(dst_compute_graph->GetSubgraph("sub2"), nullptr);
+  ComputeGraphPtr dst_compute_graph2 = std::make_shared<ComputeGraph>(ComputeGraph("dst2"));
+  ret = GraphUtils::CopyComputeGraph(dst_compute_graph, nullptr, graph_filter, nullptr, dst_compute_graph2);
+  ASSERT_EQ(ret, GRAPH_SUCCESS);
+  ASSERT_EQ(dst_compute_graph2->GetDirectNodesSize(), graph->GetDirectNodesSize());
+}
+
 TEST_F(UtestGraphUtils, CopyComputeGraphWithAttrFilter) {
   auto graph = BuildGraphWithConst();
   ComputeGraphPtr dst_compute_graph = std::make_shared<ComputeGraph>(ComputeGraph("dst"));

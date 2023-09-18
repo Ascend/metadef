@@ -2048,6 +2048,10 @@ GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY graphStatus GraphUtils::CopyOpAnd
     GE_CHECK_NOTNULL(op_desc);
     GE_CHECK_NOTNULL(op_desc->impl_);
     op_desc->SetName(n->GetName());
+    op_desc->impl_->MutableIRMeta() = n->GetOpDesc()->impl_->GetIRMeta();
+    op_desc->impl_->subgraph_names_to_index_ = n->GetOpDesc()->impl_->subgraph_names_to_index_;
+    op_desc->impl_->subgraph_instance_names_ = n->GetOpDesc()->impl_->subgraph_instance_names_;
+
     const NodePtr node = dst_compute_graph->AddNode(op_desc, n->GetOpDesc()->GetId());
     if (node == nullptr) {
       REPORT_CALL_ERROR("E18888", "AddNode %s to graph:%s failed",
@@ -2064,10 +2068,18 @@ GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY graphStatus GraphUtils::CopyOpAnd
     const auto &subgraph_names = n->GetOpDesc()->GetSubgraphInstanceNames();
     const size_t subgraph_num = subgraph_names.size();
     for (size_t subgraph_idx = 0U; subgraph_idx < subgraph_num; ++subgraph_idx) {
-      const auto src_subgraph = src_root_compute_graph->GetSubgraph(subgraph_names[subgraph_num - 1U - subgraph_idx]);
-      GE_CHECK_NOTNULL(src_subgraph);
+      const auto &subgraph_name = subgraph_names[subgraph_num - 1U - subgraph_idx];
+      const auto src_subgraph = src_root_compute_graph->GetSubgraph(subgraph_name);
+      if ((src_subgraph == nullptr) && subgraph_name.empty()) {
+        GELOGD("node=%s subgraph is empty, subgraph_idx=%zu, subgraph_num=%zu.", n->GetName().c_str(), subgraph_idx,
+               subgraph_num);
+        continue;
+      }
+      GE_CHECK_NOTNULL(src_subgraph, ", get subgraph[%s] failed, node=%s.", subgraph_name.c_str(),
+                       n->GetName().c_str());
       if ((graph_filter != nullptr) &&
           (!graph_filter(*src_subgraph->GetParentNode(), src_subgraph->GetName().c_str(), src_subgraph))) {
+        op_desc->RemoveSubgraphInstanceName(subgraph_name);
         continue;
       }
       ComputeGraphPtr dst_subgraph = ComGraphMakeShared<ComputeGraph>(src_subgraph->GetName());
@@ -2084,9 +2096,6 @@ GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY graphStatus GraphUtils::CopyOpAnd
       }
       (void)dst_root_compute_graph->AddSubGraph(dst_subgraph);
       dst_subgraph->SetParentNode(node);
-      op_desc->impl_->MutableIRMeta() = n->GetOpDesc()->impl_->GetIRMeta();
-      op_desc->impl_->subgraph_names_to_index_ = n->GetOpDesc()->impl_->subgraph_names_to_index_;
-      op_desc->impl_->subgraph_instance_names_ = n->GetOpDesc()->impl_->subgraph_instance_names_;
     }
   }
   return GRAPH_SUCCESS;
