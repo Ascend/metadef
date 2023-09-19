@@ -83,6 +83,7 @@ const char_t *const OPTION_EXEC_REUSE_ZERO_COPY_MEMORY = "ge.exec.reuseZeroCopyM
 const char_t *const OPTION_INPUT_REUSE_MEM_INDEXES = "ge.exec.inputReuseMemIndexes";
 const char_t *const OPTION_OUTPUT_REUSE_MEM_INDEXES = "ge.exec.outputReuseMemIndexes";
 const char_t *const OPTION_GRAPH_IO_MEM_ALLOC_MODE = "ge.exec.graphIOMemAllocMode";
+const char_t *const OPTION_FLOW_GRAPH_MEMORY_MAX_SIZE = "ge.flowGraphMemMaxSize";
 
 const std::string ATOMIC_CLEAN_POLICY = "ge.exec.atomicCleanPolicy";
 const std::string MEMORY_OPTIMIZATION_POLICY = "ge.exec.memoryOptimizationPolicy";
