@@ -316,6 +316,8 @@ const std::string FUSION_TENSOR_SIZE = "ge.fusionTensorSize";
 
 const std::string INPUT_SHAPE = "ge.inputShape";
 
+const std::string OUTPUT_MAX_SIZE = "ge.outputMaxSize";
+
 const std::string DYNAMIC_NODE_TYPE = "ge.dynamicNodeType";
 // configure whether to use dynamic image size
 const char_t *const kDynamicImageSize = "ge.dynamicImageSize";
