@@ -150,8 +150,8 @@ public:
     }
     const size_t input_num = GetComputeNodeInputNum();
     const size_t output_num = GetComputeNodeOutputNum();
-    ge::Allocator *allocator =
-        MutableInputPointer<ge::Allocator>(input_num + output_num +
+    auto allocator =
+        GetInputValue<ge::Allocator *>(input_num + output_num +
         static_cast<size_t>(OpExecuteInputExtendIndex::kAllocate));
     if (allocator == nullptr) {
       return nullptr;

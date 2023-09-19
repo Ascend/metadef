@@ -27,6 +27,8 @@ using float32_t = float;
 using float64_t = double;
 using vector_bit_t = std::vector<bool>;
 
+// set minimal range value as 0 to support empty tensor
+static const int64_t SHAPE_RANGE_LOWER_LIMIT = 0;
 static const int64_t UNKNOWN_DIM = -1;
 static const int64_t UNKNOWN_DIM_NUM = -2;
 static const std::vector<int64_t> UNKNOWN_SHAPE = {-1};

@@ -150,9 +150,9 @@ void SetShapeRangeForWhile(GeShape &data_shape, const GeShape &out_shape, bool &
       }
       (void) data_shape.SetDim(j, UNKNOWN_DIM);
     }
-    // set shape rang of while, if dim is unknown ,set shape range as {1,-1}
+    // set shape rang of while, if dim is unknown ,set shape range as {0,-1}
     if (data_shape.GetDim(j) == UNKNOWN_DIM) {
-      data_shape_range.emplace_back(std::make_pair(1, UNKNOWN_DIM));
+      data_shape_range.emplace_back(std::make_pair(SHAPE_RANGE_LOWER_LIMIT, UNKNOWN_DIM));
     } else {
       data_shape_range.emplace_back(std::make_pair(data_shape.GetDim(j), data_shape.GetDim(j)));
     }
@@ -183,9 +183,10 @@ graphStatus UpdateParentNodeForWhile(const ConstNodePtr &node,
   for (size_t i = 0UL; i < ref_out_tensors.size(); i++) {
     auto ref_out_tensor = ref_out_tensors[i].at(0U);
     const auto out_shape = ref_out_tensor.MutableShape();
-    std::vector<std::pair<int64_t, int64_t>> data_shape_range;
     // ref_i's data and output tensor shape should be same
     for (auto &tensor : ref_data_tensors[i]) {
+      // if the input tensor shares multiple references, the ranges should ensure consistency
+      std::vector<std::pair<int64_t, int64_t>> data_shape_range;
       if (ref_out_tensor.GetDataType() != tensor.GetDataType()) {
         REPORT_INNER_ERROR("E18888", "node[%s] does not support diff dtype or format among all ref output",
                            node->GetName().c_str());
