@@ -363,11 +363,6 @@ ge::graphStatus ParseConstValue(const nlohmann::json &input, const gert::Storage
                                 const ge::GeTensorDesc &tensor_desc, const uint32_t index,
                                 std::vector<std::pair<uint32_t, std::unique_ptr<uint8_t[]>>> &index_to_tensor) {
   if (input.contains("const_value")) {
-    if (!input.contains("name")) {
-      GELOGE(ge::GRAPH_FAILED, "Const tensor has no name.");
-      return ge::GRAPH_FAILED;
-    }
-
     size_t total_size = 0UL;
     const size_t tensor_size = static_cast<size_t>(ge::GetSizeInBytes(storage_shape.GetStorageShape().GetShapeSize(),
                                                                       tensor_desc.GetDataType()));
