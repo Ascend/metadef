@@ -310,7 +310,7 @@ TEST_F(OpImplRegistryHolderManagerUT, OmOpImplRegistryHolder_LoadSo_HomeEnv_Inva
 }
 
 TEST_F(OpImplRegistryHolderManagerUT, OmOpImplRegistryHolder_LoadSo_AscendWorkPathEnv_Invalid) {
-  mmSetEnv("ASCEND_WORK_PATH", "*&()", 1);
+  mmSetEnv("ASCEND_WORK_PATH", "", 1);
   ge::MmpaStub::GetInstance().SetImpl(std::make_shared<MockMmpa>());
   mock_handle = (void *) 0xffffffff;
   g_impl_num = 1;
@@ -340,6 +340,27 @@ TEST_F(OpImplRegistryHolderManagerUT, OmOpImplRegistryHolder_LoadSo_AscendWorkPa
   EXPECT_EQ(ret, ge::GRAPH_SUCCESS);
   std::string opp_dir = current_path;
   opp_dir += "/.ascend_temp/.om_exe_data";
+  auto real_opp_dir = ge::RealPath(opp_dir.c_str());
+  EXPECT_EQ(real_opp_dir, opp_dir);
+  unsetenv("ASCEND_WORK_PATH");
+}
+
+TEST_F(OpImplRegistryHolderManagerUT, OmOpImplRegistryHolder_LoadSo_CreateAscendWorkPath_Success) {
+  std::string work_path = "./test_work_path";
+  mmSetEnv("ASCEND_WORK_PATH", work_path.c_str(), 1);
+  ge::MmpaStub::GetInstance().SetImpl(std::make_shared<MockMmpa>());
+  mock_handle = (void *) 0xffffffff;
+  g_impl_num = 1;
+
+  std::string so_name("libopmaster.so");
+  std::string vendor_name("MDC");
+  ge::OpSoBinPtr so_bin_ptr = CreateSoBinPtr(so_name, vendor_name);
+  gert::OmOpImplRegistryHolder om_op_impl_registry_holder;
+  auto ret = om_op_impl_registry_holder.LoadSo(so_bin_ptr);
+  EXPECT_EQ(ret, ge::GRAPH_SUCCESS);
+  std::string real_work_path = ge::RealPath(work_path.c_str());
+  EXPECT_EQ(mmAccess(real_work_path.c_str()), EN_OK);
+  std::string opp_dir = real_work_path + "/.ascend_temp/.om_exe_data";
   auto real_opp_dir = ge::RealPath(opp_dir.c_str());
   EXPECT_EQ(real_opp_dir, opp_dir);
   unsetenv("ASCEND_WORK_PATH");
