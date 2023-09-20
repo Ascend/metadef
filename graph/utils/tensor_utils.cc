@@ -252,17 +252,15 @@ GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY graphStatus TensorUtils::CalcTens
   int64_t element_cnt = 0;
   const graphStatus status = CalcTensorElementCnt(dims, format, data_type, element_cnt);
   if (status != GRAPH_SUCCESS) {
-    GELOGE(status, "[Calc][TensorElementCnt] failed, status=%u format=%d(%s) data_type=%d(%s).",
-           status, format, format_str.c_str(), data_type, type_str.c_str());
+    GELOGE(status, "[Calc][TensorElementCnt] failed, shape[%s], status=%u format=%d(%s) data_type=%d(%s).",
+           shape.ToString().c_str(), status, format, format_str.c_str(), data_type, type_str.c_str());
     return status;
   }
   // Support unknown shape
   if (element_cnt < 0) {
     mem_size = kUnknownShapeMemSize;
-    GELOGD(
-        "element_cnt is unknown. "
-        "format=%d(%s), data_type=%d(%s), mem_size=%" PRId64,
-        format, format_str.c_str(), data_type, type_str.c_str(), mem_size);
+    GELOGD("element_cnt is unknown. shape[%s], format=%d(%s), data_type=%d(%s), mem_size=%" PRId64,
+           shape.ToString().c_str(), format, format_str.c_str(), data_type, type_str.c_str(), mem_size);
     return GRAPH_SUCCESS;
   }
 
@@ -278,10 +276,10 @@ GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY graphStatus TensorUtils::CalcTens
     if (CheckMultiplyOverflowInt64(element_cnt, type_size_int64)) {
       ErrorManager::GetInstance().ATCReportErrMessage(
           "E19013", {"function", "var1", "var2"},
-          {"CheckMultiplyOverflowInt64", std::to_string(element_cnt), std::to_string(type_size_int64)});
-      GELOGE(GRAPH_FAILED, "[Check][Overflow] CalcTensorMemSize overflow, "
-                           "when multiplying %" PRId64 " and %" PRId64 ", format=%d(%s), data_type=%d(%s).",
-             element_cnt, type_size_int64, format, format_str.c_str(), data_type, type_str.c_str());
+          {"CheckMultiplyOverflowInt64", std::to_string(element_cnt), std::to_string(type_size)});
+      GELOGE(GRAPH_FAILED,
+             "[Check][Overflow] multiply %" PRId64 " and %u, shape[%s], format=%d(%s), data_type=%d(%s).",
+             element_cnt, type_size, shape.ToString().c_str(), format, format_str.c_str(), data_type, type_str.c_str());
       return GRAPH_FAILED;
     }
     mem_size = element_cnt * type_size_int64;
@@ -289,10 +287,8 @@ GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY graphStatus TensorUtils::CalcTens
     mem_size = ge::GetSizeInBytes(element_cnt, data_type);
   }
 
-  GELOGD(
-      "CalcTensorMemSize end, "
-      "format=%d(%s), data_type=%d(%s), mem_size=%" PRId64,
-      format, format_str.c_str(), data_type, type_str.c_str(), mem_size);
+  GELOGD("shape[%s], format=%d(%s), data_type=%d(%s), mem_size=%" PRId64,
+         shape.ToString().c_str(), format, format_str.c_str(), data_type, type_str.c_str(), mem_size);
   return GRAPH_SUCCESS;
 }
 
