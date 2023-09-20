@@ -116,7 +116,7 @@ graphStatus IRDataTypeSymbolStore::InferDtype(const OpDescPtr &op) const {
   }
 
   std::map<size_t, std::pair<size_t, size_t>> ir_output_2_range;
-  GE_ASSERT_GRAPH_SUCCESS(OpDescUtils::GetIrOutputDescRange(op, ir_output_2_range));
+  GE_ASSERT_GRAPH_SUCCESS(ge::GetIrOutputDescRange(op, ir_output_2_range));
   GE_ASSERT(ir_output_2_range.size() == op->GetIrOutputs().size(), "Failed get output instance info of %s %s",
             op->GetName().c_str(), op->GetType().c_str());
 

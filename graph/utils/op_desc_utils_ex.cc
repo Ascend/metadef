@@ -22,6 +22,7 @@
 #include "graph/operator_factory_impl.h"
 #include "graph/common_error_codes.h"
 #include "graph/ge_context.h"
+#include "graph/ir_definitions_recover.h"
 #include "graph/debug/ge_attr_define.h"
 #include "graph/utils/node_utils.h"
 #include "graph/utils/graph_utils.h"
@@ -40,6 +41,10 @@ graphStatus OpDescUtilsEx::CallInferFuncV2Inner(const OpDescPtr &op_desc, Operat
   if ((call_infer_data_type == nullptr) || (call_infer_shape_v2 == nullptr) || (call_infer_shape_range == nullptr)) {
     GELOGW("infer func v2 has not been initialized");
     return GRAPH_PARAM_INVALID;
+  }
+  if (op_desc->GetIrInputs().empty() && op_desc->GetIrOutputs().empty() && op_desc->GetAllOutputsDescSize() != 0U) {
+    GE_CHK_STATUS_RET(RecoverOpDescIrDefinition(op_desc), "Failed recover ir def for %s %s", op_desc->GetNamePtr(),
+                      op_desc->GetTypePtr());
   }
   GE_CHK_STATUS_RET_NOLOG(call_infer_data_type(op_desc));
   GE_CHK_STATUS_RET_NOLOG(call_infer_shape_v2(op, op_desc));
