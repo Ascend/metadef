@@ -960,6 +960,8 @@ const std::string ATTR_NAME_NOTASK = "_no_task";
 
 const std::string ATTR_NAME_OUTPUT_REUSE_INPUT = "_output_reuse_input";
 
+const std::string ATTR_NAME_OUTPUT_MAX_SIZE = "_output_max_size";
+
 const std::string ATTR_NAME_REUSE_INPUT_ON_DIM_INDEX = "_reuse_input_on_dim_index";
 
 const std::string ATTR_NAME_NOPADDING_CONTINUOUS_INPUT = "_no_padding_continuous_input";

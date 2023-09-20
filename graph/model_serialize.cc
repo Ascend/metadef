@@ -47,7 +47,7 @@ namespace ge {
 bool ModelSerializeImp::ParseNodeIndex(const std::string &node_index, std::string &node_name, int32_t &index) const {
   const auto sep = node_index.rfind(":");
   if (sep == std::string::npos) {
-    GELOGW("[Parse][CheckParam] Separator \":\" is not found in node_index.");
+    GELOGD("[Parse][CheckParam] Separator \":\" is not found in node_index.");
     return false;
   }
   node_name = node_index.substr(0UL, sep);
