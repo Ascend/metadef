@@ -116,44 +116,43 @@ ge::graphStatus AppendIrDefs(const ge::OpDescPtr &op_desc, const IrDef &ir_ins, 
   return ge::GRAPH_SUCCESS;
 }
 
-ge::graphStatus RecoverIrAttrNames(const ge::NodePtr &node, IrDefinition &ir_def) {
-  const auto &ir_attr_names_in_node = node->GetOpDesc()->GetIrAttrNames();
+ge::graphStatus RecoverIrAttrNames(const ge::OpDescPtr &desc, IrDefinition &ir_def) {
+  const auto &ir_attr_names_in_node = desc->GetIrAttrNames();
   // 输入个数和顺序校验针对单算子离线流程当前未实现so进om时版本兼容性校验，实现后校验逻辑可去除
   // 当前运行版本中，算子属性个数减少了（相对于导出模型的版本）
   if (ir_def.attr_names.size() < ir_attr_names_in_node.size()) {
-    GELOGE(ge::FAILED, "In the current running version, the number of operator[%s][%s] attributes has been reduced, "
+    GELOGE(ge::FAILED,
+           "In the current running version, the number of operator[%s][%s] attributes has been reduced, "
            "ir_def.attr_names size[%zu] is less than ir_attr_names_in_node size[%zu], ir_def.attr_names is [%s], "
            "ir_attr_names_in_node is [%s]",
-           node->GetOpDesc()->GetName().c_str(), node->GetOpDesc()->GetType().c_str(),
-           ir_def.attr_names.size(), ir_attr_names_in_node.size(), IrAttrNamesToString(ir_def.attr_names).c_str(),
-           IrAttrNamesToString(ir_attr_names_in_node).c_str());
+           desc->GetName().c_str(), desc->GetType().c_str(), ir_def.attr_names.size(), ir_attr_names_in_node.size(),
+           IrAttrNamesToString(ir_def.attr_names).c_str(), IrAttrNamesToString(ir_attr_names_in_node).c_str());
     return ge::FAILED;
   }
   // 算子属性顺序变化了
   for (size_t i = 0U; i < ir_attr_names_in_node.size(); ++i) {
     if (ir_attr_names_in_node[i] != ir_def.attr_names[i]) {
-      GELOGE(ge::FAILED, "In the current running version, the order of operator[%s][%s] attributes may have changed,"
+      GELOGE(ge::FAILED,
+             "In the current running version, the order of operator[%s][%s] attributes may have changed,"
              "ir_def.attr_names[%zu] is [%s], ir_attr_names_in_node[%zu] is [%s], ir_def.attr_names is [%s], "
              "ir_attr_names_in_node is [%s]",
-             node->GetOpDesc()->GetName().c_str(), node->GetOpDesc()->GetType().c_str(), i,
-             ir_def.attr_names[i].c_str(), i, ir_attr_names_in_node[i].c_str(),
-             IrAttrNamesToString(ir_def.attr_names).c_str(), IrAttrNamesToString(ir_attr_names_in_node).c_str());
+             desc->GetName().c_str(), desc->GetType().c_str(), i, ir_def.attr_names[i].c_str(), i,
+             ir_attr_names_in_node[i].c_str(), IrAttrNamesToString(ir_def.attr_names).c_str(),
+             IrAttrNamesToString(ir_attr_names_in_node).c_str());
       return ge::FAILED;
     }
   }
   // 当前运行版本中，算子属性在后面增加了，需要拷贝到node中，或者 ir_attr_names_in_node 为空，全部拷贝到node中
   for (size_t i = ir_attr_names_in_node.size(); i < ir_def.attr_names.size(); ++i) {
-    node->GetOpDesc()->AppendIrAttrName(ir_def.attr_names[i]);
-    GELOGD("Append ir attr name:%s for node[%s(%s)]",
-           ir_def.attr_names[i].c_str(), node->GetName().c_str(), node->GetType().c_str());
+    desc->AppendIrAttrName(ir_def.attr_names[i]);
+    GELOGD("Append ir attr name:%s for desc[%s(%s)]", ir_def.attr_names[i].c_str(), desc->GetName().c_str(),
+           desc->GetType().c_str());
   }
   return ge::SUCCESS;
 }
-}
 
-namespace ge {
-ge::graphStatus RecoverNodeIrDefinitions(const ge::NodePtr &node, std::string &op_type, IrDefinition &ir_def) {
-  if ((node->GetType() == ge::NETOUTPUT) || OpTypeUtils::IsDataNode(node->GetType())) {
+ge::graphStatus RecoverOpDescIrDefinition(const ge::OpDescPtr &desc, const std::string &op_type, IrDefinition &ir_def) {
+  if ((desc->GetType() == ge::NETOUTPUT) || ge::OpTypeUtils::IsDataNode(desc->GetType())) {
     return ge::GRAPH_SUCCESS;
   }
   InitIrDefinitionsIfNeed(op_type, ir_def);
@@ -164,7 +163,7 @@ ge::graphStatus RecoverNodeIrDefinitions(const ge::NodePtr &node, std::string &o
   }
 
   // ir_attr_names
-  if (RecoverIrAttrNames(node, ir_def) != ge::GRAPH_SUCCESS) {
+  if (RecoverIrAttrNames(desc, ir_def) != ge::GRAPH_SUCCESS) {
     GELOGE(ge::FAILED, "recover ir attr names failed.");
     return ge::FAILED;
   }
@@ -172,39 +171,52 @@ ge::graphStatus RecoverNodeIrDefinitions(const ge::NodePtr &node, std::string &o
   // ir_inputs
   auto input_appender = [](const ge::OpDescPtr &op_desc, const std::string &ir_name,
                            const ge::IrInputType ir_type) -> void { op_desc->AppendIrInput(ir_name, ir_type); };
-  if (AppendIrDefs<InputIrDefs, ge::IrInputType>(node->GetOpDesc(), node->GetOpDesc()->GetIrInputs(), ir_def.inputs,
-                                                 input_appender) != ge::GRAPH_SUCCESS) {
+  if (AppendIrDefs<InputIrDefs, ge::IrInputType>(desc, desc->GetIrInputs(), ir_def.inputs, input_appender) !=
+      ge::GRAPH_SUCCESS) {
     GELOGE(ge::FAILED, "recover ir inputs failed.");
     return ge::FAILED;
   }
   // ir_outputs
   auto output_appender = [](const ge::OpDescPtr &op_desc, const std::string &ir_name,
                             const ge::IrOutputType ir_type) -> void { op_desc->AppendIrOutput(ir_name, ir_type); };
-  if (AppendIrDefs<OutputIrDefs, ge::IrOutputType>(node->GetOpDesc(), node->GetOpDesc()->GetIrOutputs(), ir_def.outputs,
-                                                   output_appender) != ge::GRAPH_SUCCESS) {
+  if (AppendIrDefs<OutputIrDefs, ge::IrOutputType>(desc, desc->GetIrOutputs(), ir_def.outputs, output_appender) !=
+      ge::GRAPH_SUCCESS) {
     GELOGE(ge::FAILED, "recover ir outputs failed.");
     return ge::FAILED;
   }
   // sym store
-  node->GetOpDesc()->ShareDtypeSymbolsFrom(*ir_def.op_desc);
+  desc->ShareDtypeSymbolsFrom(*ir_def.op_desc);
   // attr
-  const auto node_all_attrs = ge::AttrUtils::GetAllAttrs(node->GetOpDesc());
+  const auto node_all_attrs = ge::AttrUtils::GetAllAttrs(desc);
   for (const auto &name : ir_def.attr_names) {
     if (node_all_attrs.find(name) != node_all_attrs.cend()) {
       continue;
     }
-    const std::map<std::string, ge::AnyValue>::const_iterator iter =
-        ir_def.attr_value.find(name);
+    const std::map<std::string, ge::AnyValue>::const_iterator iter = ir_def.attr_value.find(name);
     if (iter == ir_def.attr_value.cend()) {
       GELOGI("node[%s(%s)] missing attr name[%s], and can not find default value for the attr,"
-             " it may be REQUIRED_ATTR.", node->GetName().c_str(), op_type.c_str(), name.c_str());
+             " it may be REQUIRED_ATTR.",
+             desc->GetName().c_str(), op_type.c_str(), name.c_str());
       continue;
     }
-    GELOGD("node[%s(%s)] missing attr name[%s], set default value.",
-           node->GetName().c_str(), op_type.c_str(), name.c_str());
-    (void)node->GetOpDesc()->SetAttr(name, iter->second);
+    GELOGD("node[%s(%s)] missing attr name[%s], set default value.", desc->GetName().c_str(), op_type.c_str(),
+           name.c_str());
+    (void) desc->SetAttr(name, iter->second);
   }
   return ge::GRAPH_SUCCESS;
+}
+}
+
+namespace ge {
+ge::graphStatus RecoverOpDescIrDefinition(const ge::OpDescPtr &desc, const std::string &op_type) {
+  std::string specified_type = op_type.empty() ? desc->GetType() : op_type;
+  IrDefinition ir_def;
+  ir_def.inited = false;
+  return RecoverOpDescIrDefinition(desc, specified_type, ir_def);
+}
+
+ge::graphStatus RecoverNodeIrDefinitions(const ge::NodePtr &node, std::string &op_type, IrDefinition &ir_def) {
+  return RecoverOpDescIrDefinition(node->GetOpDesc(), op_type, ir_def);
 }
 
 ge::graphStatus RecoverIrDefinitions(const ge::ComputeGraphPtr &graph, const vector<std::string> &attr_names) {

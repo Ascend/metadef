@@ -20,7 +20,6 @@
 #include "graph/tensor_type_impl.h"
 #include "graph/types.h"
 #include "graph/utils/type_utils.h"
-#include "graph/utils/op_desc_utils.h"
 #include "op_common/data_type_utils.h"
 
 namespace ge {
@@ -269,8 +268,7 @@ graphStatus SymDtype::Eval(const OpDesc &op, DataType &dtype) const {
   }
 
   std::map<size_t, std::pair<size_t, size_t>> ir_input_2_range;
-  GE_ASSERT_GRAPH_SUCCESS(
-      OpDescUtils::GetIrInputRawDescRange(const_cast<OpDesc *>(&op)->shared_from_this(), ir_input_2_range));
+  GE_ASSERT_GRAPH_SUCCESS(GetIrInputRawDescRange(const_cast<OpDesc *>(&op)->shared_from_this(), ir_input_2_range));
   GE_ASSERT(ir_input_2_range.size() == op.GetIrInputsSize(), "Failed get input instance info of %s %s",
             op.GetName().c_str(), op.GetType().c_str());
 
@@ -315,8 +313,7 @@ graphStatus SymDtype::Eval(const OpDesc &op, std::vector<DataType> &dtypes) cons
   }
 
   std::map<size_t, std::pair<size_t, size_t>> ir_input_2_range;
-  GE_ASSERT_GRAPH_SUCCESS(
-      OpDescUtils::GetIrInputRawDescRange(const_cast<OpDesc *>(&op)->shared_from_this(), ir_input_2_range));
+  GE_ASSERT_GRAPH_SUCCESS(GetIrInputRawDescRange(const_cast<OpDesc *>(&op)->shared_from_this(), ir_input_2_range));
   GE_ASSERT(ir_input_2_range.size() == op.GetIrInputsSize(), "Failed get input instance info of %s %s",
             op.GetName().c_str(), op.GetType().c_str());
 
@@ -374,5 +371,301 @@ graphStatus PromotionSymDtypeExpression::Eval(const OpDesc &op, TypeOrTypes &typ
   }
 
   return GRAPH_SUCCESS;
+}
+
+namespace {
+class DescEnv {
+ public:
+  DescEnv(const OpDescPtr &op, bool for_input) : op_(op), for_input_(for_input) {}
+  ~DescEnv() = default;
+
+  bool IsDescValid(uint32_t index) const {
+    return for_input_ ? (op_->MutableInputDesc(index) != nullptr) : (op_->MutableOutputDesc(index) != nullptr);
+  }
+
+  size_t NumDescs() const {
+    return for_input_ ? op_->GetAllInputsSize() : op_->GetOutputsSize();
+  }
+
+  std::string DebugString() const {
+    std::string str = "Env for ";
+    str += op_->GetName() + " ";
+    str += op_->GetType() + " ";
+    str += for_input_ ? "input" : "output";
+    return str;
+  }
+
+ private:
+  const OpDescPtr &op_;
+  bool for_input_;
+};
+class IrIOSpec {
+ public:
+  IrIOSpec(const std::string &name, const IrInputType &type) {
+    name_ = name;
+    is_input_ = true;
+    if (type == kIrInputDynamic) {
+      is_dynamic_ = true;
+    } else if (type == kIrInputOptional) {
+      is_optional_ = true;
+    } else if (type == kIrInputRequired) {
+      is_required_ = true;
+    } else {
+      is_valid_ = false;
+    }
+  }
+
+  IrIOSpec(const std::string &name, const IrOutputType &type) {
+    name_ = name;
+    if (type == kIrOutputDynamic) {
+      is_dynamic_ = true;
+    } else if (type == kIrOutputRequired) {
+      is_required_ = true;
+    } else {
+      is_valid_ = false;
+    }
+  }
+  ~IrIOSpec() = default;
+
+  const std::string &GetName() const {
+    return name_;
+  }
+  std::string DebugString() const {
+    std::string str = (is_dynamic_ ? "Dynamic " : is_optional_ ? "Optional " : is_required_ ? "Required " : "Invalid ");
+    str += is_input_ ? "input " : "output ";
+    str += name_;
+    return str;
+  }
+  bool IsValid() const {
+    return is_valid_;
+  }
+  bool IsDynamic() const {
+    return is_dynamic_;
+  }
+  bool IsOptional() const {
+    return is_optional_;
+  }
+  bool IsRequired() const {
+    return is_required_;
+  }
+
+ private:
+  std::string name_;
+  bool is_input_ = false;
+  bool is_valid_ = true;
+  bool is_dynamic_ = false;
+  bool is_optional_ = false;
+  bool is_required_ = false;
+};
+
+// 对于空的Dynamic输入和未传值的Optional输入，计算其起始index以展示更为友好
+size_t GetIrDescStartIndex(std::map<size_t, std::pair<size_t, size_t>> &ir_2_range, size_t ir_index) {
+  if (ir_index == 0U) {
+    return 0U;
+  }
+
+  auto iter = ir_2_range.find(ir_index - 1U);
+  if (iter == ir_2_range.end()) {
+    return 0U;
+  }
+  return iter->second.first + iter->second.second;
+}
+
+graphStatus MappingDynamicIrDesc(const std::vector<IrIOSpec> &ir_specs, const DescEnv &desc_env,
+                                 const std::map<std::string, uint32_t> &name2idx,
+                                 std::map<size_t, std::pair<size_t, size_t>> &ir_2_range) {
+  GELOGD("Start mapping dynamic ir desc for %s", desc_env.DebugString().c_str());
+  for (size_t ir_io_idx = 0U; ir_io_idx < ir_specs.size(); ir_io_idx++) {
+    const auto &ir_spec = ir_specs[ir_io_idx];
+    GE_ASSERT(ir_spec.IsValid(), "Invalid ir spec %s", ir_spec.DebugString().c_str());
+    if (!ir_spec.IsDynamic()) {  // 优先处理Dynamic类型的IR输入
+      continue;
+    }
+    std::set<size_t> indexes;  // Dynamic类型的IR输入对应的多个index
+    size_t num_instances = 0U;
+    for (; num_instances < name2idx.size(); num_instances++) {
+      auto iter = name2idx.find(ir_spec.GetName() + std::to_string(num_instances));
+      if (iter == name2idx.end()) {
+        break;
+      }
+      indexes.insert(iter->second);
+    }
+    // 校验Dynamic类型的IR IO对应的多个index连续
+    GE_ASSERT((indexes.size() <= 1U) || (*indexes.rbegin() - *indexes.begin() == (indexes.size() - 1U)));
+    if (indexes.empty()) {
+      GELOGD("Dynamic ir spec %s has no instance", ir_spec.DebugString().c_str());
+      ir_2_range.emplace(ir_io_idx, std::make_pair(GetIrDescStartIndex(ir_2_range, ir_io_idx), 0U));
+    } else {
+      ir_2_range.emplace(ir_io_idx, std::make_pair(*indexes.begin(), indexes.size()));
+      GELOGD("Mapping %s to desc[%zu, %zu)", ir_spec.DebugString().c_str(), *indexes.begin(),
+             *indexes.begin() + indexes.size());
+    }
+  }
+  return GRAPH_SUCCESS;
+}
+
+void UpdateRawDescInstanceShifts(std::vector<size_t> &desc_instance_shifts, size_t elim_index) {
+  if (elim_index >= desc_instance_shifts.size()) {
+    return;
+  }
+  auto iter = desc_instance_shifts.begin() + elim_index + 1U;
+  for (; iter != desc_instance_shifts.end(); iter++) {
+    (*iter)++;
+  }
+}
+
+graphStatus MappingNonDynamicIrDesc(const std::vector<IrIOSpec> &ir_specs, const DescEnv &desc_env,
+                                    const std::vector<std::pair<std::string, uint32_t>> &name2index_left,
+                                    const bool &require_raw_index,
+                                    std::map<size_t, std::pair<size_t, size_t>> &ir_2_range) {
+  GELOGD("Start mapping non-dynamic ir desc for %s", desc_env.DebugString().c_str());
+  std::vector<size_t> desc_instance_shifts;
+  desc_instance_shifts.resize(desc_env.NumDescs(), 0U);
+
+  auto iter = name2index_left.begin();
+  for (size_t ir_io_idx = 0U; ir_io_idx < ir_specs.size(); ir_io_idx++) {
+    const auto &ir_spec = ir_specs[ir_io_idx];
+    if (ir_spec.IsDynamic()) {  // 已经处理过Dynamic类型的IR输入
+      continue;
+    }
+
+    if (iter == name2index_left.end()) {  // 只允许Optional的IR输入没有对应的desc，对应Optional在IR最后且没有Desc信息
+      if (!ir_spec.IsOptional()) {
+        GELOGW("No desc left for %s", ir_spec.DebugString().c_str());
+        return GRAPH_SUCCESS;
+      }
+      ir_2_range.emplace(ir_io_idx, std::make_pair(GetIrDescStartIndex(ir_2_range, ir_io_idx), 0U));
+      continue;
+    }
+
+    auto &name = iter->first;
+    auto &index = iter->second;
+
+    if (ir_spec.GetName() != name) {  // 如果当前名字和IR不一致，需要确保不是乱序，即没有与IR名字对应的Desc存在
+      for (auto &name2index : name2index_left) {
+        GE_ASSERT(ir_spec.GetName() != name2index.first, "Found desc for %s index %u, while current name is %s",
+                  ir_spec.DebugString().c_str(), name2index.second, name.c_str());
+      }
+    }
+
+    if (!ir_spec.IsOptional()) {  // 非可选，则认为是自行构造的非标IR
+      iter++;
+      ir_2_range.emplace(ir_io_idx, std::make_pair(index, 1U));
+      GELOGD("Mapping %s to desc %zu named %s", ir_spec.DebugString().c_str(), index, name.c_str());
+      continue;
+    }
+
+    if (name != ir_spec.GetName()) {  // 对应Optional不在尾部且未传入
+      GELOGD("Ir spec %s has no instance as desc[%u] named %s", ir_spec.DebugString().c_str(), index, name.c_str());
+      ir_2_range.emplace(ir_io_idx, std::make_pair(index, 0U));
+      continue;
+    }
+
+    iter++;
+    if (desc_env.IsDescValid(index)) {  // 对应Optional传入有效值
+      GELOGD("Mapping %s desc[%zu]", ir_spec.DebugString().c_str(), index);
+      ir_2_range.emplace(ir_io_idx, std::make_pair(index, 1U));
+    } else {  // Optional传入无效值，对实例index进行调整（实例index只会保存非nullptr的输入）
+      GELOGD("Skip mapping %s to invalid desc[%zu]", ir_spec.DebugString().c_str(), index);
+      ir_2_range.emplace(ir_io_idx, std::make_pair(index, 0U));
+      UpdateRawDescInstanceShifts(desc_instance_shifts, index);
+    }
+  }
+
+  if (!require_raw_index) {
+    for (auto &item : ir_2_range) {
+      auto &start = item.second.first;
+      auto &num = item.second.second;
+      size_t shift = (start >= desc_instance_shifts.size() ? 0U : desc_instance_shifts[start]);
+      start = (start > shift) ? (start - shift) : 0U;
+      GELOGD("Re-mapping %s to desc[%zu, %zu) shift(-%zu)", ir_specs[item.first].DebugString().c_str(), start,
+             start + num, shift);
+    }
+  }
+
+  return GRAPH_SUCCESS;
+}
+
+graphStatus GetIrDescRange(const std::vector<IrIOSpec> &ir_specs, const std::map<std::string, uint32_t> &name2idx,
+                           const DescEnv &desc_env, const bool &require_raw_index,
+                           std::map<size_t, std::pair<size_t, size_t>> &ir_2_range) {
+  GELOGD("Start get desc range for %s", desc_env.DebugString().c_str());
+  for (auto &ir_spec : ir_specs) {
+    GELOGD("  Spec %s", ir_spec.DebugString().c_str());
+  }
+
+  std::map<uint32_t, std::string> idx2name;
+  for (auto &item : name2idx) {
+    GELOGD("  Desc name %s index %d", item.first.c_str(), item.second);
+    idx2name.emplace(item.second, item.first);
+  }
+  GE_ASSERT_EQ(idx2name.size(), name2idx.size());  // 拦截多个name对应到同一index
+  if (!idx2name.empty()) {
+    GE_ASSERT_EQ(idx2name.rbegin()->first, idx2name.size() - 1U);  // 拦截index不连续
+  }
+
+  // 首先确定Dynamic类型的IR IO对应的index范围，对于IR构图场景，用户会通过create_dynmaic_xx接口创建多个输入Desc，
+  // 但是Desc在所有desc中的位置，是受调用时的参数决定的，默认情况下，都向尾部追加，会出现先定义的IR输入或输出对应的desc，在后定义的之后
+  GE_ASSERT_GRAPH_SUCCESS(MappingDynamicIrDesc(ir_specs, desc_env, name2idx, ir_2_range));
+
+  std::vector<bool> index_consumed;  // index对应的desc是否已经决定对应关系
+  index_consumed.resize(name2idx.size(), false);
+  for (auto &item : ir_2_range) {
+    auto &range = item.second;
+    for (size_t i = range.first; i < range.first + range.second; i++) {
+      index_consumed[i] = true;
+    }
+  }
+
+  std::vector<std::pair<std::string, uint32_t>> name2index_left;
+  for (size_t i = 0U; i < index_consumed.size(); i++) {
+    if (!index_consumed[i]) {  // 未被使用的index顺序排列
+      name2index_left.emplace_back(idx2name[i], static_cast<uint32_t>(i));
+    }
+  }
+
+  // 确定非Dynamic类型的IR IO对应的index范围
+  GE_ASSERT_GRAPH_SUCCESS(MappingNonDynamicIrDesc(ir_specs, desc_env, name2index_left, require_raw_index, ir_2_range));
+
+  // 不校验所有的index都决定了对应的IR输入（存在算子追加非IR输入的场景，CCB裁决框架适配支持）
+
+  return GRAPH_SUCCESS;
+}
+
+graphStatus GetIrInputDescRange(const OpDescPtr &op, const bool &require_raw_index,
+                                std::map<size_t, std::pair<size_t, size_t>> &ir_input_2_range) {
+  GE_ASSERT_NOTNULL(op);
+  std::vector<IrIOSpec> ir_specs;
+  for (auto &item : op->GetIrInputs()) {
+    ir_specs.emplace_back(item.first, item.second);
+  }
+  const std::map<std::string, uint32_t> &name2idx = op->GetAllInputName();
+  DescEnv desc_env(op, true);
+
+  return GetIrDescRange(ir_specs, name2idx, desc_env, require_raw_index, ir_input_2_range);
+}
+}  // namespace
+
+// 获取输入IR对应的实例Desc的index范围，实例Desc中会去除未传值的Optional输入Desc
+graphStatus GetIrInputInstanceDescRange(const OpDescPtr &op,
+                                        std::map<size_t, std::pair<size_t, size_t>> &ir_input_2_range) {
+  return GetIrInputDescRange(op, false, ir_input_2_range);
+}
+
+// 获取输入IR对应的全部Desc的index范围，包含未传值的Optional输入Desc
+graphStatus GetIrInputRawDescRange(const OpDescPtr &op, std::map<size_t, std::pair<size_t, size_t>> &ir_input_2_range) {
+  return GetIrInputDescRange(op, true, ir_input_2_range);
+}
+
+graphStatus GetIrOutputDescRange(const OpDescPtr &op, std::map<size_t, std::pair<size_t, size_t>> &ir_output_2_range) {
+  GE_ASSERT_NOTNULL(op);
+  std::vector<IrIOSpec> ir_specs;
+  for (auto &item : op->GetIrOutputs()) {
+    ir_specs.emplace_back(item.first, item.second);
+  }
+  const std::map<std::string, uint32_t> &name2idx = op->GetAllOutputName();
+  DescEnv desc_env(op, false);
+
+  return GetIrDescRange(ir_specs, name2idx, desc_env, true, ir_output_2_range);
 }
 }  // namespace ge

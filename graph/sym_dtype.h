@@ -115,5 +115,14 @@ class PromotionSymDtypeExpression : public SymDtypeExpression {
  private:
   std::vector<SymDtype *> syms_;
 };
+
+// 获取输入IR对应的实例Desc的index范围，实例Desc中会去除未传值的Optional输入Desc
+graphStatus GetIrInputInstanceDescRange(const OpDescPtr &op,
+                                        std::map<size_t, std::pair<size_t, size_t>> &ir_input_2_range);
+
+// 获取输入IR对应的全部Desc的index范围，包含未传值的Optional输入Desc
+graphStatus GetIrInputRawDescRange(const OpDescPtr &op, std::map<size_t, std::pair<size_t, size_t>> &ir_input_2_range);
+
+graphStatus GetIrOutputDescRange(const OpDescPtr &op, std::map<size_t, std::pair<size_t, size_t>> &ir_output_2_range);
 }  // namespace ge
 #endif  // METADEF_CXX_GRAPH_SYM_DTYPE_H_
