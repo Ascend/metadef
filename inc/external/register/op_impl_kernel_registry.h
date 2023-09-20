@@ -32,6 +32,7 @@ class AnyValue;
 }  // namespace ge
 
 namespace gert {
+class TilingParseContext;
 struct OpImplKernelRegistry {
   using InferShapeKernelFunc = UINT32 (*)(InferShapeContext *);
   using InferShapeRangeKernelFunc = UINT32 (*)(InferShapeRangeContext *);
@@ -43,9 +44,10 @@ struct OpImplKernelRegistry {
   using OpType = ge::AscendString;
   using PrivateAttrList = std::vector<std::pair<ge::AscendString, ge::AnyValue>>;
   using PrivateAttrSet = std::unordered_set<ge::AscendString>;
-  using CompileInfoCreatorFunc = void *(*)();
+  using CompileInfoCreatorFunc = void *(*) ();
   using CompileInfoDeleterFunc = void (*)(void *);
   using KernelFunc = UINT32 (*)(KernelContext *context);
+  using TilingParseFunc = UINT32 (*)(TilingParseContext *context);
 
   struct OpImplFunctions {
     bool HasDataDependency() const {
@@ -106,10 +108,6 @@ struct OpImplKernelRegistry {
     uint8_t reserved_0_[7] = {0U};   // Reserved field, 8-byte aligned for unique_private_attrs
     uint8_t reserved_1_[24] = {0U};  // Reserved field, 16+8, do not directly use when only 8-byte left
   };
-  virtual ~OpImplKernelRegistry() = default;
-  virtual const OpImplFunctions *GetOpImpl(const ge::char_t *op_type) const = 0;
-  virtual const PrivateAttrList &GetPrivateAttrs(const ge::char_t *op_type) const = 0;
 };
 }  // namespace gert
-
 #endif
