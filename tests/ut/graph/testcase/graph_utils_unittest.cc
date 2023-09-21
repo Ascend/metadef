@@ -2323,6 +2323,21 @@ TEST_F(UtestGraphUtils, RemoveJustNodeGraphImplIsNull) {
   EXPECT_EQ(ret, GRAPH_FAILED);
 }
 
+TEST_F(UtestGraphUtils, RemoveJustNodes) {
+  auto graph_builder0 = ut::GraphBuilder("Test0");
+  const auto &node0 = graph_builder0.AddNode("data0", DATA, 1, 1);
+  const auto &node1 = graph_builder0.AddNode("data1", DATA, 1, 1);
+  const auto &node2 = graph_builder0.AddNode("data2", DATA, 1, 1);
+  EXPECT_EQ(graph_builder0.GetGraph()->GetDirectNodesSize(), 3U);
+  std::unordered_set<NodePtr> remove_nodes;
+  remove_nodes.insert(node0);
+  remove_nodes.insert(node1);
+  EXPECT_EQ(GraphUtils::RemoveJustNodes(graph_builder0.GetGraph(), remove_nodes), GRAPH_SUCCESS);
+  EXPECT_EQ(graph_builder0.GetGraph()->GetDirectNodesSize(), 1U);
+  // remove nodes not in graph, also return success
+  EXPECT_EQ(GraphUtils::RemoveJustNodes(graph_builder0.GetGraph(), remove_nodes), GRAPH_SUCCESS);
+}
+
 TEST_F(UtestGraphUtils, GetNodeFail) {
   UtestComputeGraphBuilder graph;
   NodePtr node_ptr = graph.GetNode("node1");

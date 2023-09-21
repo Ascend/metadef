@@ -346,6 +346,14 @@ class GraphUtils {
   static graphStatus RemoveJustNode(const ComputeGraphPtr compute_graph, const NodePtr &node);
 
   /**
+   * `RemoveJustNode`的批量删除接口，节点个数较多的时候，调用批量删除接口的性能比遍历`nodes`节点依次调用`RemoveJustNode`更高效一些
+   * @param compute_graph
+   * @param nodes
+   * @return
+   */
+  static graphStatus RemoveJustNodes(const ComputeGraphPtr &compute_graph, const std::unordered_set<NodePtr> &nodes);
+
+  /**
    * 从`compute_graph`图对象的包含的nodes列表中删除`node`节点，仅仅是删除节点，不包含对`node`的断边和重新连边等操作
    * @param compute_graph
    * @param node

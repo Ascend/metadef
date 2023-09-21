@@ -281,6 +281,14 @@ Status GetAscendWorkPath(std::string &ascend_work_path) {
   char_t work_path[MMPA_MAX_PATH] = {'\0'};
   const int32_t work_path_ret = mmGetEnv(kAscendWorkPathEnvName, work_path, MMPA_MAX_PATH);
   if (work_path_ret == EN_OK) {
+    if (mmAccess(work_path) != EN_OK) {
+      if (ge::CreateDir(work_path) != 0) {
+        std::string reason = "The path doesn't exist, create path failed.";
+        REPORT_INPUT_ERROR("E10001", std::vector<std::string>({"parameter", "value", "reason"}),
+                           std::vector<std::string>({kAscendWorkPathEnvName, work_path, reason}));
+        return FAILED;
+      }
+    }
     ascend_work_path = RealPath(work_path);
     if (ascend_work_path.empty()) {
       GELOGE(FAILED, "[Call][RealPath] File path %s is invalid.", work_path);

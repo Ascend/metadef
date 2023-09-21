@@ -76,7 +76,7 @@ public:
 class OpAICoreDefImpl {
 public:
   gert::OpImplKernelRegistry::TilingKernelFunc tiling_func = nullptr;
-  gert::OpImplRegister::TilingParseFunc tiling_parse = nullptr;
+  gert::OpImplKernelRegistry::TilingParseFunc tiling_parse = nullptr;
   gert::OpImplKernelRegistry::CompileInfoCreatorFunc ci_creator = nullptr;
   gert::OpImplKernelRegistry::CompileInfoDeleterFunc ci_deleter = nullptr;
   optiling::OP_CHECK_FUNC op_chk_support = nullptr;

@@ -195,6 +195,17 @@ TEST_F(ge_test_tensor_utils, CalcTensorMemSize_ND_FAILED_overflow) {
   EXPECT_NE(ret, GRAPH_SUCCESS);
 }
 
+TEST_F(ge_test_tensor_utils, CalcTensorMemSize_DT_STRING_FAILED_overflow) {
+  vector<int64_t> dims({4, 1024 * 1024, 1024 * 1024, 1024 * 1024});
+  GeShape ge_shape(dims);
+  Format format = FORMAT_ND;
+  DataType data_type = DT_STRING;
+  int64_t mem_size = 0;
+  graphStatus ret =
+      TensorUtils::CalcTensorMemSize(ge_shape, format, data_type, mem_size);
+  EXPECT_NE(ret, GRAPH_SUCCESS);
+}
+
 TEST_F(ge_test_tensor_utils, CalcTensorMemSize_ND_SUCCESS) {
   vector<int64_t> dims({10, 2, 3, 4, 5});
   GeShape ge_shape(dims);

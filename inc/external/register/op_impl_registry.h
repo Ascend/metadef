@@ -22,12 +22,11 @@
 #include "graph/ge_error_codes.h"
 #include "graph/types.h"
 #include "graph/compiler_def.h"
-#include "register/op_impl_kernel_registry_types.h"
-#include "op_impl_kernel_registry.h"
+#include "register/op_impl_registry_base.h"
+#include "register/op_impl_kernel_registry.h"
 
 namespace gert {
-class TilingParseContext;
-class OpImplRegistry : public OpImplKernelRegistry {
+class OpImplRegistry : public OpImplRegistryBase {
  public:
   static OpImplRegistry &GetInstance();
   OpImplFunctions &CreateOrGetOpImpl(const ge::char_t *op_type);
@@ -43,8 +42,6 @@ class OpImplRegistry : public OpImplKernelRegistry {
 
 class OpImplRegister {
  public:
-  using TilingParseFunc = UINT32 (*)(TilingParseContext *context);
-
   explicit OpImplRegister(const ge::char_t *op_type);
   OpImplRegister &InferShape(OpImplKernelRegistry::InferShapeKernelFunc infer_shape_func);
   OpImplRegister &InferShapeRange(OpImplKernelRegistry::InferShapeRangeKernelFunc infer_shape_range_func);
@@ -65,7 +62,7 @@ class OpImplRegister {
     return *this;
   }
   template<typename T>
-  OpImplRegister &TilingParse(TilingParseFunc tiling_parse_func) {
+  OpImplRegister &TilingParse(OpImplKernelRegistry::TilingParseFunc tiling_parse_func) {
     functions_.tiling_parse = reinterpret_cast<OpImplKernelRegistry::KernelFunc>(tiling_parse_func);
     functions_.compile_info_creator = CreateCompileInfo<T>;
     functions_.compile_info_deleter = DeleteCompileInfo<T>;
@@ -119,7 +116,7 @@ class OpImplRegisterV2 {
     return TilingParse(tiling_parse_func, CreateCompileInfo<T>, DeleteCompileInfo<T>);
   }
   template<typename T>
-  OpImplRegisterV2 &TilingParse(OpImplRegister::TilingParseFunc const tiling_parse_func) {
+  OpImplRegisterV2 &TilingParse(OpImplKernelRegistry::TilingParseFunc const tiling_parse_func) {
     return TilingParse(reinterpret_cast<OpImplKernelRegistry::KernelFunc>(tiling_parse_func), CreateCompileInfo<T>,
                        DeleteCompileInfo<T>);
   }

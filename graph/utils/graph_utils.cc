@@ -4269,4 +4269,28 @@ graphStatus GraphUtils::MoveNodeToGraph(const NodePtr &node, ComputeGraph &dst_g
   GE_ASSERT_SUCCESS(node->SetOwnerComputeGraph(dst_graph.shared_from_this()));
   return GRAPH_SUCCESS;
 }
+
+graphStatus GraphUtils::RemoveJustNodes(const ComputeGraphPtr &compute_graph,
+                                        const std::unordered_set<NodePtr> &nodes) {
+  GE_CHECK_NOTNULL(compute_graph);
+  GE_CHECK_NOTNULL(compute_graph->impl_);
+
+  size_t success_removed_nodes_size = 0U;
+  for (auto iter = compute_graph->impl_->nodes_.begin(); iter != compute_graph->impl_->nodes_.end();) {
+    if (nodes.count(*iter) > 0U) {
+      GELOGD("Remove %s from graph %s.", (*iter)->GetNamePtr(), compute_graph->GetName().c_str());
+      iter = compute_graph->impl_->nodes_.erase(iter);
+      --(compute_graph->impl_->direct_nodes_size_);
+      ++success_removed_nodes_size;
+    } else {
+      ++iter;
+    }
+  }
+  const auto to_be_remove_nodes_size = nodes.size();
+  if (success_removed_nodes_size != to_be_remove_nodes_size) {
+    GELOGW("Successfully remove %zu nodes but there are %zu nodes to be delete", success_removed_nodes_size,
+           to_be_remove_nodes_size);
+  }
+  return GRAPH_SUCCESS;
+}
 }  // namespace ge
