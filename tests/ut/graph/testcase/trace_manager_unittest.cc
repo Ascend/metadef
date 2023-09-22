@@ -70,10 +70,10 @@ TEST_F(UtestTraceManager, add_trace_basic_0) {
   EXPECT_EQ(instance.current_file_saved_nums_, 10001);
   EXPECT_EQ(GetFileLinesNum(instance.current_saving_file_name_), 10001);
   std::string pre_file_name = instance.current_saving_file_name_;
-
-  EXPECT_EQ(instance.Initialize("."), SUCCESS);
   instance.stopped_ = false;
   instance.current_file_saved_nums_ = 2000000U + 1U;
+  EXPECT_EQ(instance.Initialize("."), SUCCESS);
+
   for (int i = 0; i < 100; i++) {
     instance.AddTrace(std::to_string(i + 1));
   }

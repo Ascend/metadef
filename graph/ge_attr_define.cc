@@ -960,7 +960,7 @@ const std::string ATTR_NAME_NOTASK = "_no_task";
 
 const std::string ATTR_NAME_OUTPUT_REUSE_INPUT = "_output_reuse_input";
 
-const std::string ATTR_NAME_OUTPUT_MAX_SIZE = "_output_max_size";
+const std::string ATTR_NAME_GRAPH_OUTPUT_MAX_SIZE = "_graph_output_max_size";
 
 const std::string ATTR_NAME_REUSE_INPUT_ON_DIM_INDEX = "_reuse_input_on_dim_index";
 

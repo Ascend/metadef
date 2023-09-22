@@ -192,7 +192,7 @@ class GE_FUNC_VISIBILITY StringUtils {
     }
 
     for (size_t i = 1; i < str.size(); i++) {
-      if (isdigit(str.at(i)) == 0) {
+      if (isdigit(static_cast<int32_t>(str.at(i))) == 0) {
         return false;
       }
     }
