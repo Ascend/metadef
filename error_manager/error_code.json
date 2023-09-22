@@ -1981,6 +1981,39 @@
       }
     },
     {
+      "errClass": "AutoDeploy Errors",
+      "errTitle": "Unsupported Attribute for a Node",
+      "ErrCode": "EF1011",
+      "ErrMessage": "The attribute _process_node_engine_id marked as %s for node %s (%s) is invalid.",
+      "Arglist": "process_node_engine_id, node_name, node_type",
+      "suggestion": {
+        "Possible Cause": "The attribute _process_node_engine_id is marked with value other than 'NPU' for the node.",
+        "Solution": "Unset the attribute _process_node_engine_id in the compute graph or set the value to 'NPU'."
+      }
+    },
+    {
+      "errClass": "AutoDeploy Errors",
+      "errTitle": "Invalid Graph Parallel Option Configuration",
+      "ErrCode": "EF1012",
+      "ErrMessage": "Configuration of graph parallel option is incorrect.",
+      "Arglist": "",
+      "suggestion": {
+        "Possible Cause": "Tensor parallel size or data parallel size is incorrect.",
+        "Solution": "Make sure the options in graph_parallel_option.json are correct: 1. If both tensor_parallel_option and data_parallel_option are set, the total parallel size (i.e. tensor_parallel_size * data_parallel_size) must equal the total device num in numa_config.json; 2. If only either tensor_parallel_option or data_parallel_option is set, the tensor_parallel_size or data_parallel_size must equal the total device num in numa_config,json."
+      }
+    },
+    {
+      "errClass": "AutoDeploy Errors",
+      "errTitle": "Invalid Optimize Shape Format",
+      "ErrCode": "EF1013",
+      "ErrMessage": "Optimize shape format %s is incorrect.",
+      "Arglist": "opt_shape_str",
+      "suggestion": {
+        "Possible Cause": "The format of ge.exec.dataInputsOptimizeShape is incorrect.",
+        "Solution": "Make sure the format of ge.exec.dataInputsOptimizeShape is correct. For example, ge.exec.dataInputsOptimizeShape='input0:[100,16];input1:[100,100,16];input2:[100,100,16]'"
+      }
+    },
+    {
       "errClass": "DVPP Errors",
       "errTitle": "Invalid Argument",
       "ErrCode": "EN0001",
