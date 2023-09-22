@@ -81,4 +81,14 @@ TEST_F(UtestOpTypeUtils, TestGetOriginalTypeSuccess) {
   EXPECT_EQ(OpTypeUtils::GetOriginalType(node, original_type), GRAPH_SUCCESS);
   EXPECT_EQ(original_type, type);
 }
-} // namespace ge
+
+TEST_F(UtestOpTypeUtils, TestIsInputRefData) {
+  ge::OpDescPtr ref_data_op_desc = std::make_shared<ge::OpDesc>("RefData", REFDATA);
+  ge::OpDescPtr data_op_desc = std::make_shared<ge::OpDesc>("Data", DATA);
+  EXPECT_EQ(OpTypeUtils::IsInputRefData(ref_data_op_desc), true);
+  (void) AttrUtils::SetStr(ref_data_op_desc, REF_VAR_SRC_VAR_NAME, "1");
+  EXPECT_EQ(OpTypeUtils::IsInputRefData(ref_data_op_desc), false);
+  EXPECT_EQ(OpTypeUtils::IsInputRefData(data_op_desc), false);
+}
+
+}  // namespace ge
