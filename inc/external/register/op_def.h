@@ -73,12 +73,14 @@ public:
   OpParamDef &Format(std::vector<ge::Format> formats);
   OpParamDef &UnknownShapeFormat(std::vector<ge::Format> formats);
   OpParamDef &ValueDepend(Option value_depend);
+  OpParamDef &AutoContiguous();
   ge::AscendString &GetParamName(void);
   Option GetParamType(void);
   std::vector<ge::DataType> &GetDataTypes(void);
   std::vector<ge::Format> &GetFormats(void);
   std::vector<ge::Format> &GetUnknownShapeFormats(void);
   ge::AscendString &GetValueDepend(void);
+  bool GetAutoContiguous(void);
 
 private:
   std::unique_ptr<OpParamDefImpl> impl_;

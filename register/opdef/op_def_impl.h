@@ -33,6 +33,7 @@ public:
   ge::AscendString reshape_type = "";
   ge::AscendString value_depend = "";
   std::vector<ge::Format> unknown_shape_formats;
+  bool auto_contiguous = false;
 };
 
 class OpParamTrunk {

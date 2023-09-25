@@ -27,7 +27,8 @@ TEST_F(OpDefParamUT, ParamTest) {
       .DataType({ge::DT_FLOAT16})
       .Format({ge::FORMAT_ND})
       .UnknownShapeFormat({ge::FORMAT_NCHW})
-      .ValueDepend(Option::REQUIRED);
+      .ValueDepend(Option::REQUIRED)
+      .AutoContiguous();
   desc.Input("x2")
       .ParamType(Option::OPTIONAL)
       .DataType({ge::DT_FLOAT16})
@@ -45,7 +46,8 @@ TEST_F(OpDefParamUT, ParamTest) {
       .DataType({ge::DT_FLOAT16})
       .Format({ge::FORMAT_ND})
       .UnknownShapeFormat({ge::FORMAT_ND})
-      .ValueDepend(Option::REQUIRED);
+      .ValueDepend(Option::REQUIRED)
+      .AutoContiguous();
   EXPECT_EQ(desc.Input("x1").GetParamName(), "x1");
   EXPECT_EQ(desc.Input("x1").GetParamType(), Option::OPTIONAL);
   EXPECT_EQ(desc.Input("x1").GetDataTypes().size(), 1);
@@ -53,7 +55,10 @@ TEST_F(OpDefParamUT, ParamTest) {
   EXPECT_EQ(desc.Input("x1").GetUnknownShapeFormats().size(), 1);
   EXPECT_EQ(desc.Input("x1").GetUnknownShapeFormats()[0], ge::FORMAT_NCHW);
   EXPECT_EQ(desc.Input("x1").GetValueDepend(), "required");
+  EXPECT_EQ(desc.Input("x1").GetAutoContiguous(), true);
   EXPECT_EQ(desc.Input("x2").GetValueDepend(), "optional");
+  EXPECT_EQ(desc.Input("x2").GetAutoContiguous(), false);
+  EXPECT_EQ(desc.Output("y").GetAutoContiguous(), true);
   EXPECT_EQ(desc.GetInputs().size(), 2);
   EXPECT_EQ(desc.GetOutputs().size(), 1);
 }

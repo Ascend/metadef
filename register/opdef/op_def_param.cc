@@ -32,6 +32,7 @@ OpParamDef::OpParamDef(const OpParamDef &def) : impl_(new(std::nothrow) OpParamD
   this->impl_->reshape_type = def.impl_->reshape_type;
   this->impl_->value_depend = def.impl_->value_depend;
   this->impl_->unknown_shape_formats = def.impl_->unknown_shape_formats;
+  this->impl_->auto_contiguous = def.impl_->auto_contiguous;
 }
 
 OpParamDef &OpParamDef::operator=(const OpParamDef &def) {
@@ -61,6 +62,7 @@ void OpParamDef::MergeParam(const OpParamDef &def) {
   if (def.impl_->unknown_shape_formats.size() > 0) {
     this->impl_->unknown_shape_formats = def.impl_->unknown_shape_formats;
   }
+  this->impl_->auto_contiguous = def.impl_->auto_contiguous;
 }
 
 OpParamDef::~OpParamDef() = default;
@@ -103,6 +105,11 @@ OpParamDef &OpParamDef::ValueDepend(Option value_depend) {
   return *this;
 }
 
+OpParamDef &OpParamDef::AutoContiguous() {
+  this->impl_->auto_contiguous = true;
+  return *this;
+}
+
 ge::AscendString &OpParamDef::GetParamName(void) {
   return this->impl_->name;
 }
@@ -120,6 +127,9 @@ std::vector<ge::Format> &OpParamDef::GetUnknownShapeFormats(void) {
 }
 ge::AscendString &OpParamDef::GetValueDepend(void) {
   return this->impl_->value_depend;
+}
+bool OpParamDef::GetAutoContiguous(void) {
+  return this->impl_->auto_contiguous;
 }
 
 OpParamDef &OpParamTrunk::Input(const char *name) {
