@@ -23,6 +23,7 @@ namespace ge {
 class OpTypeUtils {
  public:
   static bool IsDataNode(const std::string &type);
+  static bool IsInputRefData(const ge::OpDescPtr &op_desc);
   static bool IsVariableNode(const std::string &type);
   static bool IsVarLikeNode(const std::string &type);
   static bool IsAssignLikeNode(const std::string &type);

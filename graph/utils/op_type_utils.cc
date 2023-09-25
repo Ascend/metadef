@@ -41,6 +41,18 @@ const std::unordered_set<std::string> kIdentityOpSet = {IDENTITY, READVARIABLEOP
 bool OpTypeUtils::IsDataNode(const std::string &type) {
   return (kDataOpSet.count(type) > 0);
 }
+/**
+ * @brief 判断类型是否为RefDATA并且为输入节点
+ * @param node
+ * @return true
+ * @return false
+ */
+bool OpTypeUtils::IsInputRefData(const ge::OpDescPtr &op_desc) {
+  if ((op_desc == nullptr) || (op_desc->GetType() != REFDATA)) {
+      return false;
+  }
+  return !AttrUtils::HasAttr(op_desc, REF_VAR_SRC_VAR_NAME);
+}
 
 bool OpTypeUtils::IsVariableNode(const std::string &type) {
   return (kVariableOpSet.count(type) > 0);
