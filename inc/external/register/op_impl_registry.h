@@ -123,6 +123,7 @@ class OpImplRegisterV2 {
   OpImplRegisterV2 &InputsDataDependency(std::initializer_list<int32_t> inputs);
   OpImplRegisterV2 &OpExecuteFunc(OpImplKernelRegistry::OpExecuteFunc op_execute_func);
   OpImplRegisterV2 &HostInputs(std::initializer_list<int32_t> inputs);
+  OpImplRegisterV2 &TilingInputsDataDependency(std::initializer_list<int32_t> inputs);
  private:
   OpImplRegisterV2 &TilingParse(OpImplKernelRegistry::KernelFunc tiling_parse_func,
                                 OpImplKernelRegistry::CompileInfoCreatorFunc creator_func,

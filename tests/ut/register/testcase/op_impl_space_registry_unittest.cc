@@ -235,6 +235,7 @@ TEST_F(OpImplSpaceRegistryUT, OpImplSpaceRegistry_AddRegistry_WithSameOptype_Suc
   gert::OpImplKernelRegistry::OpImplFunctions funcs;
   funcs.max_tiling_data_size = 100;
   funcs.host_inputs = 1;
+  funcs.tiling_dependency = 1;
   funcs.unique_private_attrs.insert("test");
   registry_holder->AddTypesToImpl("Add_test", funcs);
   auto ret = space_registry.AddRegistry(registry_holder);

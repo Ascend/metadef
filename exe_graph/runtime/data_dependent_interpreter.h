@@ -52,7 +52,7 @@ class DataDependentInterpreter {
    * @return
    */
   ge::graphStatus IsDataDependent(const int32_t index, bool &is_data_dependent) const;
-
+  ge::graphStatus IsTilingInputDataDependent(const int32_t index, bool &is_tiling_dependent) const;
  private:
   ge::graphStatus IsDataDependentByImplOp(const ge::NodePtr &node,
                                           const int32_t input_index, bool &is_data_dependent) const;

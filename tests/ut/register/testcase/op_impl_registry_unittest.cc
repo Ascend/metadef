@@ -80,6 +80,7 @@ TEST_F(OpImplRegistryUT, Register_impl_null) {
   gert::OpImplRegisterV2 reg("Test");
   reg.impl_.release();
   reg.HostInputs({0, 2, 128});
+  reg.TilingInputsDataDependency({0, 1});
 }
 
 TEST_F(OpImplRegistryUT, Register_Success_RegisterAll) {
@@ -102,6 +103,43 @@ TEST_F(OpImplRegistryUT, Register_Success_RegisterAll) {
       .PrivateAttr("F", true)
       .PrivateAttr("G", std::vector<float>({10.0F, 20.0F}))
       .InputsDataDependency({0, 1, 3, 5});
+
+  IMPL_OP(TestFoo_tilingDepend)
+      .TilingInputsDataDependency({0, 1, 128})
+      .TilingInputsDataDependency({0});
+
+  IMPL_OP(TestFoo_error)
+      .TilingInputsDataDependency({0, 1, 128})
+      .InputsDataDependency({0, 1, 3, 5});
+
+  IMPL_OP(TestFoo_error2)
+      .InputsDataDependency({0, 1, 3, 5})
+      .TilingInputsDataDependency({0, 1, 2, 128});
+
+  funcs = gert::OpImplRegistry::GetInstance().GetOpImpl("TestFoo_tilingDepend");
+  EXPECT_TRUE(funcs->IsTilingInputDataDependency(0U));
+  EXPECT_TRUE(funcs->IsTilingInputDataDependency(1U));
+  EXPECT_FALSE(funcs->IsTilingInputDataDependency(2U));
+  EXPECT_FALSE(funcs->IsTilingInputDataDependency(3U));
+  EXPECT_FALSE(funcs->IsTilingInputDataDependency(4U));
+  EXPECT_FALSE(funcs->IsTilingInputDataDependency(5U));
+  EXPECT_FALSE(funcs->IsTilingInputDataDependency(6U));
+
+  funcs = gert::OpImplRegistry::GetInstance().GetOpImpl("TestFoo_error");
+  EXPECT_TRUE(funcs->IsTilingInputDataDependency(0U));
+  EXPECT_TRUE(funcs->IsTilingInputDataDependency(1U));
+  EXPECT_TRUE(funcs->IsInputDataDependency(0U));
+  EXPECT_TRUE(funcs->IsInputDataDependency(1U));
+  EXPECT_TRUE(funcs->IsInputDataDependency(3U));
+
+  funcs = gert::OpImplRegistry::GetInstance().GetOpImpl("TestFoo_error2");
+  EXPECT_TRUE(funcs->IsInputDataDependency(0U));
+  EXPECT_TRUE(funcs->IsInputDataDependency(1U));
+  EXPECT_TRUE(funcs->IsInputDataDependency(3U));
+  EXPECT_TRUE(funcs->IsInputDataDependency(5U));
+  EXPECT_TRUE(funcs->IsTilingInputDataDependency(0U));
+  EXPECT_TRUE(funcs->IsTilingInputDataDependency(1U));
+  EXPECT_TRUE(funcs->IsTilingInputDataDependency(2U));
 
   funcs = gert::OpImplRegistry::GetInstance().GetOpImpl("TestFoo");
   ASSERT_NE(funcs, nullptr);
@@ -155,6 +193,7 @@ TEST_F(OpImplRegistryUT, Register_Success_RegisterAll) {
   EXPECT_FLOAT_EQ(funcs->private_attrs[6].second.Get<std::vector<float>>()->at(0), 10.0);
   EXPECT_FLOAT_EQ(funcs->private_attrs[6].second.Get<std::vector<float>>()->at(1), 20.0);
 }
+
 TEST_F(OpImplRegistryUT, Register_Success_RegisterMultiple) {
   auto funcs = gert::OpImplRegistry::GetInstance().GetOpImpl("TestFoo1");
   ASSERT_EQ(funcs, nullptr);

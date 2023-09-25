@@ -90,6 +90,32 @@ struct OpImplKernelRegistry {
       return ge::GRAPH_SUCCESS;
     }
 
+    bool HasTilingInputDataDependency() const {
+      if (HasDataDependency()) {
+        return true;
+      }
+      return (tiling_dependency != 0UL);
+    }
+    /*
+     * param index: must be ir index
+     */
+    bool IsTilingInputDataDependency(const size_t index) const {
+      if (IsInputDataDependency(index)) {
+        return true;
+      }
+      if (index >= (sizeof(tiling_dependency) * kInt64ByteCount)) {
+        return false;
+      }
+      return static_cast<bool>(tiling_dependency & (static_cast<uint64_t>(1) << index));
+    }
+    ge::graphStatus SetTilingInputDataDependency(const size_t index) {
+      if (index >= (sizeof(tiling_dependency) * kInt64ByteCount)) {
+        return ge::GRAPH_FAILED;
+      }
+      tiling_dependency |= 1UL << index;
+      return ge::GRAPH_SUCCESS;
+    }
+
     InferShapeKernelFunc infer_shape;
     InferShapeRangeKernelFunc infer_shape_range;
     InferDataTypeKernelFunc infer_datatype;
@@ -105,8 +131,9 @@ struct OpImplKernelRegistry {
     PrivateAttrSet unique_private_attrs;
     uint64_t host_inputs = 0UL;
     OpExecuteFunc op_execute_func;
+    uint64_t tiling_dependency = 0UL;
     uint8_t reserved_0_[7] = {0U};   // Reserved field, 8-byte aligned for unique_private_attrs
-    uint8_t reserved_1_[24] = {0U};  // Reserved field, 16+8, do not directly use when only 8-byte left
+    uint8_t reserved_1_[16] = {0U};  // Reserved field, 8+8, do not directly use when only 8-byte left
   };
 };
 }  // namespace gert
