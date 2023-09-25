@@ -107,6 +107,15 @@ void OpImplSpaceRegistry::MergeFunctions(OpImplKernelRegistry::OpImplFunctions &
   } else {
     // 已经注册且没有重复注册
   }
+
+  if (merged_funcs.tiling_dependency == 0U) {
+    merged_funcs.tiling_dependency = src_funcs.tiling_dependency;
+  } else if (src_funcs.tiling_dependency != 0U) {
+    GELOGW("op type %s tiling_dependency has been registered", op_type.c_str());
+  } else {
+    // 已经注册且没有重复注册
+  }
+
   if (merged_funcs.private_attrs.size() == 0U) {
     merged_funcs.private_attrs = src_funcs.private_attrs;
   } else if (src_funcs.private_attrs.size() != 0U) {

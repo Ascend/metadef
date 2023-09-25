@@ -1463,6 +1463,8 @@ GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY extern const std::string LOGIC_ST
 
 // storage format
 GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY extern const std::string ATTR_NAME_IS_HEAVY_OP;
+// tiling depend
+GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY extern const std::string ATTR_NAME_DYNAMIC_TILING_DEPEND_OP;
 }  // namespace ge
 
 /*lint +e618*/
