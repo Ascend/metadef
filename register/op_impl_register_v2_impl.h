@@ -17,6 +17,7 @@
 #ifndef METADEF_CXX_REGISTER_OP_IMPL_REGISTER_V_2_IMPL_H_
 #define METADEF_CXX_REGISTER_OP_IMPL_REGISTER_V_2_IMPL_H_
 #include "register/op_impl_registry.h"
+#include "register/op_impl_registry_base.h"
 namespace gert {
 class OpImplRegisterV2Impl {
  public:
