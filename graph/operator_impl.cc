@@ -407,16 +407,19 @@ GeTensorDescPtr OperatorImpl::MutableOutputDesc(const uint32_t index) {
 
 graphStatus OperatorImpl::UpdateOutputDesc(const std::string &name, const GeTensorDesc &tensor_desc) {
   GE_CHK_BOOL_RET_STATUS(op_desc_ != nullptr, GRAPH_FAILED, "[Check][Param] op_desc is nullptr.");
-
   const auto res = op_desc_->UpdateOutputDesc(name, tensor_desc);
   if (res == GRAPH_SUCCESS) {
+    // normalize ge tensor desc
+    auto normalized_tensor_desc = tensor_desc;
+    TensorAdapter::NormalizeGeTensorDesc(normalized_tensor_desc);
     for (const auto &ol : output_links_[name]) {
       if (ol.GetOwner() == nullptr) {
         GELOGW("[Update][Check] %s get owner is nullptr", ol.GetName().c_str());
         continue;
       }
-      GE_CHK_BOOL_RET_STATUS(ol.GetOwner()->UpdateInputDesc(ol.GetName(), tensor_desc) == GRAPH_SUCCESS, GRAPH_FAILED,
-                             "[Update][InputDesc] Could not update next operator's input %s.", ol.GetName().c_str());
+      GE_CHK_BOOL_RET_STATUS(ol.GetOwner()->UpdateInputDesc(ol.GetName(), normalized_tensor_desc) == GRAPH_SUCCESS,
+                             GRAPH_FAILED, "[Update][InputDesc] Could not update next operator's input %s.",
+                             ol.GetName().c_str());
     }
   }
   return res;
