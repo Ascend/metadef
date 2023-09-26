@@ -158,9 +158,11 @@ UINT32 OpTilingStubNewWithDynamicInput(gert::TilingContext *kernel_context) {
   EXPECT_EQ(*shape, gert::StorageShape( {4, 256, 200, 336}, {4, 16, 200, 336, 16}));
   auto shape0_1 = kernel_context->GetDynamicInputShape(0, 1);
   EXPECT_EQ(*shape0_1, gert::StorageShape( {4, 256, 100, 168}, {4, 16, 100, 168, 16}));
-  auto shape_1 = kernel_context->GetOptionalInputShape(1);
-  EXPECT_EQ(shape_1, nullptr);
-  auto shape_2 = kernel_context->GetDynamicInputShape(2, 0);
+  auto shape_optional_1 = kernel_context->GetOptionalInputShape(1);
+  EXPECT_EQ(shape_optional_1, nullptr);
+  auto shape_optional_2 = kernel_context->GetOptionalInputShape(2);
+  EXPECT_EQ(shape_optional_2, nullptr);
+  auto shape_2 = kernel_context->GetDynamicInputShape(3, 0);
   EXPECT_EQ(*shape_2, gert::StorageShape({100, 5}, {100, 5}));
   auto input_1 = kernel_context->GetInputShape(4);
   EXPECT_EQ(*input_1, gert::StorageShape({100, 5}, {100, 5}));
@@ -1415,6 +1417,7 @@ TEST_F(UtestRegister, NewOptilingInterface_Ok_WithDynamicInput) {
     "param_name": "feats"
   }
   ],
+  null,
   null,
   {
     "shape": [100, 5],

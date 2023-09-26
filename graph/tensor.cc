@@ -818,7 +818,6 @@ GeTensorDesc TensorAdapter::TensorDesc2GeTensorDesc(const TensorDesc &tensor_des
 
   const auto real_dim_cnt = static_cast<uint32_t>(tensor_desc.GetRealDimCnt());
   TensorUtils::SetRealDimCnt(ge_tensor_desc, real_dim_cnt);
-
   return ge_tensor_desc;
 }
 
@@ -898,6 +897,11 @@ GeTensor TensorAdapter::AsGeTensorShared(const Tensor &tensor) {
 GeTensor TensorAdapter::NormalizeGeTensor(const GeTensor &tensor) {
   auto normalized_tensor = tensor;
   auto &desc = normalized_tensor.MutableTensorDesc();
+  NormalizeGeTensorDesc(desc);
+  return normalized_tensor;
+}
+
+void TensorAdapter::NormalizeGeTensorDesc(GeTensorDesc &desc) {
   bool origin_format_is_set = false;
   if (AttrUtils::GetBool(desc, ATTR_NAME_ORIGIN_FORMAT_IS_SET, origin_format_is_set) && origin_format_is_set &&
       TensorUtils::IsOriginShapeInited(desc)) {
@@ -907,7 +911,6 @@ GeTensor TensorAdapter::NormalizeGeTensor(const GeTensor &tensor) {
     desc.SetShape(desc.GetOriginShape());
     (void) AttrUtils::SetBool(desc, ATTR_NAME_ORIGIN_FORMAT_IS_SET, false);
   }
-  return normalized_tensor;
 }
 
 GeTensor TensorAdapter::AsGeTensor(Tensor &tensor) {

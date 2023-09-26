@@ -22,73 +22,9 @@
 #include "graph/ge_error_codes.h"
 #include "graph/types.h"
 #include "graph/compiler_def.h"
-#include "register/op_impl_registry_base.h"
 #include "register/op_impl_kernel_registry.h"
 
 namespace gert {
-class OpImplRegistry : public OpImplRegistryBase {
- public:
-  static OpImplRegistry &GetInstance();
-  OpImplFunctions &CreateOrGetOpImpl(const ge::char_t *op_type);
-  const OpImplFunctions *GetOpImpl(const ge::char_t *op_type) const override;
-  const PrivateAttrList &GetPrivateAttrs(const ge::char_t *op_type) const override;
-  const std::map<OpType, OpImplFunctions> &GetAllTypesToImpl() const;
-  std::map<OpType, OpImplFunctions> &GetAllTypesToImpl();
-
- private:
-  std::map<OpType, OpImplFunctions> types_to_impl_;
-  uint8_t reserved_[40] = {0U};  // Reserved field, 32+8, do not directly use when only 8-byte left
-};
-
-class OpImplRegister {
- public:
-  explicit OpImplRegister(const ge::char_t *op_type);
-  OpImplRegister &InferShape(OpImplKernelRegistry::InferShapeKernelFunc infer_shape_func);
-  OpImplRegister &InferShapeRange(OpImplKernelRegistry::InferShapeRangeKernelFunc infer_shape_range_func);
-  OpImplRegister &InferDataType(OpImplKernelRegistry::InferDataTypeKernelFunc infer_datatype_func);
-  OpImplRegister &Tiling(OpImplKernelRegistry::TilingKernelFunc tiling_func, size_t max_tiling_data_size = 2048);
-  OpImplRegister &PrivateAttr(const ge::char_t *private_attr);
-  OpImplRegister &PrivateAttr(const ge::char_t *private_attr, int64_t private_attr_val);
-  OpImplRegister &PrivateAttr(const ge::char_t *private_attr, const std::vector<int64_t> &private_attr_val);
-  OpImplRegister &PrivateAttr(const ge::char_t *private_attr, const ge::char_t *private_attr_val);
-  OpImplRegister &PrivateAttr(const ge::char_t *private_attr, float private_attr_val);
-  OpImplRegister &PrivateAttr(const ge::char_t *private_attr, bool private_attr_val);
-  OpImplRegister &PrivateAttr(const ge::char_t *private_attr, const std::vector<float> &private_attr_val);
-  template<typename T>
-  OpImplRegister &TilingParse(OpImplKernelRegistry::KernelFunc tiling_parse_func) {
-    functions_.tiling_parse = tiling_parse_func;
-    functions_.compile_info_creator = CreateCompileInfo<T>;
-    functions_.compile_info_deleter = DeleteCompileInfo<T>;
-    return *this;
-  }
-  template<typename T>
-  OpImplRegister &TilingParse(OpImplKernelRegistry::TilingParseFunc tiling_parse_func) {
-    functions_.tiling_parse = reinterpret_cast<OpImplKernelRegistry::KernelFunc>(tiling_parse_func);
-    functions_.compile_info_creator = CreateCompileInfo<T>;
-    functions_.compile_info_deleter = DeleteCompileInfo<T>;
-    return *this;
-  }
-  OpImplRegister &InputsDataDependency(std::initializer_list<int32_t> inputs);
- private:
-  template<typename T, typename std::enable_if<(!std::is_array<T>::value), int32_t>::type = 0>
-  static void *CreateCompileInfo() {
-    return new T();
-  }
-  template<typename T>
-  static void DeleteCompileInfo(void *const obj) {
-    delete reinterpret_cast<T *>(obj);
-  }
-  template<size_t MaxLen>
-  static void *CreateDynamicLenTilingData() {
-    return TilingData::CreateCap(MaxLen).release();
-  }
-  OpImplRegister &PrivateAttrImpl(const ge::char_t *private_attr, ge::AnyValue private_attr_av);
-
- private:
-  const ge::char_t *op_type_;
-  OpImplRegistry::OpImplFunctions &functions_;
-  uint8_t reserved_[40] = {0U}; // Reserved field, 32+8, do not directly use when only 8-byte left
-};
 class OpImplRegisterV2Impl;
 class OpImplRegisterV2 {
  public:
