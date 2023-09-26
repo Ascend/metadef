@@ -25,9 +25,21 @@ namespace gert {
 class ProfilingInfoWrapper {
  public:
   virtual ~ProfilingInfoWrapper() = default;
-  virtual void SetBlockDim(uint32_t block_dim) = 0;
+
+  virtual void SetBlockDim(uint32_t block_dim) {
+    (void)block_dim;
+  }
+
+  virtual void SetBlockDimForAtomic(uint32_t block_dim) {
+    (void)block_dim;
+  }
+
   virtual ge::graphStatus FillShapeInfo(const std::vector<std::vector<int64_t>> &input_shapes,
-                                        const std::vector<std::vector<int64_t>> &output_shapes) = 0;
+                                        const std::vector<std::vector<int64_t>> &output_shapes) {
+    (void)input_shapes;
+    (void)output_shapes;
+    return ge::GRAPH_SUCCESS;
+  }
 };
 
 class DataDumpInfoWrapper {
