@@ -48,9 +48,7 @@ graphStatus OpDescUtilsEx::CallInferFuncV2Inner(const OpDescPtr &op_desc, Operat
   }
   GE_CHK_STATUS_RET_NOLOG(call_infer_data_type(op_desc));
   GE_CHK_STATUS_RET_NOLOG(call_infer_shape_v2(op, op_desc));
-  if (!ge::GetContext().GetTrainGraphFlag()) {
-    GE_CHK_STATUS_RET_NOLOG(call_infer_shape_range(op, op_desc));
-  }
+  GE_CHK_STATUS_RET_NOLOG(call_infer_shape_range(op, op_desc));
   return GRAPH_SUCCESS;
 }
 
