@@ -62,6 +62,14 @@ struct DeviceIndex {
 };
 
 struct ModelIndex {
+  // use this construct when need use stage id
+  ModelIndex() = default;
+  ModelIndex(const DeviceIndex &device_index, const int64_t stage_id, const int64_t virtual_stage_id)
+      : device_index(device_index), virtual_stage_id(virtual_stage_id), stage_id(stage_id) {}
+  // use this construct when do not need use stage id
+  ModelIndex(const DeviceIndex &device_index, const int64_t virtual_stage_id)
+      : device_index(device_index), virtual_stage_id(virtual_stage_id), stage_id(0L) {}
+  ~ModelIndex() = default;
   DeviceIndex device_index;
   int64_t virtual_stage_id = 0L;
   int64_t stage_id = 0L;
