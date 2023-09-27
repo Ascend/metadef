@@ -46,9 +46,15 @@ graphStatus OpDescUtilsEx::CallInferFuncV2Inner(const OpDescPtr &op_desc, Operat
     GE_CHK_STATUS_RET(RecoverOpDescIrDefinition(op_desc), "Failed recover ir def for %s %s", op_desc->GetNamePtr(),
                       op_desc->GetTypePtr());
   }
+  NodeShapeTransUtils transformer(op_desc);
+  GE_CHK_BOOL_RET_STATUS(transformer.Init(), GRAPH_FAILED, "Failed to init transformer for %s", op_desc->GetNamePtr());
+  GE_CHK_BOOL_RET_STATUS(transformer.CatchFormatAndShape(), GRAPH_FAILED,
+                         "Failed to catch format and shape for %s", op_desc->GetNamePtr());
   GE_CHK_STATUS_RET_NOLOG(call_infer_data_type(op_desc));
   GE_CHK_STATUS_RET_NOLOG(call_infer_shape_v2(op, op_desc));
   GE_CHK_STATUS_RET_NOLOG(call_infer_shape_range(op, op_desc));
+  GE_CHK_BOOL_RET_STATUS(transformer.UpdateFormatAndShape(), GRAPH_FAILED,
+                         "Failed to update format and shape for %s", op_desc->GetNamePtr());
   return GRAPH_SUCCESS;
 }
 
