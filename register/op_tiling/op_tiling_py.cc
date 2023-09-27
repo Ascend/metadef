@@ -428,7 +428,8 @@ ge::graphStatus ParseInputs(const char* inputs, ContextComponent& context_com) {
     GELOGE(ge::GRAPH_FAILED, "Parse json exception. %s", inputs);
     return ge::GRAPH_FAILED;
   }
-  uint32_t index = 0;
+  uint32_t index = 0U;
+  uint32_t optional_index = 0U;
   for (const auto &desc : desc_list) {
     if (desc.is_array()) {
       const auto input_num = desc.size();
@@ -447,10 +448,12 @@ ge::graphStatus ParseInputs(const char* inputs, ContextComponent& context_com) {
       }
     } else {
       if (desc.is_null()) {
-        context_com.op_desc->AppendIrInput("optional" + std::to_string(index), ge::kIrInputOptional);
+        context_com.op_desc->AppendIrInput("optional" + std::to_string(optional_index), ge::kIrInputOptional);
         context_com.op_desc->AddOptionalInputDesc(
-            "optional" + std::to_string(index), ge::GeTensorDesc(ge::GeShape(), ge::FORMAT_RESERVED, ge::DT_UNDEFINED));
-        GELOGI("Optional input index %u is null.", index);
+            "optional" + std::to_string(optional_index),
+            ge::GeTensorDesc(ge::GeShape(), ge::FORMAT_RESERVED, ge::DT_UNDEFINED));
+        GELOGI("Optional input index %u is null.", optional_index);
+        ++optional_index;
         continue;
       }
       context_com.op_desc->AppendIrInput(std::to_string(index), ge::kIrInputRequired);
@@ -1201,6 +1204,7 @@ int TbeOpTilingPyInterfaceEx3Inner(const char *const optype, const char *const c
     ParseInputsAndOutputs(inputs, outputs, op_desc, operator_param, const_values);
     CheckAndSetAttr(attrs, operator_param);
   } catch (...) {
+    GELOGE(ge::FAILED, "Failed to parse json_str. %s, %s, %s", compile_info, inputs, outputs);
     REPORT_CALL_ERROR("E19999", "Failed to parse json_str. %s, %s, %s", compile_info, inputs, outputs);
     return 0;
   }
