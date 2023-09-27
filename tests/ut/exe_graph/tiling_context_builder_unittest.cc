@@ -22,6 +22,7 @@
 #include "platform/platform_infos_def.h"
 #include "common/ge_common/util.h"
 #include "register/op_impl_registry.h"
+#include "register/op_impl_registry_base.h"
 #include "faker/node_faker.h"
 #include "faker/space_registry_faker.h"
 #include "graph/debug/ge_attr_define.h"

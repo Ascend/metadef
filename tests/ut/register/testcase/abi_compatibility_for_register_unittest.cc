@@ -18,6 +18,7 @@
 #define private public
 #include "graph/any_value.h"
 #include "register/op_impl_registry.h"
+#include "register/op_impl_registry_base.h"
 #include "register/kernel_registry_impl.h"
 
 namespace gert {

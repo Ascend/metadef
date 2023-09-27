@@ -16,6 +16,7 @@
 #define private public
 #define protected public
 #include "register/op_impl_registry.h"
+#include "register/op_impl_registry_base.h"
 #undef private
 #undef protected
 #include <gtest/gtest.h>

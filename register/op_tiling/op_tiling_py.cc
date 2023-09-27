@@ -29,6 +29,7 @@
 #include "common/util/tiling_utils.h"
 #include "platform/platform_info.h"
 #include "register/op_impl_registry.h"
+#include "register/op_impl_registry_base.h"
 #include "exe_graph/runtime/storage_shape.h"
 #include "exe_graph/runtime/kernel_run_context_builder.h"
 #include "exe_graph/runtime/tiling_context.h"
