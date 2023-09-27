@@ -716,6 +716,12 @@ void GetDumpGraphPrefix(std::stringstream& stream_file_name) {
         stream_file_name << (dump_graph_path_str.empty() ? "" : dump_graph_path_str + "/");
       } else {
         stream_file_name << "./";
+        std::string ascend_work_path;
+        (void)GetAscendWorkPath(ascend_work_path);
+        if (!ascend_work_path.empty()) {
+          stream_file_name.str("");
+          stream_file_name << (ascend_work_path + "/");
+        }
       }
     }
     path_prefix = stream_file_name.str();
