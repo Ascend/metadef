@@ -58,5 +58,12 @@ inline uint16_t FloatToUint16(const ge::float32_t value) {
   out = uint16_t(out | (sign >> right_shift_16));
   return out;
 }
+
+inline uint16_t FloatToBF16(const ge::float32_t value) {
+  Fp32 temp;
+  temp.f = value;
+  constexpr uint32_t kInt16BitsNum = 16U;
+  return uint16_t(temp.u >> kInt16BitsNum);
+}
 }  // namespace optiling
 #endif
