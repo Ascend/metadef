@@ -784,6 +784,8 @@ const std::string ATTR_MODEL_COMPILER_VERSION = "compiler_version";
 
 const std::string ATTR_MODEL_SESSION_SCOPE_MEMORY_SIZE = "session_scope_memory_size";
 
+const std::string ATTR_MODEL_SUB_MEMORY_INFO = "sub_memory_info";
+
 // Used for om compress
 const std::string ATTR_MODEL_OM_COMPRESS_VERSION = "om_compress_version";
 
