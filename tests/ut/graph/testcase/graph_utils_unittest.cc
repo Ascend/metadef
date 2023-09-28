@@ -31,6 +31,7 @@
 #include "graph/debug/ge_util.h"
 #include "graph/utils/op_desc_utils.h"
 #include "graph/utils/graph_utils_ex.h"
+#include "mmpa/mmpa_api.h"
 
 #undef private
 #undef protected
@@ -347,6 +348,19 @@ class UtestGraphUtils : public testing::Test {
   void TearDown() {
   }
 };
+
+TEST_F(UtestGraphUtils, DumpGEGraphUserGraphNameNull_AscendWorkPathNotNull) {
+  auto graph = BuildGraphWithConst();
+  std::string ascend_work_path = "./test_ascend_work_path";
+  mmSetEnv("ASCEND_WORK_PATH", ascend_work_path.c_str(), 1);
+  GraphUtils::DumpGEGraph(graph, "", true, "");
+  ComputeGraphPtr com_graph = std::make_shared<ComputeGraph>("GeTestGraph");
+  std::string dump_graph_path = ge::RealPath(ascend_work_path.c_str()) + "/" + "ge_proto_00000000_graph_" +
+      std::to_string(graph->GetGraphID()) + "_.txt";
+  auto state = GraphUtils::LoadGEGraph(dump_graph_path.c_str(), *com_graph);
+  ASSERT_EQ(state, true);
+  unsetenv("ASCEND_WORK_PATH");
+}
 
 /*
 *               var                               var

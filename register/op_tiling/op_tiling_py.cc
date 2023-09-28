@@ -276,6 +276,22 @@ bool GetConstDataWithFloat16(const nlohmann::json &json_array, const size_t tota
   return true;
 }
 
+bool GetConstDataWithBF16(const nlohmann::json &json_array, const size_t total_size,
+                          std::unique_ptr<uint8_t[]> &tensor_holder) {
+  std::vector<float> const_value = json_array["const_value"].get<std::vector<float>>();
+  std::vector<uint16_t> const_data_vec;
+  for (size_t i = 0UL; i < const_value.size(); ++i) {
+    uint16_t const_data_uint16 = FloatToBF16(const_value[i]);
+    const_data_vec.emplace_back(const_data_uint16);
+  }
+  auto tensor = reinterpret_cast<gert::Tensor *>(tensor_holder.get());
+  GE_CHK_BOOL_RET_STATUS((memcpy_s(tensor->GetData<uint8_t>(), total_size - sizeof(gert::Tensor), const_data_vec.data(),
+                                   const_data_vec.size() * sizeof(uint16_t)) == EOK),
+                         false, "Call memcpy failed, total value size is %zu.",
+                         const_data_vec.size() * sizeof(uint16_t));
+  return true;
+}
+
 const std::unordered_map<std::string, ParseAttrFunc> kDtypeToAttrFunc = {
     {"bool", ParseAndSetAttr<bool>},
     {"float", ParseAndSetFloatAttr},
@@ -307,7 +323,8 @@ const FuncTable kFuncTable = FuncTable()
                              .Insert(ge::DT_UINT64, GetConstData<uint64_t>)
                              .Insert(ge::DT_FLOAT, GetConstData<float>)
                              .Insert(ge::DT_DOUBLE, GetConstData<double>)
-                             .Insert(ge::DT_FLOAT16, GetConstDataWithFloat16);
+                             .Insert(ge::DT_FLOAT16, GetConstDataWithFloat16)
+                             .Insert(ge::DT_BF16, GetConstDataWithBF16);
 
 void ParseDtype(const nlohmann::json &json, ge::GeTensorDesc &tensor_desc) {
   if (json.contains("dtype")) {
