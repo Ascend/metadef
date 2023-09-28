@@ -49,7 +49,7 @@ class OpImplRegister {
   OpImplRegister &PrivateAttr(const ge::char_t *private_attr, int64_t private_attr_val);
   OpImplRegister &PrivateAttr(const ge::char_t *private_attr, const std::vector<int64_t> &private_attr_val);
   OpImplRegister &PrivateAttr(const ge::char_t *private_attr, const ge::char_t *private_attr_val);
-  OpImplRegister &PrivateAttr(const ge::char_t *private_attr, float private_attr_val);
+  OpImplRegister &PrivateAttr(const ge::char_t *private_attr, const ge::float32_t private_attr_val);
   OpImplRegister &PrivateAttr(const ge::char_t *private_attr, bool private_attr_val);
   OpImplRegister &PrivateAttr(const ge::char_t *private_attr, const std::vector<float> &private_attr_val);
   template<typename T>

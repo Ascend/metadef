@@ -600,6 +600,20 @@ TEST_F(OpImplRegistryUT, RegisterFloatPrivateAttrOk) {
   EXPECT_EQ(private_attr_val_ret, private_attr_val);
 }
 
+TEST_F(OpImplRegistryUT, RegisterV1FloatPrivateAttrOk) {
+  float private_attr_val = 10.0;
+  gert::OpImplRegister register_v1("TestDeprecatedRegister");
+  register_v1.PrivateAttr("attr1", private_attr_val);
+  const char *op_type = "TestDeprecatedRegister";
+  const auto &private_attrs = gert::OpImplRegistry::GetInstance().GetPrivateAttrs(op_type);
+  EXPECT_EQ(private_attrs.size(), 1);
+  EXPECT_EQ(private_attrs[0].first.GetString(), std::string("attr1"));
+  EXPECT_TRUE(!private_attrs[0].second.IsEmpty());
+  float private_attr_val_ret;
+  EXPECT_EQ(private_attrs[0].second.GetValue(private_attr_val_ret), ge::GRAPH_SUCCESS);
+  EXPECT_EQ(private_attr_val_ret, private_attr_val);
+}
+
 TEST_F(OpImplRegistryUT, RegisterListFloatPrivateAttrOk) {
   std::vector<float> private_attr_val = {10.0, 20.0, 30.0};
   IMPL_OP(TestListFloatOpdesc).PrivateAttr("attr1", private_attr_val);
