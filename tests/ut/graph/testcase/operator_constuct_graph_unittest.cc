@@ -292,7 +292,7 @@ TEST_F(OperatorConstructGraphUt, UpdateOutputOk_AutoUpdatedToPeer) {
   EXPECT_EQ(o1_1.GetOutputDesc(0).GetOriginFormat(), FORMAT_NHWC);
   EXPECT_EQ(o1_2.GetOutputDesc(0).GetFormat(), FORMAT_NC1HWC0);
   EXPECT_EQ(o1_2.GetOutputDesc(0).GetOriginFormat(), FORMAT_NHWC);
-  EXPECT_EQ(o3.GetInputDesc(0).GetFormat(), FORMAT_NC1HWC0);
+  EXPECT_EQ(o3.GetInputDesc(0).GetFormat(), FORMAT_NHWC);
   EXPECT_EQ(o3.GetInputDesc(0).GetOriginFormat(), FORMAT_NHWC);
 }
 
