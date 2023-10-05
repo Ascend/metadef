@@ -952,6 +952,28 @@ TEST_F(UtestComputeGraph, DFSPOSTORDERTopologicalSorting_success) {
   EXPECT_EQ(node20->GetOpDesc()->GetId(), 19);
 }
 
+TEST_F(UtestComputeGraph, DynamicShapeGraph_DFSPOSTORDERTopologicalSorting_success) {
+  auto builder = ut::GraphBuilder("graph_reverse_dfs");
+  const auto &node1 = builder.AddNode("node1", "node1", 1, 1, FORMAT_NCHW, DT_FLOAT, {-1, 1});
+  const auto &node2 = builder.AddNode("node2", "node2", 1, 1, FORMAT_NCHW, DT_FLOAT, {-1, 1});
+  const auto &node3 = builder.AddNode("node3", "node3", 1, 1, FORMAT_NCHW, DT_FLOAT, {-1, 1});
+
+  builder.AddDataEdge(node1, 0, node2, 0);
+  builder.AddDataEdge(node2, 0, node3, 0);
+
+  GetThreadLocalContext().SetGraphOption({});
+  auto graph = builder.GetGraph();
+  ASSERT_TRUE(AttrUtils::SetBool(graph, ATTR_NAME_DYNAMIC_SHAPE_PARTITIONED, true));
+  std::map<std::string, std::string> options_map;
+  options_map["ge.topoSortingMode"] = "2";
+  GetThreadLocalContext().SetGraphOption(options_map);
+  EXPECT_EQ(graph->TopologicalSorting(), GRAPH_SUCCESS);
+
+  EXPECT_EQ(node1->GetOpDesc()->GetId(), 0);
+  EXPECT_EQ(node2->GetOpDesc()->GetId(), 1);
+  EXPECT_EQ(node3->GetOpDesc()->GetId(), 2);
+}
+
 TEST_F(UtestComputeGraph, DFSPOSTORDERTopologicalSorting_ringing_fail) {
   auto builder = ut::GraphBuilder("graph");
   const auto &node1 = builder.AddNode("node1", "node1", 1, 1);
