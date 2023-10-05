@@ -134,8 +134,8 @@ OpImplRegister &OpImplRegister::PrivateAttr(const char *private_attr, const std:
 OpImplRegister &OpImplRegister::PrivateAttr(const char *private_attr, const char *private_attr_val) {
   return PrivateAttrImpl(private_attr, ge::AnyValue::CreateFrom<std::string>(private_attr_val));
 }
-OpImplRegister &OpImplRegister::PrivateAttr(const char *private_attr, float private_attr_val) {
-  return PrivateAttrImpl(private_attr, ge::AnyValue::CreateFrom<float>(private_attr_val));
+OpImplRegister &OpImplRegister::PrivateAttr(const char *private_attr, const ge::float32_t private_attr_val) {
+  return PrivateAttrImpl(private_attr, ge::AnyValue::CreateFrom<ge::float32_t>(private_attr_val));
 }
 OpImplRegister &OpImplRegister::PrivateAttr(const char *private_attr, bool private_attr_val) {
   return PrivateAttrImpl(private_attr, ge::AnyValue::CreateFrom<bool>(private_attr_val));
