@@ -28,7 +28,7 @@ constexpr const size_t kVectorSize = 24U;
 constexpr const size_t kUnorderedSetSize = 56U;
 constexpr const size_t kMapSize = 48U;
 constexpr const size_t kVirtualTableSize = 8U;
-constexpr const size_t kReservedFieldSize = 24U;
+constexpr const size_t kReservedFieldSize = 16U;
 constexpr const size_t kReservedFieldSize2 = 40U;
 
 constexpr const size_t kOpImplFunctionsSize = 200U;
@@ -66,8 +66,10 @@ TEST_F(AbiCompatibilityForRegisterUT, OpImplFunctions_CheckMemLayoutNotChanged) 
             kUnorderedSetSize);
   EXPECT_EQ(reinterpret_cast<uintptr_t>(&f.op_execute_func) - reinterpret_cast<uintptr_t>(&f.host_inputs),
             sizeof(uint64_t));
-  EXPECT_EQ(reinterpret_cast<uintptr_t>(&f.reserved_0_) - reinterpret_cast<uintptr_t>(&f.op_execute_func),
+  EXPECT_EQ(reinterpret_cast<uintptr_t>(&f.tiling_dependency) - reinterpret_cast<uintptr_t>(&f.op_execute_func),
             kPointerSize);
+  EXPECT_EQ(reinterpret_cast<uintptr_t>(&f.reserved_0_) - reinterpret_cast<uintptr_t>(&f.tiling_dependency),
+            sizeof(uint64_t));
   EXPECT_EQ(reinterpret_cast<uintptr_t>(&f.reserved_1_) - reinterpret_cast<uintptr_t>(&f.reserved_0_), 7);
 
   EXPECT_EQ(sizeof(f.reserved_1_), kReservedFieldSize);

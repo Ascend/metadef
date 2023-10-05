@@ -100,6 +100,40 @@ ge::graphStatus DataDependentInterpreter::IsDataDependentByImplOp(const ge::Node
   is_data_dependent = op_impl->IsInputDataDependency(ir_index);
   return ge::GRAPH_SUCCESS;
 }
+
+ge::graphStatus DataDependentInterpreter::IsTilingInputDataDependent(const int32_t index,
+                                                                     bool &is_tiling_dependent) const {
+  if (space_registry_ == nullptr) {
+    GELOGW("Default registry is not existed.");
+    is_tiling_dependent = false;
+    return ge::GRAPH_SUCCESS;
+  }
+  std::string type;
+  GE_ASSERT_SUCCESS(ge::OpTypeUtils::GetOriginalType(node_, type), "Failed to get original type from %s(%s).",
+                    node_->GetName().c_str(), node_->GetType().c_str());
+  const auto op_impl = space_registry_->GetOpImpl(type);
+  if (op_impl == nullptr) {
+    GELOGW("The node %s type %s does not registered by `IMPL_OP`", node_->GetName().c_str(), type.c_str());
+    is_tiling_dependent = false;
+    return ge::GRAPH_SUCCESS;
+  }
+  if (!op_impl->HasTilingInputDataDependency()) {
+    is_tiling_dependent = false;
+    return ge::GRAPH_SUCCESS;
+  }
+  size_t ir_index = 0UL;
+  const ge::graphStatus ret = ge::OpDescUtils::GetInputIrIndexByInstanceIndex(node_->GetOpDesc(),
+                                                                              static_cast<size_t>(index),
+                                                                              ir_index);
+  if (ret != ge::GRAPH_SUCCESS) {
+    GELOGE(ge::GRAPH_FAILED, "Failed to get ir index by input_index[%d] for node %s(%s).", index,
+           node_->GetName().c_str(), node_->GetType().c_str());
+    return ge::GRAPH_FAILED;
+  }
+  is_tiling_dependent = op_impl->IsTilingInputDataDependency(ir_index);
+  return ge::GRAPH_SUCCESS;
+}
+
 ge::graphStatus DataDependentInterpreter::IsDataDependent(const int32_t index, bool &is_data_dependent) const {
   bool by_ir;
   GE_ASSERT_SUCCESS(IsDataDependentByIr(index, by_ir));
