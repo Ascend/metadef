@@ -991,6 +991,8 @@ graphStatus ComputeGraphImpl::DFSPOSTORDERTopologicalSorting(std::vector<NodePtr
                                                              const ConstComputeGraphPtr &compute_graph) {
   (void) reverse;
   GELOGD("Runing_Dfs_Post_Order_Sort: %s", name_.c_str());
+  bool is_dynamic_shape = false;
+  (void) AttrUtils::GetBool(compute_graph, ATTR_NAME_DYNAMIC_SHAPE_PARTITIONED, is_dynamic_shape);
   std::unordered_map<NodePtr, WalkStatus> walk_status;
   for (const auto &node : compute_graph->GetDirectNode()) {
     walk_status[node] = WalkStatus::kNotWalked;
@@ -1008,8 +1010,12 @@ graphStatus ComputeGraphImpl::DFSPOSTORDERTopologicalSorting(std::vector<NodePtr
         walk_status[current] = WalkStatus::kWalking;
 
         const auto in_all_nodes = current->GetInAllNodes();
-        std::set<NodePtr, NodeCmp> input_nodes{in_all_nodes.begin(), in_all_nodes.end()};
-        stack.insert(stack.end(), input_nodes.cbegin(), input_nodes.cend());
+        if (is_dynamic_shape) {
+          stack.insert(stack.end(), in_all_nodes.begin(), in_all_nodes.end());
+        } else {
+          std::set<NodePtr, NodeCmp> input_nodes{in_all_nodes.begin(), in_all_nodes.end()};
+          stack.insert(stack.end(), input_nodes.cbegin(), input_nodes.cend());
+        }
         continue;
       }
       stack.pop_back();
