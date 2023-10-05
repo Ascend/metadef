@@ -106,6 +106,13 @@ ge::graphStatus TilingContextBuilder::BuildRTInputTensors(const ge::Operator &op
     TensorAddress address = nullptr;
     bool is_data_dependent = false;
     GE_ASSERT_SUCCESS(ddi.IsDataDependent(static_cast<int32_t>(i), is_data_dependent));
+    bool is_tiling_dependent = false;
+    if (!is_data_dependent) {
+      GE_ASSERT_SUCCESS(ddi.IsTilingInputDataDependent(static_cast<int32_t>(i), is_tiling_dependent));
+    }
+    GELOGD("Node: %s input: %zu data/tiling depend flag: %d/%d",
+        node->GetName().c_str(), i, is_data_dependent, is_tiling_dependent);
+    is_data_dependent |= is_tiling_dependent;
     if (is_data_dependent) {
       GE_ASSERT_GRAPH_SUCCESS(GetDependInputTensorAddr(op, i, address));
     }
