@@ -20,6 +20,7 @@
 #include "graph/compiler_def.h"
 #include "graph/utils/node_utils.h"
 #include "graph/utils/op_desc_utils.h"
+#include "graph/utils/transformer_utils.h"
 #include "register/op_impl_space_registry.h"
 #include "common/checker.h"
 
@@ -492,6 +493,11 @@ ge::graphStatus InferShapeOnCompile(const ge::Operator &op, const ge::OpDescPtr 
            op_desc->GetName().c_str(), op_desc->GetType().c_str());
     return ge::GRAPH_PARAM_INVALID;
   }
+
+  ge::NodeShapeTransUtils transformer(op_desc);
+  GE_CHK_BOOL_RET_STATUS(transformer.Init(), ge::GRAPH_FAILED, "Failed to init transformer for %s", op_desc->GetNamePtr());
+  GE_CHK_BOOL_RET_STATUS(transformer.CatchFormatAndShape(), ge::GRAPH_FAILED,
+                         "Failed to catch format and shape for %s", op_desc->GetNamePtr());
   std::vector<std::unique_ptr<uint8_t[]>> inputs_holder;
   std::vector<std::unique_ptr<uint8_t[]>> outputs_holder;
   std::vector<std::unique_ptr<ge::Tensor>> ge_tensors_holder;
@@ -509,6 +515,8 @@ ge::graphStatus InferShapeOnCompile(const ge::Operator &op, const ge::OpDescPtr 
   ret = functions->infer_shape(infer_shape_ctx);
   GE_CHK_STATUS_RET(ret, "[Call][InferShapeV2Func] failed, op_desc[%s], ret[%d]", op_desc->GetName().c_str(), ret);
   UpdateOpDescOutShape(op_desc, infer_shape_ctx);
+  GE_CHK_BOOL_RET_STATUS(transformer.UpdateFormatAndShape(), ge::GRAPH_FAILED,
+                         "Failed to update format and shape for %s", op_desc->GetNamePtr());
   return ge::GRAPH_SUCCESS;
 }
 
