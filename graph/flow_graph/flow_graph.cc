@@ -371,6 +371,16 @@ public:
     return;
   }
 
+  void SetOutputs(const std::vector<std::pair<FlowOperator, std::vector<size_t>>> &output_indexes) {
+    std::vector<std::pair<Operator, std::vector<size_t>>> graph_output_indexes;
+    graph_output_indexes.reserve(output_indexes.size());
+    for (auto iter = output_indexes.cbegin(); iter != output_indexes.cend(); ++iter) {
+      graph_output_indexes.emplace_back(iter->first, iter->second);
+    }
+    (void)graph_.SetOutputs(graph_output_indexes);
+    return;
+  }
+
   const char *GetName() const {
     return name_.c_str();
   }
@@ -438,6 +448,23 @@ FlowGraph &FlowGraph::SetOutputs(const std::vector<FlowOperator> &outputs) {
   if (!err_msg.empty()) {
     std::cout << err_msg << std::endl;
   }
+  return *this;
+}
+
+FlowGraph &FlowGraph::SetOutputs(const std::vector<std::pair<FlowOperator, std::vector<size_t>>> &output_indexes) {
+  if (impl_ == nullptr) {
+    GELOGE(GRAPH_FAILED, "SetOutputs failed: graph can not be used, impl is nullptr.");
+    REPORT_INNER_ERROR("E18888", "SetOutputs failed: graph can not be used, impl is nullptr.");
+    return *this;
+  }
+
+  if (output_indexes.empty()) {
+    GELOGE(GRAPH_FAILED, "SetOutputs failed: output_indexes size can not be 0.");
+    REPORT_INNER_ERROR("E18888", "SetOutputs failed: output_indexes size can not be 0.");
+    return *this;
+  }
+
+  impl_->SetOutputs(output_indexes);
   return *this;
 }
 
