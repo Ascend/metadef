@@ -91,18 +91,12 @@ struct OpImplKernelRegistry {
     }
 
     bool HasTilingInputDataDependency() const {
-      if (HasDataDependency()) {
-        return true;
-      }
       return (tiling_dependency != 0UL);
     }
     /*
      * param index: must be ir index
      */
     bool IsTilingInputDataDependency(const size_t index) const {
-      if (IsInputDataDependency(index)) {
-        return true;
-      }
       if (index >= (sizeof(tiling_dependency) * kInt64ByteCount)) {
         return false;
       }

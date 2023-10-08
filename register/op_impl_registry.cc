@@ -248,11 +248,6 @@ OpImplRegisterV2 &OpImplRegisterV2::InputsDataDependency(std::initializer_list<i
       if (impl_->functions.IsInputDataDependency(static_cast<size_t>(index))) {
         continue;
       }
-      if (impl_->functions.IsTilingInputDataDependency(static_cast<size_t>(index))) {
-        GELOGW("Input[%d] of node %s has been register tiling dependency, "
-            "it will be override by data dependency",
-            index, impl_->op_type.GetString());
-      }
       if (impl_->functions.SetInputDataDependency(static_cast<size_t>(index)) != ge::GRAPH_SUCCESS) {
         GELOGE(ge::FAILED, "Failed to set data dependency for node %s, the input index %d", impl_->op_type.GetString(),
                index);
@@ -266,11 +261,7 @@ OpImplRegisterV2 &OpImplRegisterV2::InputsDataDependency(std::initializer_list<i
 OpImplRegisterV2 &OpImplRegisterV2::TilingInputsDataDependency(std::initializer_list<int32_t> inputs) {
   if (impl_ != nullptr) {
     for (const int32_t index : inputs) {
-      if (impl_->functions.IsInputDataDependency(static_cast<size_t>(index))) {
-        GELOGW("Failed to set tiling dependency for input[%d] of node %s, "
-               "because it has been register data dependency",
-               index, impl_->op_type.GetString());
-      } else if (impl_->functions.IsTilingInputDataDependency(static_cast<size_t>(index))) {
+      if (impl_->functions.IsTilingInputDataDependency(static_cast<size_t>(index))) {
         continue;
       }
       if (impl_->functions.SetTilingInputDataDependency(static_cast<size_t>(index)) != ge::GRAPH_SUCCESS) {
