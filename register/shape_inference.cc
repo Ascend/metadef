@@ -495,7 +495,8 @@ ge::graphStatus InferShapeOnCompile(const ge::Operator &op, const ge::OpDescPtr 
   }
 
   ge::NodeShapeTransUtils transformer(op_desc);
-  GE_CHK_BOOL_RET_STATUS(transformer.Init(), ge::GRAPH_FAILED, "Failed to init transformer for %s", op_desc->GetNamePtr());
+  GE_CHK_BOOL_RET_STATUS(transformer.Init(), ge::GRAPH_FAILED,
+                         "Failed to init transformer for %s", op_desc->GetNamePtr());
   GE_CHK_BOOL_RET_STATUS(transformer.CatchFormatAndShape(), ge::GRAPH_FAILED,
                          "Failed to catch format and shape for %s", op_desc->GetNamePtr());
   std::vector<std::unique_ptr<uint8_t[]>> inputs_holder;
