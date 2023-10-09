@@ -121,10 +121,11 @@ ge::graphStatus DataDependentInterpreter::IsTilingInputDataDependent(const int32
     is_tiling_dependent = false;
     return ge::GRAPH_SUCCESS;
   }
-  if (op_impl->HasDataDependency() || (!op_impl->HasTilingInputDataDependency())) {
+  if (!op_impl->HasTilingInputDataDependency()) {
     is_tiling_dependent = false;
     return ge::GRAPH_SUCCESS;
   }
+
   size_t ir_index = 0UL;
   const ge::graphStatus ret = ge::OpDescUtils::GetInputIrIndexByInstanceIndex(node_->GetOpDesc(),
                                                                               static_cast<size_t>(index),
@@ -134,8 +135,7 @@ ge::graphStatus DataDependentInterpreter::IsTilingInputDataDependent(const int32
            node_->GetName().c_str(), node_->GetType().c_str());
     return ge::GRAPH_FAILED;
   }
-  is_tiling_dependent = ((!op_impl->IsInputDataDependency(ir_index)) &&
-      (op_impl->IsTilingInputDataDependency(ir_index)));
+  is_tiling_dependent = op_impl->IsTilingInputDataDependency(ir_index);
   return ge::GRAPH_SUCCESS;
 }
 

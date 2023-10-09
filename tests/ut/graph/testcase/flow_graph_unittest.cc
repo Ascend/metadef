@@ -120,6 +120,13 @@ TEST_F(FlowGraphUTest, DflowFuncBasicTest_Map) {
   ASSERT_EQ(strcmp(flow_graph.GetName(), "flow_graph"), 0);
   ASSERT_EQ(flow_graph.ToGeGraph().GetName(), "flow_graph");
 
+  FlowGraph flow_graph_out_not_use("flow_graph_out_not_use");
+  std::vector<std::pair<FlowOperator, std::vector<size_t>>> output_indexes;
+  std::vector<size_t> part_out{0};
+  output_indexes.emplace_back(node0, part_out);
+  flow_graph_out_not_use.SetInputs(inputs_operator).SetOutputs(output_indexes);
+  ASSERT_EQ(strcmp(flow_graph_out_not_use.GetName(), "flow_graph_out_not_use"), 0);
+
   FlowGraph flow_graph2(nullptr);
   flow_graph2.SetInputs(empty_flow_ops).SetOutputs(empty_flow_ops);
   ASSERT_EQ(flow_graph2.GetName(), nullptr);
@@ -267,5 +274,16 @@ TEST_F(FlowGraphUTest, FlowGraph_FlowGraphImpl_nullptr) {
   auto flow_graph = FlowGraph(nullptr);
   flow_graph.SetInputs({data0}).SetOutputs({flow_node});
   ASSERT_EQ(flow_graph.ToGeGraph().IsValid(), false);
+
+  std::vector<std::pair<FlowOperator, std::vector<size_t>>> output_indexes;
+  std::vector<size_t> part_out{0};
+  output_indexes.emplace_back(flow_node, part_out);
+  flow_graph.SetInputs({data0}).SetOutputs(output_indexes);
+  ASSERT_EQ(flow_graph.ToGeGraph().IsValid(), false);
+
+  auto flow_graph2 = FlowGraph("flow_graph");
+  output_indexes.clear();
+  flow_graph2.SetInputs({data0}).SetOutputs(output_indexes);
+  ASSERT_EQ(flow_graph2.ToGeGraph().IsValid(), false);
 }
 }  // namespace ge
