@@ -104,9 +104,11 @@ graphStatus OpDescUtilsEx::CallInferFunc(const OpDescPtr &op_desc, Operator &op)
   // priority of use infer func v1
   // when v2 func is ready, remove v1 func, it will automatically follow the V2 process
   if (infer_func != nullptr) {
+    GELOGD("Op %s Call InferShapeFuncV1", op_desc->GetName().c_str());
     op_desc->AddInferFunc(infer_func);
     return CallInferFuncV1(op_desc, op);
   } else {
+    GELOGD("Op %s Call InferShapeFuncV2", op_desc->GetName().c_str());
     return CallInferFuncV2(op_desc, op);
   }
 }
