@@ -477,8 +477,10 @@ bool ModelSerializeImp::UnserializeOpDesc(OpDescPtr &op_desc, proto::OpDef &op_d
   op_desc->SetId(op_def_proto.id());
   uint32_t graph_index = 0U;
   for (const std::string &name : op_def_proto.subgraph_name()) {
-    (void) op_desc->AddSubgraphName(name);
-    (void) op_desc->SetSubgraphInstanceName(graph_index++, name);
+    if (!name.empty()) {
+      (void) op_desc->AddSubgraphName(name);
+      (void) op_desc->SetSubgraphInstanceName(graph_index++, name);
+    }
   }
 
   // insert name index by key and value
