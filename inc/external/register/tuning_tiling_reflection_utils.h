@@ -19,7 +19,6 @@
 #include <type_traits>
 #include <tuple>
 #include <nlohmann/json.hpp>
-#include "graph/ascend_string.h"
 
 namespace tuningtiling {
 // implement for std c++11
