@@ -74,9 +74,9 @@ struct GETaskInfo {
   void *privateDef;
   uint32_t privateDefLen;
   void *opsKernelStorePtr;
-
   std::vector<GETaskKernelHcclInfo> kernelHcclInfo;
   DvppInfo dvpp_info;
+  bool needRefresh;
 };
 
 struct HcomRemoteAccessAddrInfo

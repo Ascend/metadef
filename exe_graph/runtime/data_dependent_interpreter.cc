@@ -101,6 +101,10 @@ ge::graphStatus DataDependentInterpreter::IsDataDependentByImplOp(const ge::Node
   return ge::GRAPH_SUCCESS;
 }
 
+// 此接口返回的结果表示算子是否只支持TilingDepend
+// true： 算子只注册了tilingDepend，未注册DataDepend，表示算子在Infershape的时候不是dataDepend，
+// 在tiling时是dataDepend
+// false：其他情况
 ge::graphStatus DataDependentInterpreter::IsTilingInputDataDependent(const int32_t index,
                                                                      bool &is_tiling_dependent) const {
   if (space_registry_ == nullptr) {
@@ -121,6 +125,7 @@ ge::graphStatus DataDependentInterpreter::IsTilingInputDataDependent(const int32
     is_tiling_dependent = false;
     return ge::GRAPH_SUCCESS;
   }
+
   size_t ir_index = 0UL;
   const ge::graphStatus ret = ge::OpDescUtils::GetInputIrIndexByInstanceIndex(node_->GetOpDesc(),
                                                                               static_cast<size_t>(index),
