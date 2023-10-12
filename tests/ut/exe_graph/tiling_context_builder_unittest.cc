@@ -205,8 +205,6 @@ TEST_F(TilingContextBuilderUT, BuildWithInputConstSuccess) {
   EXPECT_EQ(node->GetAllInDataAnchorsSize(), 2);
   ge::OpDescPtr op_desc = node->GetOpDesc();
   ge::GeTensorDesc tensor_desc(ge::GeShape({1}));
-  op_desc->AddInputDesc("x", tensor_desc);
-  op_desc->AddInputDesc("y", tensor_desc);
   op_desc->AddOutputDesc("z", tensor_desc);
   op_desc->MutableInputDesc(1)->SetDataType(ge::DT_INT32);
   op_desc->MutableInputDesc(1)->SetShape(ge::GeShape({1}));
