@@ -116,6 +116,7 @@ TEST_F(UtestNode, NodeInputAndOutCheck) {
     EXPECT_EQ(attr_node->AddLinkFrom(2, data_node), GRAPH_SUCCESS);
     EXPECT_EQ(attr_node->AddLinkFrom("Attr", data_node), GRAPH_SUCCESS);
     EXPECT_EQ(data_node->GetOutNodes().size(), 3U);
+    EXPECT_EQ(data_node->GetOutNodesPtr().size(), 3U);
     EXPECT_EQ(data_node->GetOutDataNodes().size(), 3U);
     EXPECT_EQ(data_node->GetOutDataNodesSize(), 3U);
     EXPECT_EQ(attr_node->GetInNodes().size(), 3U);
@@ -127,11 +128,20 @@ TEST_F(UtestNode, NodeInputAndOutCheck) {
     EXPECT_EQ(attr_node->GetInControlNodes().size(), 0U);
     builder.AddControlEdge(data_node, attr_node);
     EXPECT_EQ(attr_node->GetInNodes().size(), 4U);
+    EXPECT_EQ(attr_node->GetInNodesPtr().size(), 4U);
     EXPECT_EQ(attr_node->GetInNodesSize(), 4U);
     EXPECT_EQ(attr_node->GetInDataNodesSize(), 3U);
     EXPECT_EQ(attr_node->GetInDataNodes().size(), 3U);
     EXPECT_EQ(attr_node->GetInControlNodesSize(), 1U);
     EXPECT_EQ(attr_node->GetInControlNodes().size(), 1U);
+    EXPECT_EQ(data_node->GetOutNodes().size(), 4U);
+    EXPECT_EQ(data_node->GetOutNodesPtr().size(), 4U);
+    EXPECT_EQ(data_node->GetOutNodesSize(), 4U);
+    EXPECT_EQ(data_node->GetOutControlNodesSize(), 1U);
+    EXPECT_EQ(data_node->GetOutDataNodesSize(), 3U);
+    data_node->impl_->out_data_anchors_.push_back(nullptr);
+    EXPECT_EQ(data_node->GetOutNodesPtr().size(), 4U);
+    EXPECT_EQ(data_node->GetOutNodes().size(), 4U);
     EXPECT_EQ(GraphUtils::RemoveNodeWithoutRelink(builder.GetGraph(), data_node), GRAPH_SUCCESS);
   }
   EXPECT_EQ(attr_node->GetInNodes().size(), 0U);
