@@ -102,6 +102,10 @@ ge::graphStatus TilingContextBuilder::BuildRTInputTensors(const ge::Operator &op
   GE_ASSERT_NOTNULL(op_desc);
 
   const size_t input_num = node->GetInDataNodesAndAnchors().size();
+  auto input_descs = op_desc->GetAllInputsDesc();
+  GE_ASSERT_TRUE(input_descs.size() == input_num,
+                 "[Check][Param]node(%s) has %zu input, while num of valid input desc is %zu.", node->GetNamePtr(),
+                 input_num, input_descs.size());
   for (size_t i = 0U; i < input_num; ++i) {
     TensorAddress address = nullptr;
     bool is_data_dependent = false;
@@ -117,7 +121,7 @@ ge::graphStatus TilingContextBuilder::BuildRTInputTensors(const ge::Operator &op
       GE_ASSERT_GRAPH_SUCCESS(GetDependInputTensorAddr(op, i, address));
     }
     std::unique_ptr<uint8_t[]> tensor_holder;
-    GE_ASSERT_GRAPH_SUCCESS(BuildRtTensor(op_desc->GetInputDesc(i), address, tensor_holder));
+    GE_ASSERT_GRAPH_SUCCESS(BuildRtTensor(input_descs.at(i), address, tensor_holder));
     rt_tensor_holders_.emplace_back(std::move(tensor_holder));
   }
   return ge::GRAPH_SUCCESS;
