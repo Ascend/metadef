@@ -16,6 +16,7 @@
 #include <gtest/gtest.h>
 #include "exe_graph/runtime/tiling_context_builder.h"
 #include "graph/utils/op_desc_utils.h"
+#include "graph/utils/node_utils.h"
 #include "graph/utils/graph_utils.h"
 #include "exe_graph/runtime/atomic_clean_tiling_context.h"
 #include "exe_graph/lowering/value_holder.h"
@@ -202,7 +203,10 @@ TEST_F(TilingContextBuilderUT, BuildWithInputConstSuccess) {
   auto bar = bg::ValueHolder::CreateSingleDataOutput("Bar", outputs);
   EXPECT_NE(bar, nullptr);
   auto node = bar->GetNode();
-  EXPECT_EQ(node->GetAllInDataAnchorsSize(), 2);
+  auto bar_node = bg::ValueHolder::GetCurrentFrame()->GetExeGraph()->FindFirstNodeMatchType("Bar");
+  const size_t k_input_anchor = 3U;
+  ge::NodeUtils::AppendInputAnchor(bar_node, k_input_anchor);
+  EXPECT_EQ(node->GetAllInDataAnchorsSize(), k_input_anchor);
   ge::OpDescPtr op_desc = node->GetOpDesc();
   ge::GeTensorDesc tensor_desc(ge::GeShape({1}));
   op_desc->AddOutputDesc("z", tensor_desc);

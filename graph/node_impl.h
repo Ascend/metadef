@@ -63,13 +63,12 @@ class Node::NodeImpl {
   InControlAnchorPtr GetInControlAnchor() const;
   OutControlAnchorPtr GetOutControlAnchor() const;
 
+  Node::Vistor<NodePtr> GetInAllNodes(const ConstNodePtr &owner_node) const;
   Node::Vistor<NodePtr> GetInNodes(const ConstNodePtr &owner_node) const;
   std::vector<Node *> GetInNodesPtr() const;
   bool IsAllInNodesSeen(const std::unordered_set<Node *> &nodes_seen) const;
   Node::Vistor<NodePtr> GetInDataNodes(const ConstNodePtr &owner_node) const;
   Node::Vistor<NodePtr> GetInControlNodes(const ConstNodePtr &owner_node) const;
-  Node::Vistor<NodePtr> GetOutNodes(const ConstNodePtr &owner_node) const;
-  Node::Vistor<NodePtr> GetInAllNodes(const ConstNodePtr &owner_node) const;
   Node::Vistor<NodePtr> GetOutDataNodes(const ConstNodePtr &owner_node) const;
   uint32_t GetOutDataNodesSize() const;
   uint32_t GetOutControlNodesSize() const;
@@ -78,7 +77,9 @@ class Node::NodeImpl {
   size_t GetInControlNodesSize() const;
   size_t GetInNodesSize() const;
   Node::Vistor<NodePtr> GetOutControlNodes(const ConstNodePtr &owner_node) const;
+  Node::Vistor<NodePtr> GetOutNodes(const ConstNodePtr &owner_node) const;
   Node::Vistor<NodePtr> GetOutAllNodes(const ConstNodePtr &owner_node) const;
+  std::vector<Node *> GetOutNodesPtr() const;
 
   OpDescPtr GetOpDesc() const;
   OpDesc *GetOpDescBarePtr() const;
