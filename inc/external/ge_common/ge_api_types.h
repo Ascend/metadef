@@ -123,6 +123,8 @@ const char_t *const OPTION_EMBEDDING_DIM = "ge.embedding_dim";
 // Option key: Offload
 constexpr char_t const OPTION_EXEC_RANK_MAP[] = "ge.exec.rankMap";
 
+// Option key: enable engine parallel or not
+constexpr char_t const OPTION_EXEC_ENABLE_ENGINE_PARALLEL[] = "ge.exec.enableEngineParallel";
 // Option key: host env os & cpu
 const char_t *const OPTION_HOST_ENV_OS = "ge.host_env_os";
 const char_t *const OPTION_HOST_ENV_CPU = "ge.host_env_cpu";

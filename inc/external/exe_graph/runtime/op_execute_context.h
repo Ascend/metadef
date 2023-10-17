@@ -160,7 +160,7 @@ public:
     if (mem_block == nullptr) {
       return nullptr;
     }
-    memory_vec->emplace_back(mem_block);
+    (void)memory_vec->emplace_back(mem_block);
     return mem_block->GetAddr();
   }
 
