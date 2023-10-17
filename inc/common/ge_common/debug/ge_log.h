@@ -96,15 +96,15 @@ inline bool IsLogEnable(const int32_t module_name, const int32_t log_level) {
     }                                                                                            \
   } while (false)
 
-#define GELOGT(VALUE, fmt, ...)                                                                                      \
-  do {                                                                                                               \
-    const char_t *const TraceStatStr[] = {"INIT", "RUNNING", "WAITING", "STOP"};                                     \
-    const int32_t idx = static_cast<int32_t>(VALUE);                                                                 \
-    char_t *k = const_cast<char_t *>("status");                                                                      \
-    char_t *v = const_cast<char_t *>(TraceStatStr[idx]);                                                             \
-    KeyValue kv = {k, v};                                                                                            \
-    DlogWithKV(GE_MODULE_NAME, DLOG_TRACE, &kv, 1, "%" PRIu64 " %s:" fmt, GeLog::GetTid(), \
-	       &__FUNCTION__[0U], ##__VA_ARGS__); \
+#define GELOGT(VALUE, fmt, ...)                                                                                        \
+  do {                                                                                                                 \
+    constexpr const char_t *TraceStatStr[] = {"INIT", "RUNNING", "WAITING", "STOP"};                                   \
+    constexpr int32_t idx = static_cast<int32_t>(VALUE);                                                               \
+    char_t *k = const_cast<char_t *>("status");                                                                        \
+    char_t *v = const_cast<char_t *>(TraceStatStr[idx]);                                                               \
+    KeyValue kv = {k, v};                                                                                              \
+    DlogWithKV(GE_MODULE_NAME, DLOG_TRACE, &kv, 1, "%" PRIu64 " %s:" fmt, GeLog::GetTid(), &__FUNCTION__[0U],          \
+               ##__VA_ARGS__);                                                                                         \
   } while (false)
 
 #define GE_LOG_ERROR(MOD_NAME, ERROR_CODE, fmt, ...)                                                           \
