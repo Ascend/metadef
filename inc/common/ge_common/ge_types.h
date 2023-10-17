@@ -452,6 +452,7 @@ struct DumpConfig {
   std::string dump_op_switch;
   std::string dump_debug;
   std::string dump_step;
+  std::string dump_exception;
   std::vector<ModelDumpConfig> dump_list;
 };
 
