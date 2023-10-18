@@ -69,9 +69,31 @@ TopoSortingMode GetTopoSortingStrategy() {
   return TopoSortingMode::kDFS;
 }
 
-int64_t GetNodeOutputRealSize(const NodePtr& node) {
+struct NodeStatus {
+  size_t size = 0U;
+  WalkStatus status;
+};
+
+void InitNodeStatus(const ConstComputeGraphPtr &compute_graph, std::vector<NodeStatus> &reverse_dfs_nodes_info) {
+  reverse_dfs_nodes_info.clear();
+  reverse_dfs_nodes_info.resize(compute_graph->GetDirectNodesSize());
+  int64_t index = 0;
+  for (const auto &node : compute_graph->GetDirectNode()) {
+    reverse_dfs_nodes_info[index].size = 0;
+    reverse_dfs_nodes_info[index].status = WalkStatus::kNotWalked;
+    node->GetOpDesc()->SetId(index);
+    index++;
+  }
+}
+
+int64_t GetNodeOutputRealSize(const NodePtr &node, std::vector<NodeStatus> &reverse_dfs_nodes_info) {
   int64_t total_size = 0;
-  if (node == nullptr) {
+  if ((node == nullptr) || (node->GetOpDesc() == nullptr)) {
+    return total_size;
+  }
+  NodeStatus &reverse_dfs_node_info = reverse_dfs_nodes_info[static_cast<size_t>(node->GetOpDesc()->GetId())];
+  total_size = reverse_dfs_node_info.size;
+  if (total_size != 0) {
     return total_size;
   }
   for (const auto &out_desc : node->GetOpDescBarePtr()->GetAllOutputsDescPtr()) {
@@ -83,24 +105,29 @@ int64_t GetNodeOutputRealSize(const NodePtr& node) {
                                               output_size);
     total_size += output_size;
   }
+  if (total_size != 0) {
+    reverse_dfs_node_info.size = total_size;
+  }
   return total_size;
 }
 
 struct NodeCmp {
+  explicit NodeCmp(std::vector<NodeStatus> *reverse_dfs_nodes_info) : reverse_dfs_nodes_info_(reverse_dfs_nodes_info) {}
   bool operator()(const NodePtr &lhs, const NodePtr &rhs) const {
-    const auto lhs_size = GetNodeOutputRealSize(lhs);
-    const auto rhs_size = GetNodeOutputRealSize(rhs);
+    const auto lhs_size = GetNodeOutputRealSize(lhs, *reverse_dfs_nodes_info_);
+    const auto rhs_size = GetNodeOutputRealSize(rhs, *reverse_dfs_nodes_info_);
     if (lhs_size == rhs_size) {
-      return lhs->GetName() > rhs->GetName();
+      return strcmp(lhs->GetNamePtr(), rhs->GetNamePtr()) > 0;
     }
     return lhs_size > rhs_size;
   }
+  std::vector<NodeStatus> *reverse_dfs_nodes_info_;
 };
 
 struct NodeOutInfo {
-  explicit NodeOutInfo(const NodePtr &node)
-      : num_out_data_nodes(node->GetOutDataNodesSize()), output_size(GetNodeOutputRealSize(node)),
-        node_name(node->GetName()) {}
+  NodeOutInfo(const NodePtr &node, std::vector<NodeStatus> *reverse_dfs_nodes_info)
+      : num_out_data_nodes(node->GetOutDataNodesSize()),
+        output_size(GetNodeOutputRealSize(node, *reverse_dfs_nodes_info)), node_name(node->GetName()) {}
 
   bool operator<(const NodeOutInfo &rhs) const {
     if (num_out_data_nodes < rhs.num_out_data_nodes) {
@@ -131,9 +158,10 @@ bool IsMemoryPriority() {
 
 class TopoSortStack {
  public:
-  explicit TopoSortStack(const bool is_mem_priority = false, const bool is_dfs = false,
-                         const bool is_reverse_dfs = false)
-      : is_mem_priority_(is_mem_priority), is_dfs_(is_dfs), is_reverse_dfs_(is_reverse_dfs) {}
+  explicit TopoSortStack(std::vector<NodeStatus> *reverse_dfs_nodes_info, const bool is_mem_priority = false,
+                         const bool is_dfs = false, const bool is_reverse_dfs = false)
+      : is_mem_priority_(is_mem_priority), is_dfs_(is_dfs), is_reverse_dfs_(is_reverse_dfs),
+        reverse_dfs_nodes_info_(reverse_dfs_nodes_info) {}
 
   NodePtr Pop() {
     if (is_mem_priority_ && (!is_reverse_dfs_)) {
@@ -149,7 +177,7 @@ class TopoSortStack {
 
   void Push(const NodePtr &node) {
     if (is_mem_priority_ && (!is_reverse_dfs_)) {
-      (void) mem_priority_stack_.emplace(NodeOutInfo(node), node);
+      (void) mem_priority_stack_.emplace(NodeOutInfo(node, reverse_dfs_nodes_info_), node);
       return;
     }
     if (is_dfs_) {
@@ -170,6 +198,7 @@ class TopoSortStack {
   bool is_mem_priority_;
   bool is_dfs_;
   bool is_reverse_dfs_;
+  std::vector<NodeStatus> *reverse_dfs_nodes_info_;
   std::vector<NodePtr> normal_stack_;
   std::map<NodeOutInfo, NodePtr> mem_priority_stack_;
 };
@@ -944,7 +973,12 @@ graphStatus ComputeGraphImpl::DFSTopologicalSorting(std::vector<NodePtr> &node_v
   // Record the number of non data nodes but no input nodes
   GE_CHK_BOOL_EXEC(SortNodes(stack, map_in_edge_num, compute_graph) == GRAPH_SUCCESS,
                    return GRAPH_FAILED, "sort nodes failed");
-  TopoSortStack topo_sort_stack(IsMemoryPriority(), true, reverse);
+  const bool is_mem_priority = IsMemoryPriority();
+  std::vector<NodeStatus> reverse_dfs_nodes_info;
+  if (is_mem_priority) {
+    InitNodeStatus(compute_graph, reverse_dfs_nodes_info);
+  }
+  TopoSortStack topo_sort_stack(&reverse_dfs_nodes_info, is_mem_priority, true, reverse);
   for (const auto &node : stack) {
     topo_sort_stack.Push(node);
   }
@@ -991,36 +1025,30 @@ graphStatus ComputeGraphImpl::DFSPOSTORDERTopologicalSorting(std::vector<NodePtr
                                                              const ConstComputeGraphPtr &compute_graph) {
   (void) reverse;
   GELOGD("Runing_Dfs_Post_Order_Sort: %s", name_.c_str());
-  bool is_dynamic_shape = false;
-  (void) AttrUtils::GetBool(compute_graph, ATTR_NAME_DYNAMIC_SHAPE_PARTITIONED, is_dynamic_shape);
-  std::unordered_map<NodePtr, WalkStatus> walk_status;
-  for (const auto &node : compute_graph->GetDirectNode()) {
-    walk_status[node] = WalkStatus::kNotWalked;
-  }
+  std::vector<NodeStatus> reverse_dfs_nodes_info;
+  InitNodeStatus(compute_graph, reverse_dfs_nodes_info);
 
   for (const auto &node : compute_graph->GetDirectNode()) {
-    if (!node->GetOutAllNodes().empty()) {
+    if (node->GetOutNodesSize() > 0U) {
       continue;
     }
 
     std::vector<NodePtr> stack = {node};
     while (!stack.empty()) {
       const auto current = stack.back();
-      if (walk_status[current] == WalkStatus::kNotWalked) {
-        walk_status[current] = WalkStatus::kWalking;
+      NodeStatus &reverse_dfs_node_info = reverse_dfs_nodes_info[current->GetOpDesc()->GetId()];
+      if (reverse_dfs_node_info.status == WalkStatus::kNotWalked) {
+        reverse_dfs_node_info.status = WalkStatus::kWalking;
 
         const auto in_all_nodes = current->GetInAllNodes();
-        if (is_dynamic_shape) {
-          stack.insert(stack.end(), in_all_nodes.begin(), in_all_nodes.end());
-        } else {
-          std::set<NodePtr, NodeCmp> input_nodes{in_all_nodes.begin(), in_all_nodes.end()};
-          stack.insert(stack.end(), input_nodes.cbegin(), input_nodes.cend());
-        }
+        NodeCmp cmp(&reverse_dfs_nodes_info);
+        std::set<NodePtr, NodeCmp> input_nodes{in_all_nodes.begin(), in_all_nodes.end(), cmp};
+        stack.insert(stack.end(), input_nodes.cbegin(), input_nodes.cend());
         continue;
       }
       stack.pop_back();
-      if (walk_status[current] == WalkStatus::kWalking) {
-        walk_status[current] = WalkStatus::kWalked;
+      if (reverse_dfs_node_info.status == WalkStatus::kWalking) {
+        reverse_dfs_node_info.status = WalkStatus::kWalked;
         node_vec.emplace_back(current);
       }
     }
@@ -1033,7 +1061,12 @@ graphStatus ComputeGraphImpl::BFSTopologicalSorting(std::vector<NodePtr> &node_v
                                                     const ConstComputeGraphPtr &compute_graph) {
   GELOGD("Runing_Bfs_Sort: %s", name_.c_str());
   (void) reverse;
-  TopoSortStack topo_sort_stack(IsMemoryPriority());
+  const bool is_mem_priority = IsMemoryPriority();
+  std::vector<NodeStatus> reverse_dfs_nodes_info;
+  if (is_mem_priority) {
+    InitNodeStatus(compute_graph, reverse_dfs_nodes_info);
+  }
+  TopoSortStack topo_sort_stack(&reverse_dfs_nodes_info, is_mem_priority);
   std::vector<NodePtr> stack_input;
   std::map<std::string, NodePtr> breadth_node_map;
   std::map<NodePtr, uint32_t> map_in_edge_num;
