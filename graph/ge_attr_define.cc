@@ -173,6 +173,8 @@ const std::string ATTR_NAME_ATOMIC_MEMSET_VALUES_INT = "values_int";
 const std::string ATTR_NAME_ATOMIC_MEMSET_VALUES_FLOAT = "values_float";
 const std::string ATTR_NAME_DYNAMIC_OUTPUT_DIMS = "_dynamic_output_dims";
 const std::string ATTR_NAME_INPUT_ORIGIN_SIZE = "input_origin_size";
+const std::string ATTR_NAME_SEND_EVENT_IDS = "_send_event_ids";
+const std::string ATTR_NAME_RECV_EVENT_IDS = "_recv_event_ids";
 
 const std::string ATTR_NAME_ROOT_GRAPH_ID = "_root_graph_id";
 const std::string ATTR_NAME_ROOT_GRAPH_NAME = "_root_graph_name";

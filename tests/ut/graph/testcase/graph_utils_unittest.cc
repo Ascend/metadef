@@ -584,6 +584,28 @@ TEST_F(UtestGraphUtils, BuildSubgraphWithOnlyControlNodes) {
   ASSERT_EQ((*subgraph_output->GetInControlNodes().begin())->GetType(), "Square");
 }
 
+TEST_F(UtestGraphUtils, SingleOpScene) {
+  auto builder1 = ut::GraphBuilder("root");
+  auto data1 = builder1.AddNode("data1", DATA, 0, 1);
+  auto graph1 = builder1.GetGraph();
+  ASSERT_TRUE(AttrUtils::SetBool(graph1, ATTR_SINGLE_OP_SCENE, true));
+  bool is_single_op = GraphUtils::IsSingleOpScene(graph1);
+  ASSERT_EQ(is_single_op, true);
+
+  auto builder2 = ut::GraphBuilder("root");
+  auto data2 = builder2.AddNode("data2", DATA, 0, 1);
+  AttrUtils::SetBool(data2->GetOpDesc(), ATTR_SINGLE_OP_SCENE, true);
+  auto graph2 = builder2.GetGraph();
+  is_single_op = GraphUtils::IsSingleOpScene(graph2);
+  ASSERT_EQ(is_single_op, true);
+
+  auto builder3 = ut::GraphBuilder("root");
+  auto data3 = builder3.AddNode("data3", DATA, 0, 1);
+  auto graph3 = builder3.GetGraph();
+  is_single_op = GraphUtils::IsSingleOpScene(graph3);
+  ASSERT_EQ(is_single_op, false);
+}
+
 TEST_F(UtestGraphUtils, UnfoldSubgraph) {
   ComputeGraphPtr graph;
   ComputeGraphPtr subgraph;
