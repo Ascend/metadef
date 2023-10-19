@@ -149,6 +149,7 @@ constexpr const char_t *OPTION_SCREEN_PRINT_MODE = "ge.screen_print_mode";
 namespace configure_option {
 const char_t *const STREAM_NUM = "ge.streamNum";
 const char_t *const HEAD_STREAM = "ge.headStream";
+const char_t *const AC_PARALLEL_ENABLE = "ac_parallel_enable";
 const char_t *const PERF_LEVEL = "ge.perfLevel";
 const char_t *const ENCRYPT_MODE = "ge.encryptMode";
 const char_t *const EK_FILE = "ge.ekFile";
@@ -208,6 +209,10 @@ const std::string STREAM_NUM = "ge.streamNum";
 // Configure add head stream to model.
 // its value should be "0" or "1", default value is "0"
 const std::string HEAD_STREAM = "ge.headStream";
+
+// Configure engines such as Aicpu to compute parallelly with other engines in dynamic shape graphs.
+// its value should be "0" or "1", default value is "0"
+const std::string AC_PARALLEL_ENABLE = "ac_parallel_enable";
 
 // Configure perf level by Session constructor options param,
 // its value please see enum PerfLevel, default value is "4"
@@ -530,6 +535,7 @@ static const char_t *const CORE_TYPE = ge::CORE_TYPE.c_str();
 static const char_t *const SOC_VERSION = ge::SOC_VERSION.c_str();
 static const char_t *const VIRTUAL_TYPE = ge::VIRTUAL_TYPE.c_str();
 static const char_t *const ENABLE_SINGLE_STREAM = ge::ENABLE_SINGLE_STREAM;
+static const char_t *const AC_PARALLEL_ENABLE = ge::AC_PARALLEL_ENABLE.c_str();
 static const char_t *const AICORE_NUM = ge::AICORE_NUM.c_str();
 static const char_t *const FUSION_SWITCH_FILE = ge::FUSION_SWITCH_FILE.c_str();
 static const char_t *const ENABLE_SMALL_CHANNEL = ge::ENABLE_SMALL_CHANNEL.c_str();
@@ -608,6 +614,7 @@ const std::set<std::string> ir_builder_suppported_options = {INPUT_FORMAT,
                                                              DISTRIBUTED_CLUSTER_BUILD,
                                                              MODEL_RELATION_CONFIG,
                                                              ENABLE_GRAPH_PARALLEL,
+                                                             AC_PARALLEL_ENABLE,
                                                              GRAPH_PARALLEL_OPTION_PATH};
 
 // for interface: aclgrphParse
@@ -630,6 +637,7 @@ const std::set<std::string> global_options = {CORE_TYPE,
                                               EXEC_DISABLE_REUSED_MEMORY,
                                               AUTO_TUNE_MODE,
                                               ENABLE_SINGLE_STREAM,
+                                              AC_PARALLEL_ENABLE,
                                               AICORE_NUM,
                                               FUSION_SWITCH_FILE,
                                               ENABLE_SMALL_CHANNEL,

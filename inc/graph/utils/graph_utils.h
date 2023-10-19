@@ -665,6 +665,8 @@ class GraphUtils {
                                  const NodePtr &target_node, const function<bool(const ComputeGraphPtr &)> &filter,
                                  int32_t depth = 0);
 
+  static bool IsSingleOpScene(const ComputeGraphPtr &graph);
+
   static CycleDetectorPtr CreateCycleDetector(const ComputeGraphPtr &graph);
 
   static CycleDetectorSharedPtr CreateSharedCycleDetector(const ComputeGraphPtr &graph);

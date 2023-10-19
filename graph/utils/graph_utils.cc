@@ -3456,6 +3456,21 @@ void GraphUtils::InheritOriginalAttr(const ComputeGraphPtr &src_compute_graph,
   }
 }
 
+bool GraphUtils::IsSingleOpScene(const ComputeGraphPtr &graph) {
+  bool is_single_op = false;
+  if (AttrUtils::GetBool(graph, ATTR_SINGLE_OP_SCENE, is_single_op)) {
+    return is_single_op;
+  }
+  GELOGD("There is no _single_op_scene for graph:%s. Start search all node.", graph->GetName().c_str());
+  for (const auto &node : graph->GetAllNodes()) {
+    GE_ASSERT_NOTNULL(node->GetOpDesc());
+    if (AttrUtils::GetBool(node->GetOpDesc(), ATTR_SINGLE_OP_SCENE, is_single_op)) {
+      return is_single_op;
+    }
+  }
+  return is_single_op;
+}
+
 CycleDetectorPtr GraphUtils::CreateCycleDetector(const ComputeGraphPtr &graph) {
   CycleDetectorPtr detector = std::unique_ptr<CycleDetector>(new (std::nothrow) CycleDetector());
   if (detector == nullptr) {
