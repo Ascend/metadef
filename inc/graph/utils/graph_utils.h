@@ -599,6 +599,13 @@ class GraphUtils {
    */
   static bool IsRefFromInput(const OutDataAnchorPtr &out_data_anchor, int32_t &reuse_in_index);
   /**
+   * 判断当前`out_data_anchor`是否引用RefData的输出
+   * @param out_data_anchor
+   * @param ref_data 复用的RefData节点
+   * @return 如果存在复用关系，返回true, 否则返回false
+   */
+  static bool IsRefFromRefData(const OutDataAnchorPtr &out_data_anchor, NodePtr &ref_data);
+  /**
   * 针对含有`ATTR_NAME_NOPADDING_CONTINUOUS_INPUT`和`ATTR_NAME_NOPADDING_CONTINUOUS_OUTPUT`类型的节点
   * 单独封装的复用接口
   * @param out_data_anchor
