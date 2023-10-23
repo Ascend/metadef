@@ -63,6 +63,20 @@ std::unique_ptr<uint8_t[], AlignedPtr::Deleter> AlignedPtr::Reset() {
   }
 }
 
+std::unique_ptr<uint8_t[], AlignedPtr::Deleter> AlignedPtr::Reset(uint8_t *const data,
+                                                                  const AlignedPtr::Deleter &delete_func) {
+  if ((data == nullptr) || (delete_func == nullptr)) {
+    REPORT_INNER_ERROR("E18888", "data is nullptr or delete_func is nullptr");
+    GELOGE(FAILED, "[Check][Param] data/delete_func is null");
+    return nullptr;
+  }
+  auto ptr = Reset();
+  base_.reset(data);
+  base_.get_deleter() = delete_func;
+  aligned_addr_ = base_.get();
+  return ptr;
+}
+
 std::shared_ptr<AlignedPtr> AlignedPtr::BuildFromAllocFunc(const AlignedPtr::Allocator &alloc_func,
                                                            const AlignedPtr::Deleter &delete_func) {
   if ((alloc_func == nullptr) || (delete_func == nullptr)) {

@@ -83,31 +83,6 @@ const int32_t kCopyGraphMaxRecursionDepth = 10;
 const int32_t kNameWidth = 5;
 const uint32_t kSubgraphIndexOfPartitionedCall = 0U;
 const std::set<std::string> kMergeInputSkipTypes{ STREAMACTIVE, STREAMSWITCH, CONSTANT, CONSTANTOP };
-
-bool IsRefFromRefData(const OutDataAnchorPtr &out_data_anchor, ge::NodeIndexIO &exist_node_info) {
-  const auto owner_node = out_data_anchor->GetOwnerNode();
-  const auto out_desc = owner_node->GetOpDesc()->GetOutputDescPtr(static_cast<uint32_t>(out_data_anchor->GetIdx()));
-  GE_ASSERT_NOTNULL(out_desc);
-  std::string ref_var_src_var_name;
-  bool has_ref_attr = ge::AttrUtils::GetStr(out_desc, REF_VAR_SRC_VAR_NAME, ref_var_src_var_name);
-  if (!has_ref_attr) {
-    return false;
-  }
-  // find src ref_data
-  const auto &ower_graph = owner_node->GetOwnerComputeGraph();
-  GE_ASSERT_NOTNULL(ower_graph);
-  const auto ref_data = ower_graph->FindNode(ref_var_src_var_name);
-  if (ref_data == nullptr) {
-    GELOGW("Can not find refdata named %s. Please check ref relation on graph.", ref_var_src_var_name.c_str());
-    return false;
-  }
-  if (ref_data->GetType() != REFDATA) {
-    return false;
-  }
-  ge::NodeIndexIO ref_data_node_info(ref_data, 0U, ge::kOut);
-  exist_node_info = ref_data_node_info;
-  return true;
-}
 } // namespace
 
 GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY
@@ -2491,9 +2466,10 @@ graphStatus GraphUtils::HandleOutAnchorMapping(const NodePtr &node,
       continue;
     }
 
-    NodeIndexIO exist_ref_data_info(node, 0U, kOut);
-    const bool is_ref_from_refdata = IsRefFromRefData(out_data_anchor, exist_ref_data_info);
+    NodePtr ref_node;
+    const bool is_ref_from_refdata = IsRefFromRefData(out_data_anchor, ref_node);
     if (is_ref_from_refdata) {
+      NodeIndexIO exist_ref_data_info(ref_node, 0U, kOut);
       GELOGD("Node %s output:%d is ref form refdata: %s.", node->GetName().c_str(), out_data_anchor->GetIdx(),
              exist_ref_data_info.ToString().c_str());
       GE_ASSERT_GRAPH_SUCCESS(
@@ -2876,6 +2852,32 @@ bool GraphUtils::IsRefFromInput(const OutDataAnchorPtr &out_data_anchor, int32_t
   }
   // nopadding reuse
   return IsNoPaddingRefFromInput(out_data_anchor, reuse_in_index);
+}
+
+bool GraphUtils::IsRefFromRefData(const OutDataAnchorPtr &out_data_anchor, NodePtr &ref_data) {
+  GE_ASSERT_NOTNULL(out_data_anchor);
+  const auto owner_node = out_data_anchor->GetOwnerNode();
+  GE_ASSERT_NOTNULL(owner_node);
+  const auto out_desc = owner_node->GetOpDesc()->GetOutputDescPtr(static_cast<uint32_t>(out_data_anchor->GetIdx()));
+  GE_ASSERT_NOTNULL(out_desc);
+  std::string ref_var_src_var_name;
+  bool has_ref_attr = ge::AttrUtils::GetStr(out_desc, REF_VAR_SRC_VAR_NAME, ref_var_src_var_name);
+  if (!has_ref_attr) {
+    return false;
+  }
+  // find src ref_data_node
+  const auto &ower_graph = owner_node->GetOwnerComputeGraph();
+  GE_ASSERT_NOTNULL(ower_graph);
+  const auto ref_data_node = ower_graph->FindNode(ref_var_src_var_name);
+  if (ref_data_node == nullptr) {
+    GELOGW("Can not find refdata named %s. Please check ref relation on graph.", ref_var_src_var_name.c_str());
+    return false;
+  }
+  if (ref_data_node->GetType() != REFDATA) {
+    return false;
+  }
+  ref_data = ref_data_node;
+  return true;
 }
 
 bool GraphUtils::IsNoPaddingRefFromInput(const OutDataAnchorPtr &out_data_anchor, int32_t &reuse_in_index) {
