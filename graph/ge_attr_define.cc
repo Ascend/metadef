@@ -946,6 +946,8 @@ const std::string ATTR_NAME_NET_OUTPUT_DATATYPE = "net_output_datatype";
 //  For constant folding
 const std::string ATTR_NO_NEED_CONSTANT_FOLDING = "no_need_constant_folding";
 
+const std::string ATTR_NAME_IS_INSERTED_BY_CANN = "_is_inserted_by_cann";
+
 const std::string ATTR_NAME_CONTINUOUS_INPUT = "continuous_input";
 
 const std::string ATTR_NAME_CONTINUOUS_INPUT_ALLOC = "continuous_input_alloc";
