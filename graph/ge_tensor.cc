@@ -396,6 +396,7 @@ class GeShapeImpl {
   int64_t GetShapeSize() const;
   bool IsUnknownShape() const;
   bool IsScalar() const;
+  bool IsEmptyTensor() const;
 
   bool operator==(const GeShapeImpl &other) const;
 
@@ -505,6 +506,15 @@ bool GeShapeImpl::IsScalar() const {
   return dims_.empty();
 }
 
+bool GeShapeImpl::IsEmptyTensor() const {
+  for (const auto &dim : dims_) {
+    if (dim == 0) {
+      return true;
+    }
+  }
+  return false;
+}
+
 GeShapeImpl::GeShapeImpl(proto::ShapeDef *const proto_msg) {
   if (proto_msg != nullptr) {
     const auto &dims = *proto_msg->mutable_dim();
@@ -578,6 +588,10 @@ bool GeShape::IsUnknownShape() const {
 
 bool GeShape::IsScalar() const {
   return impl_->IsScalar();
+}
+
+bool GeShape::IsEmptyTensor() const {
+  return impl_->IsEmptyTensor();
 }
 
 GeShape &GeShape::operator=(const GeShape &other) {

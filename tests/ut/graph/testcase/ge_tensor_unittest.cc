@@ -67,6 +67,20 @@ TEST_F(UtestGeTensor, get_shape_size) {
   EXPECT_EQ(shape1.GetShapeSize(), 24);
 }
 
+TEST_F(UtestGeTensor, TestEmptyTensor) {
+  vector<int64_t> vec1{0};
+  GeShape shape1(vec1);
+  EXPECT_EQ(shape1.IsEmptyTensor(), true);
+
+  vector<int64_t> vec2{1, 2, 3, 4};
+  GeShape shape2(vec2);
+  EXPECT_EQ(shape2.IsEmptyTensor(), false);
+
+  vector<int64_t> vec3{1, 2, 3, 0};
+  GeShape shape3(vec3);
+  EXPECT_EQ(shape3.IsEmptyTensor(), true);
+}
+
 TEST_F(UtestGeTensor, shape) {
   GeShape a;
   EXPECT_EQ(a.GetDim(0), 0);
