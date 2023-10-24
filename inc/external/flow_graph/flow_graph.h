@@ -50,7 +50,10 @@ public:
                      const std::vector<DataFlowInputAttr> &attrs = {});
   FlowNode &MapOutput(uint32_t node_output_index, const ProcessPoint &pp, uint32_t pp_output_index);
   FlowNode &AddPp(const ProcessPoint &pp);
-private:
+  FlowNode &SetBalanceScatter();
+  FlowNode &SetBalanceGather();
+
+ private:
   std::shared_ptr<FlowNodeImpl> impl_;
 };
 

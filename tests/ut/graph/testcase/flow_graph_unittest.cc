@@ -17,6 +17,7 @@
 #include "flow_graph/data_flow.h"
 #include "proto/dflow.pb.h"
 #include "graph/utils/op_desc_utils.h"
+#include "graph/flow_graph/data_flow_attr_define.h"
 #define protected public
 #define private public
 #include "inc/common/util/error_manager/error_manager.h"
@@ -217,6 +218,11 @@ TEST_F(FlowGraphUTest, FlowNode_FlowNodeImpl_nullptr) {
   auto op_desc = OpDescUtils::GetOpDescFromOperator(node);
   std::vector<std::string> pp_attrs;
   ASSERT_FALSE(ge::AttrUtils::GetListStr(op_desc, "_dflow_process_points", pp_attrs));
+  node.SetBalanceGather();
+  bool attr_value = false;
+  ASSERT_FALSE(ge::AttrUtils::GetBool(op_desc, ATTR_NAME_BALANCE_GATHER, attr_value));
+  node.SetBalanceScatter();
+  ASSERT_FALSE(ge::AttrUtils::GetBool(op_desc, ATTR_NAME_BALANCE_SCATTER, attr_value));
 }
 
 namespace {
@@ -265,6 +271,52 @@ TEST_F(FlowGraphUTest, FlowNode_AddPp_Failed) {
   std::vector<std::string> pp_attrs;
   auto op_desc = OpDescUtils::GetOpDescFromOperator(node);
   ASSERT_FALSE(ge::AttrUtils::GetListStr(op_desc, "_dflow_process_points", pp_attrs));
+}
+
+TEST_F(FlowGraphUTest, FlowNode_SetBalanceScatter_Success) {
+  auto node = FlowNode("node", 1, 1);
+  auto op_desc = OpDescUtils::GetOpDescFromOperator(node);
+  bool attr_value = false;
+  ASSERT_FALSE(ge::AttrUtils::GetBool(op_desc, ATTR_NAME_BALANCE_SCATTER, attr_value));
+  node.SetBalanceScatter();
+  ASSERT_TRUE(ge::AttrUtils::GetBool(op_desc, ATTR_NAME_BALANCE_SCATTER, attr_value));
+  EXPECT_TRUE(attr_value);
+}
+
+TEST_F(FlowGraphUTest, FlowNode_SetBalanceGather_Success) {
+  auto node = FlowNode("node", 1, 1);
+  auto op_desc = OpDescUtils::GetOpDescFromOperator(node);
+  bool attr_value = false;
+  ASSERT_FALSE(ge::AttrUtils::GetBool(op_desc, ATTR_NAME_BALANCE_GATHER, attr_value));
+  node.SetBalanceGather();
+  ASSERT_TRUE(ge::AttrUtils::GetBool(op_desc, ATTR_NAME_BALANCE_GATHER, attr_value));
+  EXPECT_TRUE(attr_value);
+}
+
+TEST_F(FlowGraphUTest, FlowNode_SetBalanceGather_conflict_with_scatter) {
+  auto node = FlowNode("node", 1, 1);
+  auto op_desc = OpDescUtils::GetOpDescFromOperator(node);
+  node.SetBalanceScatter();
+  node.SetBalanceGather();
+  bool is_scatter = false;
+  bool is_gather = false;
+  ASSERT_TRUE(ge::AttrUtils::GetBool(op_desc, ATTR_NAME_BALANCE_SCATTER, is_scatter));
+  ASSERT_FALSE(ge::AttrUtils::GetBool(op_desc, ATTR_NAME_BALANCE_GATHER, is_gather));
+  EXPECT_TRUE(is_scatter);
+  EXPECT_FALSE(is_gather);
+}
+
+TEST_F(FlowGraphUTest, FlowNode_SetBalanceScatter_conflict_with_gather) {
+  auto node = FlowNode("node", 1, 1);
+  auto op_desc = OpDescUtils::GetOpDescFromOperator(node);
+  node.SetBalanceGather();
+  node.SetBalanceScatter();
+  bool is_scatter = false;
+  bool is_gather = false;
+  ASSERT_FALSE(ge::AttrUtils::GetBool(op_desc, ATTR_NAME_BALANCE_SCATTER, is_scatter));
+  ASSERT_TRUE(ge::AttrUtils::GetBool(op_desc, ATTR_NAME_BALANCE_GATHER, is_gather));
+  EXPECT_FALSE(is_scatter);
+  EXPECT_TRUE(is_gather);
 }
 
 TEST_F(FlowGraphUTest, FlowGraph_FlowGraphImpl_nullptr) {
