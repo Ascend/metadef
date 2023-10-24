@@ -67,8 +67,8 @@ class TensorData {
     other.manager_ = nullptr;
     other.size_ = 0U;
     other.placement_ = kTensorPlacementEnd;
-    reserved_0_ = 0U;
-    (void)memset_s(reserved_1_, sizeof(reserved_1_), 0, sizeof(reserved_1_));
+    reserved_0_ = other.reserved_0_;
+    (void)memcpy_s(reserved_1_, sizeof(reserved_1_), other.reserved_1_, sizeof(reserved_1_));
   }
   TensorData &operator=(const TensorData &other) = delete;
   TensorData &operator=(TensorData &&other) noexcept {
@@ -82,8 +82,8 @@ class TensorData {
       other.manager_ = nullptr;
       other.size_ = 0U;
       other.placement_ = kTensorPlacementEnd;
-      reserved_0_ = 0U;
-      (void)memset_s(reserved_1_, sizeof(reserved_1_), 0, sizeof(reserved_1_));
+      reserved_0_ = other.reserved_0_;
+      (void)memcpy_s(reserved_1_, sizeof(reserved_1_), other.reserved_1_, sizeof(reserved_1_));
     }
     return *this;
   }
