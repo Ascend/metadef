@@ -141,46 +141,12 @@ public:
    * @param size 申请内存的大小
    * @return void *，内存地址，异常情况返回nullptr
    */
-  void *MallocWorkspace(const size_t size) {
-    auto memory_vec =
-        GetOutputPointer<std::vector<ge::MemBlock *>>(
-            static_cast<size_t>(OpExecuteOutputIndex::kBlockMemory));
-    if (memory_vec == nullptr) {
-      return nullptr;
-    }
-    const size_t input_num = GetComputeNodeInputNum();
-    const size_t output_num = GetComputeNodeOutputNum();
-    auto allocator =
-        GetInputValue<ge::Allocator *>(input_num + output_num +
-        static_cast<size_t>(OpExecuteInputExtendIndex::kAllocate));
-    if (allocator == nullptr) {
-      return nullptr;
-    }
-    auto mem_block = allocator->Malloc(size);
-    if (mem_block == nullptr) {
-      return nullptr;
-    }
-    (void)memory_vec->emplace_back(mem_block);
-    return mem_block->GetAddr();
-  }
+  void *MallocWorkspace(const size_t size);
 
   /**
    * 释放workspace内存
    */
-  void FreeWorkspace() {
-    auto memory_vec =
-        GetOutputPointer<std::vector<ge::MemBlock *>>(
-            static_cast<size_t>(OpExecuteOutputIndex::kBlockMemory));
-    if (memory_vec == nullptr) {
-      return;
-    }
-    for (size_t i = 0UL; i < memory_vec->size(); i++) {
-      if (memory_vec->at(i) != nullptr) {
-        memory_vec->at(i)->Free();
-      }
-    }
-    memory_vec->clear();
-  }
+  void FreeWorkspace();
 
   /**
    * 获取确定性计算模式

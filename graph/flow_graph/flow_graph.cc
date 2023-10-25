@@ -48,7 +48,8 @@ public:
                        const std::vector<DataFlowInputAttr> &attrs = {});
   graphStatus MapOutput(uint32_t node_output_index, const ProcessPoint &pp, uint32_t pp_output_index);
   graphStatus AddPp(const ProcessPoint &pp);
-
+  graphStatus SetBalanceScatter();
+  graphStatus SetBalanceGather();
  private:
   graphStatus AddInEdges(uint32_t node_input_index, const ProcessPoint &pp, uint32_t pp_input_index);
   graphStatus AddOutEdges(uint32_t node_output_index, const ProcessPoint &pp, uint32_t pp_output_index);
@@ -233,6 +234,32 @@ graphStatus FlowNodeImpl::AddPp(const ProcessPoint &pp) {
   return GRAPH_SUCCESS;
 }
 
+graphStatus FlowNodeImpl::SetBalanceScatter() {
+  bool is_gather_node = false;
+  (void) ge::AttrUtils::GetBool(op_desc_, ATTR_NAME_BALANCE_GATHER, is_gather_node);
+  if (is_gather_node) {
+    GELOGE(GRAPH_FAILED, "op[%s] is set balance gather, can't set balance sactter", op_desc_->GetNamePtr());
+    return GRAPH_FAILED;
+  }
+  GE_ASSERT_TRUE(ge::AttrUtils::SetBool(op_desc_, ATTR_NAME_BALANCE_SCATTER, true),
+                 "Failed to set balance scatter for op[%s].", op_desc_->GetNamePtr());
+  GELOGI("set balance scatter for op[%s] success.", op_desc_->GetNamePtr());
+  return GRAPH_SUCCESS;
+}
+
+graphStatus FlowNodeImpl::SetBalanceGather() {
+  bool is_scatter_node = false;
+  (void) ge::AttrUtils::GetBool(op_desc_, ATTR_NAME_BALANCE_SCATTER, is_scatter_node);
+  if (is_scatter_node) {
+    GELOGE(GRAPH_FAILED, "op[%s] is set balance scatter, can't set balance gather", op_desc_->GetNamePtr());
+    return GRAPH_FAILED;
+  }
+  GE_ASSERT_TRUE(ge::AttrUtils::SetBool(op_desc_, ATTR_NAME_BALANCE_GATHER, true),
+                 "Failed to set balance gather for op[%s].", op_desc_->GetNamePtr());
+  GELOGI("set balance gather for op[%s] success.", op_desc_->GetNamePtr());
+  return GRAPH_SUCCESS;
+}
+
 FlowNode::FlowNode(const char *name, uint32_t input_num, uint32_t output_num) : FlowOperator(name, "FlowNode") {
   ge::Operator::DynamicInputRegister(ATTR_NAME_DATA_FLOW_INPUT, input_num);
   ge::Operator::DynamicOutputRegister(ATTR_NAME_DATA_FLOW_OUTPUT, output_num);
@@ -337,6 +364,34 @@ FlowNode &FlowNode::AddPp(const ProcessPoint &pp) {
   }
 
   (void) impl_->AddPp(pp);
+  return *this;
+}
+
+FlowNode &FlowNode::SetBalanceScatter() {
+  if (impl_ == nullptr) {
+    GELOGE(GRAPH_FAILED, "[Check][Param] FlowNodeImpl is nullptr, check failed, failed to set balance scatter.");
+    REPORT_INNER_ERROR("E18888", "set balance scatter failed: FlowNode can not be used, impl is nullptr.");
+    return *this;
+  }
+  graphStatus set_ret = impl_->SetBalanceScatter();
+  if (set_ret != GRAPH_SUCCESS) {
+    GELOGE(set_ret, "Set balance scatter failed.");
+    REPORT_INNER_ERROR("E18888", "Set balance scatter failed.");
+  }
+  return *this;
+}
+
+FlowNode &FlowNode::SetBalanceGather() {
+  if (impl_ == nullptr) {
+    GELOGE(GRAPH_FAILED, "[Check][Param] FlowNodeImpl is nullptr, check failed, failed to set balance gather.");
+    REPORT_INNER_ERROR("E18888", "set balance gather failed: FlowNode can not be used, impl is nullptr.");
+    return *this;
+  }
+  graphStatus set_ret = impl_->SetBalanceGather();
+  if (set_ret != GRAPH_SUCCESS) {
+    GELOGE(set_ret, "Set balance gather failed.");
+    REPORT_INNER_ERROR("E18888", "Set balance gather failed.");
+  }
   return *this;
 }
 

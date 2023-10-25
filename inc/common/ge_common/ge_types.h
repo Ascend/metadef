@@ -456,6 +456,12 @@ struct DumpConfig {
   std::vector<ModelDumpConfig> dump_list;
 };
 
+struct QueueAttrs {
+  uint32_t queue_id;
+  int32_t device_type; // CPU NPU
+  int32_t device_id;
+};
+
 struct ModelQueueParam {
   uint32_t group_total_count{1};
   uint32_t group_index{0U};
@@ -465,6 +471,8 @@ struct ModelQueueParam {
   std::vector<int32_t> input_fusion_offsets;
   std::vector<uint64_t> input_events;
   std::vector<uint64_t> output_events;
+  std::vector<QueueAttrs> input_queues_attrs;
+  std::vector<QueueAttrs> output_queues_attrs;
 };
 
 // internal options

@@ -80,6 +80,14 @@ class GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY GeShape {
  */
   bool IsScalar() const;
 
+/**
+ * 根据tensor的shape的dim值是否含0判断tensor是否是个空tensor
+ * @return
+ * 如果任一维度的dim值为0，则返回true,代表是空tensor
+ * 其他情况返回false, 代表非空tensor
+ */
+  bool IsEmptyTensor() const;
+
   GeShape(const GeShape &other);
   GeShape(GeShape &&other);
   GeShape &operator=(const GeShape &other);
