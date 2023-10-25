@@ -189,6 +189,16 @@ void ModelSerializeImp::OpDescIrDefToAttrDef(const ConstOpDescPtr &op_desc,
     (*op_desc_attr)["_ir_inputs_key"] = key;
     (*op_desc_attr)["_ir_inputs_value"] = value;
   }
+  if (!op_desc->impl_->GetIRMeta().GetIrOutputs().empty()) {
+    proto::AttrDef key;
+    proto::AttrDef value;
+    for (const auto &output : op_desc->impl_->GetIRMeta().GetIrOutputs()) {
+      key.mutable_list()->add_s(output.first);
+      value.mutable_list()->add_i(static_cast<int64_t>(output.second));
+    }
+    (*op_desc_attr)["_ir_outputs_key"] = key;
+    (*op_desc_attr)["_ir_outputs_value"] = value;
+  }
 }
 
 void ModelSerializeImp::OpDescToAttrDef(const ConstOpDescPtr &op_desc, proto::OpDef *const op_def_proto,
@@ -435,6 +445,32 @@ void ModelSerializeImp::AttrDefToOpDescIrDef(OpDescPtr &op_desc, proto::OpDef &o
   }
   for (size_t i = 0U; i < keys.size(); ++i) {
       op_desc->impl_->MutableIRMeta().AppendIrInput(std::move(keys[i]), values[i]);
+  }
+
+  std::vector<std::string> out_keys;
+  if (op_def_proto.attr().count("_ir_outputs_key") > 0UL) {
+    const auto &key_list = op_def_proto.attr().at("_ir_outputs_key").list();
+    out_keys.reserve(key_list.s_size());
+    for (const auto &key : key_list.s()) {
+      out_keys.emplace_back(key);
+    }
+    (void) op_def_proto.mutable_attr()->erase("_ir_outputs_key");
+  }
+  std::vector<IrOutputType> out_types;
+  if (op_def_proto.attr().count("_ir_outputs_value") > 0UL) {
+    const auto &val_list = op_def_proto.attr().at("_ir_outputs_value").list();
+    out_types.reserve(val_list.i_size());
+    for (const auto &val : val_list.i()) {
+      if (val < kIrOutputTypeEnd) {
+        out_types.emplace_back(static_cast<IrOutputType>(val));
+      }
+    }
+    (void) op_def_proto.mutable_attr()->erase("_ir_outputs_value");
+  }
+  if (out_keys.size() == out_types.size()) {
+    for (size_t i = 0UL; i < out_keys.size(); ++i) {
+      op_desc->impl_->MutableIRMeta().AppendIrOutput(std::move(out_keys[i]), out_types[i]);
+    }
   }
 }
 
