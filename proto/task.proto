@@ -517,6 +517,7 @@ message FftsPlusMixAicAivCtxDef {
     repeated uint32 src_slot = 28;  // len = 4, context ID for source data which is out of subgraph
     uint32 policy_pri = 29;
     uint32 thread_window_size = 30;
+    string args_format = 31;
 }
 
 // sdma context
