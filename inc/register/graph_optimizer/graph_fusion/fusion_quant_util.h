@@ -18,8 +18,18 @@
 #define INC_FUSION_QUANT_UTIL_H_
 #include "graph/node.h"
 #include "register/graph_optimizer/graph_optimize_register_error_codes.h"
-#include "register/graph_optimizer/graph_fusion/fusion_quant_util_impl.h"
 #include <vector>
+
+struct BiasOptimizeEdges {
+  ge::InDataAnchorPtr quant_scale;
+  ge::InDataAnchorPtr quant_offset;
+  ge::InDataAnchorPtr cube_weight;
+  ge::InDataAnchorPtr cube_bias;
+  ge::InDataAnchorPtr deq_scale;
+  bool isValid() {
+    return !(cube_weight == nullptr || cube_bias == nullptr || deq_scale == nullptr);
+  }
+};
 
 namespace fe {
 class QuantUtil {

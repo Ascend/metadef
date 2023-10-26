@@ -16,6 +16,7 @@
 
 #ifndef INC_FUSION_QUANT_UTIL_IMPL_H_
 #define INC_FUSION_QUANT_UTIL_IMPL_H_
+#include "register/graph_optimizer/graph_fusion/fusion_quant_util.h"
 #include "graph/node.h"
 #include "common/ge_common/ge_inner_error_codes.h"
 #include "register/graph_optimizer/graph_optimize_register_error_codes.h"
@@ -92,16 +93,7 @@ const int32_t DHWNC_DIM_H = 1;
 const int32_t DHWNC_DIM_W = 2;
 const int32_t DHWNC_DIM_N = 3;
 const int32_t DHWNC_DIM_C = 4;
-struct BiasOptimizeEdges {
-  ge::InDataAnchorPtr quant_scale;
-  ge::InDataAnchorPtr quant_offset;
-  ge::InDataAnchorPtr cube_weight;
-  ge::InDataAnchorPtr cube_bias;
-  ge::InDataAnchorPtr deq_scale;
-  bool isValid() {
-    return !(cube_weight == nullptr || cube_bias == nullptr || deq_scale == nullptr);
-  }
-};
+
 using TensorPtr = std::shared_ptr<ge::GeTensor>;
 class QuantUtilImpl {
  public:

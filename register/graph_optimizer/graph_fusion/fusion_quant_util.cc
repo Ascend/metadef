@@ -1,4 +1,5 @@
 #include "register/graph_optimizer/graph_fusion/fusion_quant_util.h"
+#include "register/graph_optimizer/graph_fusion/fusion_quant_util_impl.h"
 
 namespace fe {
 Status QuantUtil::BiasOptimizeByEdge(ge::NodePtr &quant_node, BiasOptimizeEdges &param,
