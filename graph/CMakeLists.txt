@@ -5,6 +5,7 @@ set(GRAPH_BASE_SOURCE_LIST
     "types.cc"
     "anchor.cc"
     "ge_attr_value.cc"
+    "args_format_desc.cc"
     "any_value.cc"
     "attr_store.cc"
     "buffer.cc"
