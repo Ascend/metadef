@@ -2449,7 +2449,8 @@ graphStatus GraphUtils::HandleInAnchorMapping(const ComputeGraphPtr &graph, cons
       anchor_to_symbol[symbol] = symbol;
     } else {
       const NodeIndexIO exist_node_info(peer_out_anchor->GetOwnerNode(), peer_out_anchor->GetIdx(), kOut);
-      GE_ASSERT_GRAPH_SUCCESS(UpdateRefMapping(cur_node_info, exist_node_info, symbol_to_anchors, anchor_to_symbol));
+      GE_ASSERT_GRAPH_SUCCESS(UpdateRefMapping(cur_node_info, exist_node_info.ToString(),
+                                               symbol_to_anchors, anchor_to_symbol));
     }
   }
 
@@ -2466,14 +2467,14 @@ graphStatus GraphUtils::HandleOutAnchorMapping(const NodePtr &node,
       continue;
     }
 
-    NodePtr ref_node;
-    const bool is_ref_from_refdata = IsRefFromRefData(out_data_anchor, ref_node);
-    if (is_ref_from_refdata) {
-      NodeIndexIO exist_ref_data_info(ref_node, 0U, kOut);
-      GELOGD("Node %s output:%d is ref form refdata: %s.", node->GetName().c_str(), out_data_anchor->GetIdx(),
-             exist_ref_data_info.ToString().c_str());
+    std::string src_node_name;
+    const bool has_ref_var_attr = HasRefVarAttr(out_data_anchor, src_node_name);
+    const auto src_node_name_index_type_str = NodeIndexIO::ToValueByNameIndexType(src_node_name, kOut, 0U);
+    if (has_ref_var_attr && anchor_to_symbol.find(src_node_name_index_type_str) != anchor_to_symbol.end()) {
+      GELOGD("Node %s output:%d is ref form node %s.", node->GetName().c_str(), out_data_anchor->GetIdx(),
+             src_node_name.c_str());
       GE_ASSERT_GRAPH_SUCCESS(
-          UpdateRefMapping(cur_node_info, exist_ref_data_info, symbol_to_anchors, anchor_to_symbol));
+          UpdateRefMapping(cur_node_info, src_node_name_index_type_str, symbol_to_anchors, anchor_to_symbol));
     }
 
     // 这里ref from input和ref from refdata不冲突
@@ -2481,7 +2482,8 @@ graphStatus GraphUtils::HandleOutAnchorMapping(const NodePtr &node,
     const bool reuse_input_flag = IsRefFromInput(out_data_anchor, reuse_in_index);
     if (reuse_input_flag && (node->GetInDataAnchor(reuse_in_index) != nullptr)) {
       const NodeIndexIO exist_node_info(node, reuse_in_index, kIn);
-      if (UpdateRefMapping(cur_node_info, exist_node_info, symbol_to_anchors, anchor_to_symbol) != GRAPH_SUCCESS) {
+      if (UpdateRefMapping(cur_node_info, exist_node_info.ToString(),
+                           symbol_to_anchors, anchor_to_symbol) != GRAPH_SUCCESS) {
         GE_LOGE("[Update][SymbolMapping] failed.");
         return GRAPH_FAILED;
       }
@@ -2522,7 +2524,8 @@ graphStatus GraphUtils::HandleSubgraphInput(const NodePtr &node,
     // Data has and only has one input
     const NodeIndexIO cur_node_info(node, 0, kIn);
     const NodeIndexIO exist_node_info(peer_out_anchor->GetOwnerNode(), peer_out_anchor->GetIdx(), kOut);
-    if (UpdateRefMapping(cur_node_info, exist_node_info, symbol_to_anchors, anchor_to_symbol) != GRAPH_SUCCESS) {
+    if (UpdateRefMapping(cur_node_info, exist_node_info.ToString(),
+                         symbol_to_anchors, anchor_to_symbol) != GRAPH_SUCCESS) {
       GE_LOGE("[Update][SymbolMapping] failed.");
       return GRAPH_FAILED;
     }
@@ -2679,15 +2682,15 @@ graphStatus GraphUtils::UnionSymbolMapping(const NodeIndexIO &exist_node_info1, 
   return GRAPH_SUCCESS;
 }
 
-graphStatus GraphUtils::UpdateRefMapping(const NodeIndexIO &cur_node_info, const NodeIndexIO &exist_node_info,
+graphStatus GraphUtils::UpdateRefMapping(const NodeIndexIO &cur_node_info, const std::string &exist_node,
                                          SymbolToAnchors &symbol_to_anchors,
                                          AnchorToSymbol &anchor_to_symbol) {
-  const auto iter1 = anchor_to_symbol.find(exist_node_info.ToString());
+  const auto iter1 = anchor_to_symbol.find(exist_node);
   if (iter1 == anchor_to_symbol.end()) {
     REPORT_INNER_ERROR("E18888", "data_anchor %s is not visible before data_anchor %s, maybe TopoSorting is missing.",
-                       exist_node_info.ToString().c_str(), cur_node_info.ToString().c_str());
+                       exist_node.c_str(), cur_node_info.ToString().c_str());
     GE_LOGE("[Check][Param] data_anchor %s is not visible before data_anchor %s, maybe TopoSorting is missing.",
-            exist_node_info.ToString().c_str(), cur_node_info.ToString().c_str());
+            exist_node.c_str(), cur_node_info.ToString().c_str());
     return GRAPH_FAILED;
   }
 
@@ -2854,30 +2857,13 @@ bool GraphUtils::IsRefFromInput(const OutDataAnchorPtr &out_data_anchor, int32_t
   return IsNoPaddingRefFromInput(out_data_anchor, reuse_in_index);
 }
 
-bool GraphUtils::IsRefFromRefData(const OutDataAnchorPtr &out_data_anchor, NodePtr &ref_data) {
+bool GraphUtils::HasRefVarAttr(const OutDataAnchorPtr &out_data_anchor, std::string &src_node_name) {
   GE_ASSERT_NOTNULL(out_data_anchor);
   const auto owner_node = out_data_anchor->GetOwnerNode();
   GE_ASSERT_NOTNULL(owner_node);
   const auto out_desc = owner_node->GetOpDesc()->GetOutputDescPtr(static_cast<uint32_t>(out_data_anchor->GetIdx()));
   GE_ASSERT_NOTNULL(out_desc);
-  std::string ref_var_src_var_name;
-  bool has_ref_attr = ge::AttrUtils::GetStr(out_desc, REF_VAR_SRC_VAR_NAME, ref_var_src_var_name);
-  if (!has_ref_attr) {
-    return false;
-  }
-  // find src ref_data_node
-  const auto &ower_graph = owner_node->GetOwnerComputeGraph();
-  GE_ASSERT_NOTNULL(ower_graph);
-  const auto ref_data_node = ower_graph->FindNode(ref_var_src_var_name);
-  if (ref_data_node == nullptr) {
-    GELOGW("Can not find refdata named %s. Please check ref relation on graph.", ref_var_src_var_name.c_str());
-    return false;
-  }
-  if (ref_data_node->GetType() != REFDATA) {
-    return false;
-  }
-  ref_data = ref_data_node;
-  return true;
+  return ge::AttrUtils::GetStr(out_desc, REF_VAR_SRC_VAR_NAME, src_node_name);
 }
 
 bool GraphUtils::IsNoPaddingRefFromInput(const OutDataAnchorPtr &out_data_anchor, int32_t &reuse_in_index) {

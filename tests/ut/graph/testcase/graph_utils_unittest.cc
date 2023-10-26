@@ -2182,7 +2182,8 @@ TEST_F(UtestGraphUtils, UpdateRefMappingSuccess) {
   anchor_to_symbol.insert(pair<std::string, std::string>("data2_out_0", "var2_out_0"));
 
   std::string symbol;
-  int ret = GraphUtils::UpdateRefMapping(cur_node_info, exist_node_info, symbol_to_anchors, anchor_to_symbol);
+  int ret = GraphUtils::UpdateRefMapping(cur_node_info, exist_node_info.ToString(),
+                                         symbol_to_anchors, anchor_to_symbol);
   EXPECT_EQ(ret, GRAPH_SUCCESS);
 }
 
@@ -2213,7 +2214,8 @@ TEST_F(UtestGraphUtils, UpdateRefMappingSymbolToAnchorsIsNull) {
   anchor_to_symbol.insert(pair<std::string, std::string>("data2_out_0", "var2_out_0"));
 
   std::string symbol;
-  int ret = GraphUtils::UpdateRefMapping(cur_node_info, exist_node_info, symbol_to_anchors, anchor_to_symbol);
+  int ret = GraphUtils::UpdateRefMapping(cur_node_info, exist_node_info.ToString(),
+                                         symbol_to_anchors, anchor_to_symbol);
   EXPECT_EQ(ret, GRAPH_FAILED);
 }
 
