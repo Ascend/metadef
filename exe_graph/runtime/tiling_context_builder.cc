@@ -101,28 +101,33 @@ ge::graphStatus TilingContextBuilder::BuildRTInputTensors(const ge::Operator &op
   const auto op_desc = node->GetOpDesc();
   GE_ASSERT_NOTNULL(op_desc);
 
-  const size_t input_num = node->GetInDataNodesAndAnchors().size();
-  auto input_descs = op_desc->GetAllInputsDesc();
-  GE_ASSERT_TRUE(input_descs.size() == input_num,
-                 "[Check][Param]node(%s) has %zu input, while num of valid input desc is %zu.", node->GetNamePtr(),
-                 input_num, input_descs.size());
-  for (size_t i = 0U; i < input_num; ++i) {
+  size_t valid_input_idx = 0U;
+  const auto &all_in_data_anchors = node->GetAllInDataAnchors();
+  for (size_t i = 0U; i < all_in_data_anchors.size(); ++i) {
+    GE_ASSERT_NOTNULL(all_in_data_anchors.at(i));
+    if (all_in_data_anchors.at(i)->GetPeerOutAnchor() == nullptr) {
+      continue;
+    }
+    GE_ASSERT_NOTNULL(all_in_data_anchors.at(i)->GetPeerOutAnchor()->GetOwnerNode());
     TensorAddress address = nullptr;
     bool is_data_dependent = false;
-    GE_ASSERT_SUCCESS(ddi.IsDataDependent(static_cast<int32_t>(i), is_data_dependent));
+    GE_ASSERT_SUCCESS(ddi.IsDataDependent(static_cast<int32_t>(valid_input_idx), is_data_dependent));
     bool is_tiling_dependent = false;
     if (!is_data_dependent) {
-      GE_ASSERT_SUCCESS(ddi.IsTilingInputDataDependent(static_cast<int32_t>(i), is_tiling_dependent));
+      GE_ASSERT_SUCCESS(ddi.IsTilingInputDataDependent(static_cast<int32_t>(valid_input_idx), is_tiling_dependent));
     }
     GELOGD("Node: %s input: %zu data/tiling depend flag: %d/%d",
-        node->GetName().c_str(), i, is_data_dependent, is_tiling_dependent);
+        node->GetName().c_str(), valid_input_idx, is_data_dependent, is_tiling_dependent);
     is_data_dependent |= is_tiling_dependent;
     if (is_data_dependent) {
-      GE_ASSERT_GRAPH_SUCCESS(GetDependInputTensorAddr(op, i, address));
+      GE_ASSERT_GRAPH_SUCCESS(GetDependInputTensorAddr(op, valid_input_idx, address));
     }
     std::unique_ptr<uint8_t[]> tensor_holder;
-    GE_ASSERT_GRAPH_SUCCESS(BuildRtTensor(input_descs.at(i), address, tensor_holder));
+    const auto valid_op_desc = op_desc->GetInputDescPtr(i);
+    GE_ASSERT_NOTNULL(valid_op_desc);
+    GE_ASSERT_GRAPH_SUCCESS(BuildRtTensor(*valid_op_desc, address, tensor_holder));
     rt_tensor_holders_.emplace_back(std::move(tensor_holder));
+    ++valid_input_idx;
   }
   return ge::GRAPH_SUCCESS;
 }
