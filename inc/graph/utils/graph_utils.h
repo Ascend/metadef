@@ -105,10 +105,6 @@ class NodeIndexIO {
     }
   }
 
-  static std::string ToValueByNameIndexType(const std::string &name, const IOType io_type, const uint32_t index) {
-    return name + ((io_type == kOut) ? "_out_" : "_in_") + std::to_string(index);
-  }
-
   NodePtr node_ = nullptr;
   uint32_t index_ = 0U;
   IOType io_type_ = kOut;
@@ -605,10 +601,10 @@ class GraphUtils {
   /**
    * 判断当前`out_data_anchor`是否引用RefData的输出
    * @param out_data_anchor
-   * @param src_node_name 复用的节点名
+   * @param ref_data 复用的RefData节点
    * @return 如果存在复用关系，返回true, 否则返回false
    */
-  static bool HasRefVarAttr(const OutDataAnchorPtr &out_data_anchor, std::string &src_node_name);
+  static bool IsRefFromRefData(const OutDataAnchorPtr &out_data_anchor, NodePtr &ref_data);
   /**
   * 针对含有`ATTR_NAME_NOPADDING_CONTINUOUS_INPUT`和`ATTR_NAME_NOPADDING_CONTINUOUS_OUTPUT`类型的节点
   * 单独封装的复用接口
@@ -774,12 +770,12 @@ class GraphUtils {
   /**
    * 对于同一块地址，使用已有tensor的符号设置当前tensor的符号
    * @param cur_node_info
-   * @param exist_node
+   * @param exist_node_info
    * @param symbol_to_anchors
    * @param anchor_to_symbol
    * @return
    */
-  static graphStatus UpdateRefMapping(const NodeIndexIO &cur_node_info, const std::string &exist_node,
+  static graphStatus UpdateRefMapping(const NodeIndexIO &cur_node_info, const NodeIndexIO &exist_node_info,
                                       SymbolToAnchors &symbol_to_anchors, AnchorToSymbol &anchor_to_symbol);
 
   /// Relink all edges for cloned ComputeGraph.
