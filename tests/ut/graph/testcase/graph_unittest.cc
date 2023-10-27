@@ -190,7 +190,7 @@ TEST_F(UtestGraph, test_infer_value_range_register_succ) {
   ASSERT_EQ(para.is_initialized, false);
 }
 
-TEST_F(UtestGraph, HasRefVarAttr_HasNoAttr_ReturnFalse) {
+TEST_F(UtestGraph, IsRefFromRefData_HasNoAttr_ReturnFalse) {
   ut::GraphBuilder builder = ut::GraphBuilder("graph");
   auto ref_data = builder.AddNode("ref_data", "RefData", 0, 1);
   auto transdata = builder.AddNode("Transdata", "Transdata", 1, 1);
@@ -201,11 +201,43 @@ TEST_F(UtestGraph, HasRefVarAttr_HasNoAttr_ReturnFalse) {
   auto out_data_anchor = transdata->GetOutDataAnchor(0);
   ASSERT_NE(out_data_anchor, nullptr);
 
-  std::string src_node_name;
-  EXPECT_FALSE(GraphUtils::HasRefVarAttr(out_data_anchor, src_node_name));
+  NodePtr node = nullptr;
+  EXPECT_FALSE(GraphUtils::IsRefFromRefData(out_data_anchor, node));
 }
 
-TEST_F(UtestGraph, HasRefVarAttr_ReturnTrue) {
+TEST_F(UtestGraph, IsRefFromRefData_VarNameNotExist_ReturnFalse) {
+  ut::GraphBuilder builder = ut::GraphBuilder("graph");
+  auto ref_data = builder.AddNode("ref_data", "RefData", 0, 1);
+  auto transdata = builder.AddNode("Transdata", "Transdata", 1, 1);
+  auto netoutput = builder.AddNode("Netoutput", "NetOutput", 1, 0);
+  builder.AddDataEdge(ref_data, 0, transdata, 0);
+  builder.AddDataEdge(transdata, 0, netoutput, 0);
+  auto graph = builder.GetGraph();
+  ge::AttrUtils::SetStr(transdata->GetOpDesc()->MutableOutputDesc(0), "ref_var_src_var_name", "not_exist");
+  auto out_data_anchor = transdata->GetOutDataAnchor(0);
+  ASSERT_NE(out_data_anchor, nullptr);
+
+  NodePtr node = nullptr;
+  EXPECT_FALSE(GraphUtils::IsRefFromRefData(out_data_anchor, node));
+}
+
+TEST_F(UtestGraph, IsRefFromRefData_VarNameNodeIsNotRefData_ReturnFalse) {
+  ut::GraphBuilder builder = ut::GraphBuilder("graph");
+  auto ref_data = builder.AddNode("ref_data", "RefData", 0, 1);
+  auto transdata = builder.AddNode("Transdata", "Transdata", 1, 1);
+  auto netoutput = builder.AddNode("Netoutput", "NetOutput", 1, 0);
+  builder.AddDataEdge(ref_data, 0, transdata, 0);
+  builder.AddDataEdge(transdata, 0, netoutput, 0);
+  auto graph = builder.GetGraph();
+  ge::AttrUtils::SetStr(transdata->GetOpDesc()->MutableOutputDesc(0), "ref_var_src_var_name", "NetOutput");
+  auto out_data_anchor = transdata->GetOutDataAnchor(0);
+  ASSERT_NE(out_data_anchor, nullptr);
+
+  NodePtr node = nullptr;
+  EXPECT_FALSE(GraphUtils::IsRefFromRefData(out_data_anchor, node));
+}
+
+TEST_F(UtestGraph, IsRefFromRefData_ReturnTrue) {
   ut::GraphBuilder builder = ut::GraphBuilder("graph");
   auto ref_data = builder.AddNode("ref_data", "RefData", 0, 1);
   auto transdata = builder.AddNode("Transdata", "Transdata", 1, 1);
@@ -217,8 +249,8 @@ TEST_F(UtestGraph, HasRefVarAttr_ReturnTrue) {
   auto out_data_anchor = transdata->GetOutDataAnchor(0);
   ASSERT_NE(out_data_anchor, nullptr);
 
-  std::string src_node_name;
-  EXPECT_TRUE(GraphUtils::HasRefVarAttr(out_data_anchor, src_node_name));
+  NodePtr node = nullptr;
+  EXPECT_TRUE(GraphUtils::IsRefFromRefData(out_data_anchor, node));
 }
 
 REG_OP(Shape)
