@@ -35,6 +35,8 @@ public:
   std::vector<ge::Format> unknown_shape_formats;
   bool ignore_contiguous = false;
   bool auto_contiguous = false;
+  bool is_scalar = false;
+  bool is_scalar_list = false;
 };
 
 class OpParamTrunk {

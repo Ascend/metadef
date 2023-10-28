@@ -34,6 +34,8 @@ OpParamDef::OpParamDef(const OpParamDef &def) : impl_(new(std::nothrow) OpParamD
   this->impl_->unknown_shape_formats = def.impl_->unknown_shape_formats;
   this->impl_->ignore_contiguous = def.impl_->ignore_contiguous;
   this->impl_->auto_contiguous = def.impl_->auto_contiguous;
+  this->impl_->is_scalar = def.impl_->is_scalar;
+  this->impl_->is_scalar_list = def.impl_->is_scalar_list;
 }
 
 OpParamDef &OpParamDef::operator=(const OpParamDef &def) {
@@ -65,6 +67,8 @@ void OpParamDef::MergeParam(const OpParamDef &def) {
   }
   this->impl_->ignore_contiguous = def.impl_->ignore_contiguous;
   this->impl_->auto_contiguous = def.impl_->auto_contiguous;
+  this->impl_->is_scalar = def.impl_->is_scalar;
+  this->impl_->is_scalar_list = def.impl_->is_scalar_list;
 }
 
 OpParamDef::~OpParamDef() = default;
@@ -117,6 +121,16 @@ OpParamDef &OpParamDef::AutoContiguous() {
   return *this;
 }
 
+OpParamDef &OpParamDef::Scalar() {
+  this->impl_->is_scalar = true;
+  return *this;
+}
+
+OpParamDef &OpParamDef::ScalarList() {
+  this->impl_->is_scalar_list = true;
+  return *this;
+}
+
 ge::AscendString &OpParamDef::GetParamName(void) {
   return this->impl_->name;
 }
@@ -140,6 +154,12 @@ bool OpParamDef::GetIgnoreContiguous(void) {
 }
 bool OpParamDef::GetAutoContiguous(void) {
   return this->impl_->auto_contiguous;
+}
+bool OpParamDef::IsScalar(void) {
+  return this->impl_->is_scalar;
+}
+bool OpParamDef::IsScalarList(void) {
+  return this->impl_->is_scalar_list;
 }
 
 OpParamDef &OpParamTrunk::Input(const char *name) {

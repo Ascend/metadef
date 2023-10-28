@@ -42,6 +42,18 @@ TEST_F(OpDefParamUT, ParamTest) {
       .Format({ge::FORMAT_ND})
       .UnknownShapeFormat({ge::FORMAT_ND})
       .ValueDepend(Option::OPTIONAL);
+  desc.Input("x3")
+      .ParamType(Option::OPTIONAL)
+      .DataType({ge::DT_FLOAT16})
+      .Format({ge::FORMAT_ND})
+      .UnknownShapeFormat({ge::FORMAT_ND})
+      .Scalar();
+  desc.Input("x4")
+      .ParamType(Option::OPTIONAL)
+      .DataType({ge::DT_FLOAT16})
+      .Format({ge::FORMAT_ND})
+      .UnknownShapeFormat({ge::FORMAT_ND})
+      .ScalarList();
   desc.Output("y")
       .ParamType(Option::OPTIONAL)
       .DataType({ge::DT_FLOAT16})
@@ -64,8 +76,14 @@ TEST_F(OpDefParamUT, ParamTest) {
   EXPECT_EQ(desc.Input("x2").GetAutoContiguous(), false);
   EXPECT_EQ(desc.Output("y").GetIgnoreContiguous(), true);
   EXPECT_EQ(desc.Output("y").GetAutoContiguous(), true);
-  EXPECT_EQ(desc.GetInputs().size(), 2);
+  EXPECT_EQ(desc.GetInputs().size(), 4);
   EXPECT_EQ(desc.GetOutputs().size(), 1);
+  EXPECT_EQ(desc.Input("x1").IsScalar(), false);
+  EXPECT_EQ(desc.Input("x1").IsScalarList(), false);
+  EXPECT_EQ(desc.Input("x3").IsScalar(), true);
+  EXPECT_EQ(desc.Input("x3").IsScalarList(), false);
+  EXPECT_EQ(desc.Input("x4").IsScalar(), false);
+  EXPECT_EQ(desc.Input("x4").IsScalarList(), true);
 }
 
 }  // namespace

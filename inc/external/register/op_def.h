@@ -75,6 +75,8 @@ public:
   OpParamDef &ValueDepend(Option value_depend);
   OpParamDef &IgnoreContiguous(void);
   OpParamDef &AutoContiguous();
+  OpParamDef &Scalar();
+  OpParamDef &ScalarList();
   ge::AscendString &GetParamName(void);
   Option GetParamType(void);
   std::vector<ge::DataType> &GetDataTypes(void);
@@ -83,6 +85,8 @@ public:
   ge::AscendString &GetValueDepend(void);
   bool GetIgnoreContiguous(void);
   bool GetAutoContiguous(void);
+  bool IsScalar(void);
+  bool IsScalarList(void);
 
 private:
   std::unique_ptr<OpParamDefImpl> impl_;
