@@ -912,3 +912,15 @@ message FlowgwRequest {
 message FlowgwResponse {
     repeated QueueInfo queue_infos = 1;
 }
+
+message QueueStatus {
+  QueueAttrs queue_attrs = 1;
+  uint32 logic_queue_id = 2;
+  uint32 queue_depth = 3;
+  uint32 input_consume_num = 4;
+}
+
+message SubmodelStatus {
+  uint32 model_uuid = 1;
+  repeated QueueStatus queue_statuses = 2;
+}
