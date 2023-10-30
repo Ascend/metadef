@@ -240,6 +240,28 @@ class NodeUtils {
   */
   static graphStatus TryGetWeightByDataNode(const NodePtr &node_ptr, ConstGeTensorPtr &ge_tensor);
   /**
+ * 判断当前`out_data_anchor`是否复用了输入anchor的内存
+ * @param out_data_anchor
+ * @param reuse_in_index 复用的输入anchor的index
+ * @return 如果存在复用关系，返回true, 否则返回false
+ */
+  static bool IsRefFromInput(const OutDataAnchorPtr &out_data_anchor, int32_t &reuse_in_index);
+  /**
+  * 针对含有`ATTR_NAME_NOPADDING_CONTINUOUS_INPUT`和`ATTR_NAME_NOPADDING_CONTINUOUS_OUTPUT`类型的节点
+  * 单独封装的复用接口
+  * @param out_data_anchor
+  * @param reuse_in_index 出参，如果存在复用，值为0
+  * @return 如果存在复用，返回true,负责返回false
+  */
+  static bool IsNoPaddingRefFromInput(const OutDataAnchorPtr &out_data_anchor, int32_t &reuse_in_index);
+  /**
+   * 判断当前`out_data_anchor`是否引用src_node_name的输出
+   * @param out_data_anchor
+   * @param src_node_name 复用的节点名
+   * @return 如果有REF_VAR_SRC_VAR_NAME，返回true, 否则返回false
+   */
+  static bool HasRefVarAttr(const OutDataAnchorPtr &out_data_anchor, std::string &src_node_name);
+  /**
    * 判断`node`的名称是否是`name`
    * @param node
    * @param name
