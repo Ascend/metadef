@@ -21,7 +21,7 @@
 #include "exe_graph/runtime/tensor.h"
 #include "exe_graph/runtime/runtime_attrs.h"
 #include "exe_graph/runtime/extended_kernel_context.h"
-#include "external/ge_common/ge_allocator.h"
+#include "ge/ge_allocator.h"
 
 namespace gert {
 using rtStream = void *;

@@ -16,7 +16,7 @@
 
 #ifndef AIR_CXX_TESTS_UT_GE_RUNTIME_V2_FAKER_ALLOCATOR_FACKER_H_
 #define AIR_CXX_TESTS_UT_GE_RUNTIME_V2_FAKER_ALLOCATOR_FACKER_H_
-#include "ge_common/ge_allocator.h"
+#include "ge/ge_allocator.h"
 namespace gert {
   class AllocatorFaker : public ge::Allocator {
     ge::MemBlock *Malloc(size_t size) override;

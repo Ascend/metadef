@@ -18,7 +18,7 @@
 #define METADEF_MEMORY_GERT_MEM_ALLOCATOR_H
 
 #include "exe_graph/runtime/tensor_data.h"
-#include "ge_common/ge_allocator.h"
+#include "ge/ge_allocator.h"
 
 namespace gert {
 namespace memory {
