@@ -460,6 +460,7 @@ struct QueueAttrs {
   uint32_t queue_id;
   int32_t device_type; // CPU NPU
   int32_t device_id;
+  uint32_t logic_id {0U};
 };
 
 struct ModelQueueParam {
@@ -473,6 +474,10 @@ struct ModelQueueParam {
   std::vector<uint64_t> output_events;
   std::vector<QueueAttrs> input_queues_attrs;
   std::vector<QueueAttrs> output_queues_attrs;
+  QueueAttrs status_output_queue;
+  uint32_t model_uuid {0U};
+  bool is_dynamic_sched {false};
+  bool need_report_status {false};
 };
 
 // internal options

@@ -425,6 +425,10 @@ HyperStatus ValueHolder::AddDependency(const ValueHolderPtr &src, const ValueHol
   if (dst == nullptr || dst->GetNode() == nullptr) {
     return HyperStatus::ErrorStatus("Failed to add control ege, because the dst does not have a node.");
   }
+  if (src->GetNode() == dst->GetNode()) {
+    GELOGW("Add dependency between the same node %s, skip", src->GetNode()->GetName().c_str());
+    return HyperStatus::Success();
+  }
   return AddDependencyBetweenNodes(*(src->GetNode()), *(dst->GetNode()));
 }
 
