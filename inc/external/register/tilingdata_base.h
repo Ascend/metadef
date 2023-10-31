@@ -91,7 +91,7 @@ public:
   std::vector<FieldInfo> GetFieldInfo() const;
   const char *GetTilingClassName() const;
   size_t GetDataSize() const;
-  void SetDataPtr(void *ptr);
+  void SetDataPtr(void *dataPtr);
   void CheckAlignAndGenPlaceHolder(const char *name, size_t typeSize);
 protected:
   void InitData();

@@ -125,3 +125,51 @@ target_compile_options(metadef_aicpu_protos_obj PRIVATE
         $<$<AND:$<STREQUAL:${TARGET_SYSTEM_NAME},Windows>,$<STREQUAL:${CMAKE_CONFIGURATION_TYPES},Debug>>:/MTd>
         $<$<AND:$<STREQUAL:${TARGET_SYSTEM_NAME},Windows>,$<STREQUAL:${CMAKE_CONFIGURATION_TYPES},Release>>:/MT>
         )
+
+
+############ stub/libop_common.so ############
+set(STUB_SRC_LIST
+    ${CMAKE_CURRENT_BINARY_DIR}/stub_common_infershape_fns.cc
+)
+
+add_custom_command(
+    OUTPUT ${STUB_SRC_LIST}
+    COMMAND echo "Generating stub files."
+            && ${HI_PYTHON} ${CMAKE_CURRENT_LIST_DIR}/stub/gen_stubapi.py ${METADEF_DIR}/inc/external ${CMAKE_CURRENT_BINARY_DIR}
+            && echo "Generating stub files end."
+)
+
+add_custom_target(op_common_stub DEPENDS ${STUB_SRC_LIST})
+
+add_library(stub_op_common SHARED ${STUB_SRC_LIST})
+
+add_dependencies(stub_op_common op_common_stub)
+
+target_include_directories(stub_op_common PRIVATE
+    ${CMAKE_CURRENT_LIST_DIR}
+    ${CMAKE_BINARY_DIR}
+)
+
+target_compile_options(stub_op_common PRIVATE
+    -Wfloat-equal
+    -fno-common
+)
+
+target_link_libraries(stub_op_common
+    PRIVATE
+        intf_pub
+        air_headers
+        c_sec
+    PUBLIC
+        metadef_headers
+)
+
+set_target_properties(stub_op_common PROPERTIES
+    OUTPUT_NAME op_common
+    LIBRARY_OUTPUT_DIRECTORY stub
+)
+
+############ install ############
+install(TARGETS stub_op_common OPTIONAL
+    LIBRARY DESTINATION ${INSTALL_LIBRARY_DIR}/${CMAKE_SYSTEM_PROCESSOR}/stub
+)

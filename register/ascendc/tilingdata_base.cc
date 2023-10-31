@@ -25,24 +25,24 @@ std::vector<FieldInfo> TilingDef::GetFieldInfo() const {
   return field_info_;
 }
 
-const char *TilingDef::GetTilingClassName() const {
-  return class_name_;
-}
-
 size_t TilingDef::GetDataSize() const {
   return data_size_;
 }
 
-void TilingDef::GeLogError(const std::string& str) const {
+const char *TilingDef::GetTilingClassName() const {
+  return class_name_;
+}
+
+void TilingDef::GeLogError(const std::string &str) const {
   GELOGE(ge::GRAPH_FAILED, "%s", str.c_str());
 }
 
-void TilingDef::SetDataPtr(void *ptr) {
+void TilingDef::SetDataPtr(void *dataPtr) {
   if (!inited_data_ptr && data_ptr_ != nullptr) {
     delete[] data_ptr_;
   }
   inited_data_ptr = true;
-  data_ptr_ = (uint8_t*)ptr;
+  data_ptr_ = (uint8_t*)dataPtr;
   for (auto &ptr : saveBufferPtr) {
     TilingDef* sub_ptr = (TilingDef *)ptr.first;
     size_t offset = ptr.second;

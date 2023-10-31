@@ -22,6 +22,7 @@
 #include "graph/utils/node_utils.h"
 #include "graph/utils/type_utils.h"
 #include "register/graph_optimizer/graph_optimize_register_error_codes.h"
+#include "external/graph/types.h"
 
 #include <map>
 #include <memory>
