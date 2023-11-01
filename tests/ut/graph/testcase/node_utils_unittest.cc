@@ -25,11 +25,9 @@
 #include "graph/op_desc_impl.h"
 #include "graph_builder_utils.h"
 #include "graph/debug/ge_op_types.h"
-#include "graph/debug/ge_attr_define.h"
 #include "graph/operator_factory_impl.h"
 #include "graph/compute_graph_impl.h"
 #include "graph/anchor.h"
-#include "graph/utils/tensor_utils.h"
 
 #undef private
 #undef protected
@@ -382,108 +380,6 @@ TEST_F(UtestNodeUtils, GetNodeUnknownShapeStatus_success) {
   ASSERT_EQ(NodeUtils::GetNodeUnknownShapeStatus(*case0, is_known), GRAPH_SUCCESS);
 }
 
-TEST_F(UtestNodeUtils, IsNoPaddingRefFromInputSuccess) {
-  auto builder = ut::GraphBuilder("test0");
-  const auto &node1 = builder.AddNode("node", "node", 1, 1);
-  AttrUtils::SetBool(node1->GetOpDesc(), ATTR_NAME_NOPADDING_CONTINUOUS_INPUT, true);
-  AttrUtils::SetBool(node1->GetOpDesc(), ATTR_NAME_NOPADDING_CONTINUOUS_OUTPUT, true);
-  AttrUtils::SetBool(node1->GetOpDesc(), ATTR_NAME_OUTPUT_REUSE_INPUT, true);
-
-  int32_t reuse_in_index;
-  bool ret = NodeUtils::IsNoPaddingRefFromInput(node1->GetOutDataAnchor(0), reuse_in_index);
-  EXPECT_EQ(ret, true);
-}
-
-TEST_F(UtestNodeUtils, IsRefFromInputOutDataAnchorPtrIsNull) {
-  OutDataAnchorPtr out_data_anchor;
-  int32_t reuse_in_index;
-  bool ret = NodeUtils::IsRefFromInput(out_data_anchor, reuse_in_index);
-  EXPECT_EQ(ret, false);
-}
-
-TEST_F(UtestNodeUtils, IsRefFromInputFail) {
-  auto builder = ut::GraphBuilder("test0");
-  const auto &node0 = builder.AddNode("node0", "node", 1, 1);
-  int32_t reuse_in_index;
-  bool ret = NodeUtils::IsRefFromInput(node0->GetOutDataAnchor(0), reuse_in_index);
-  EXPECT_EQ(ret, false);
-}
-
-TEST_F(UtestNodeUtils, IsRefFromInputPassThroughOK) {
-  auto builder = ut::GraphBuilder("test0");
-  const auto &node0 = builder.AddNode("node0", NETOUTPUT, 1, 1);
-  int32_t reuse_in_index;
-  bool ret = NodeUtils::IsRefFromInput(node0->GetOutDataAnchor(0), reuse_in_index);
-  EXPECT_EQ(ret, true);
-}
-
-TEST_F(UtestNodeUtils, IsRefFromInputTypeIsMergeSuccess) {
-  auto builder = ut::GraphBuilder("test0");
-  const auto &node0 = builder.AddNode("node0", MERGE, 1, 1);
-  int32_t reuse_in_index;
-  bool ret = NodeUtils::IsRefFromInput(node0->GetOutDataAnchor(0), reuse_in_index);
-  EXPECT_EQ(ret, true);
-}
-
-TEST_F(UtestNodeUtils, IsRefFromInput_ReuseInput_Success) {
-  auto builder = ut::GraphBuilder("test0");
-  const auto &node0 = builder.AddNode("node0", "Relu", 1, 1);
-  TensorUtils::SetReuseInput(*node0->GetOpDesc()->MutableOutputDesc(0), true);
-  TensorUtils::SetReuseInputIndex(*node0->GetOpDesc()->MutableOutputDesc(0), 0);
-  int32_t reuse_in_index;
-  bool ret = NodeUtils::IsRefFromInput(node0->GetOutDataAnchor(0), reuse_in_index);
-  EXPECT_EQ(ret, true);
-}
-
-TEST_F(UtestNodeUtils, IsRefFromInputTypeIsReshapeSuccess) {
-  auto builder = ut::GraphBuilder("test0");
-  const auto &node0 = builder.AddNode("node0", RESHAPE, 1, 1);
-  int32_t reuse_in_index;
-  bool ret = NodeUtils::IsRefFromInput(node0->GetOutDataAnchor(0), reuse_in_index);
-  EXPECT_EQ(ret, true);
-  EXPECT_EQ(reuse_in_index, 0);
-}
-
-TEST_F(UtestNodeUtils, IsRefFromInputRefOpFail) {
-  auto builder = ut::GraphBuilder("test0");
-  const auto &node1 = builder.AddNode("node", "node", 1, 1);
-  AttrUtils::SetBool(node1->GetOpDesc(), ATTR_NAME_REFERENCE, true);
-
-  int32_t reuse_in_index;
-  bool ret = NodeUtils::IsRefFromInput(node1->GetOutDataAnchor(0), reuse_in_index);
-  EXPECT_EQ(ret, false);
-}
-
-TEST_F(UtestNodeUtils, HasRefVarAttr_HasNoAttr_ReturnFalse) {
-  ut::GraphBuilder builder = ut::GraphBuilder("graph");
-  auto ref_data = builder.AddNode("ref_data", "RefData", 0, 1);
-  auto transdata = builder.AddNode("Transdata", "Transdata", 1, 1);
-  auto netoutput = builder.AddNode("Netoutput", "NetOutput", 1, 0);
-  builder.AddDataEdge(ref_data, 0, transdata, 0);
-  builder.AddDataEdge(transdata, 0, netoutput, 0);
-  auto graph = builder.GetGraph();
-  auto out_data_anchor = transdata->GetOutDataAnchor(0);
-  ASSERT_NE(out_data_anchor, nullptr);
-
-  std::string src_node_name;
-  EXPECT_FALSE(NodeUtils::HasRefVarAttr(out_data_anchor, src_node_name));
-}
-
-TEST_F(UtestNodeUtils, HasRefVarAttr_ReturnTrue) {
-  ut::GraphBuilder builder = ut::GraphBuilder("graph");
-  auto ref_data = builder.AddNode("ref_data", "RefData", 0, 1);
-  auto transdata = builder.AddNode("Transdata", "Transdata", 1, 1);
-  auto netoutput = builder.AddNode("Netoutput", "NetOutput", 1, 0);
-  builder.AddDataEdge(ref_data, 0, transdata, 0);
-  builder.AddDataEdge(transdata, 0, netoutput, 0);
-  auto graph = builder.GetGraph();
-  ge::AttrUtils::SetStr(transdata->GetOpDesc()->MutableOutputDesc(0), "ref_var_src_var_name", "ref_data");
-  auto out_data_anchor = transdata->GetOutDataAnchor(0);
-  ASSERT_NE(out_data_anchor, nullptr);
-
-  std::string src_node_name;
-  EXPECT_TRUE(NodeUtils::HasRefVarAttr(out_data_anchor, src_node_name));
-}
 
 TEST_F(UtestNodeUtils, GetInNodeCrossPartionedCallNode_cross_one_subgraph) {
   auto graph = BuildGraphPartitionCall4();

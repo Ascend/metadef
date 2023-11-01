@@ -2182,8 +2182,7 @@ TEST_F(UtestGraphUtils, UpdateRefMappingSuccess) {
   anchor_to_symbol.insert(pair<std::string, std::string>("data2_out_0", "var2_out_0"));
 
   std::string symbol;
-  int ret = GraphUtils::UpdateRefMapping(cur_node_info, exist_node_info.ToString(),
-                                         symbol_to_anchors, anchor_to_symbol);
+  int ret = GraphUtils::UpdateRefMapping(cur_node_info, exist_node_info, symbol_to_anchors, anchor_to_symbol);
   EXPECT_EQ(ret, GRAPH_SUCCESS);
 }
 
@@ -2214,8 +2213,7 @@ TEST_F(UtestGraphUtils, UpdateRefMappingSymbolToAnchorsIsNull) {
   anchor_to_symbol.insert(pair<std::string, std::string>("data2_out_0", "var2_out_0"));
 
   std::string symbol;
-  int ret = GraphUtils::UpdateRefMapping(cur_node_info, exist_node_info.ToString(),
-                                         symbol_to_anchors, anchor_to_symbol);
+  int ret = GraphUtils::UpdateRefMapping(cur_node_info, exist_node_info, symbol_to_anchors, anchor_to_symbol);
   EXPECT_EQ(ret, GRAPH_FAILED);
 }
 
@@ -2223,6 +2221,49 @@ TEST_F(UtestGraphUtils, IsRefFromInputOutDataAnchorPtrIsNull) {
   OutDataAnchorPtr out_data_anchor;
   int32_t reuse_in_index;
   bool ret = GraphUtils::IsRefFromInput(out_data_anchor, reuse_in_index);
+  EXPECT_EQ(ret, false);
+}
+
+TEST_F(UtestGraphUtils, IsRefFromInputFail) {
+  auto builder = ut::GraphBuilder("test0");
+  const auto &node0 = builder.AddNode("node0", "node", 1, 1);
+  int32_t reuse_in_index;
+  bool ret = GraphUtils::IsRefFromInput(node0->GetOutDataAnchor(0), reuse_in_index);
+  EXPECT_EQ(ret, false);
+}
+
+TEST_F(UtestGraphUtils, IsRefFromInputPassThroughOK) {
+  auto builder = ut::GraphBuilder("test0");
+  const auto &node0 = builder.AddNode("node0", NETOUTPUT, 1, 1);
+  int32_t reuse_in_index;
+  bool ret = GraphUtils::IsRefFromInput(node0->GetOutDataAnchor(0), reuse_in_index);
+  EXPECT_EQ(ret, true);
+}
+
+TEST_F(UtestGraphUtils, IsRefFromInputTypeIsMergeSuccess) {
+  auto builder = ut::GraphBuilder("test0");
+  const auto &node0 = builder.AddNode("node0", MERGE, 1, 1);
+  int32_t reuse_in_index;
+  bool ret = GraphUtils::IsRefFromInput(node0->GetOutDataAnchor(0), reuse_in_index);
+  EXPECT_EQ(ret, true);
+}
+
+TEST_F(UtestGraphUtils, IsRefFromInputTypeIsReshapeSuccess) {
+  auto builder = ut::GraphBuilder("test0");
+  const auto &node0 = builder.AddNode("node0", RESHAPE, 1, 1);
+  int32_t reuse_in_index;
+  bool ret = GraphUtils::IsRefFromInput(node0->GetOutDataAnchor(0), reuse_in_index);
+  EXPECT_EQ(ret, true);
+  EXPECT_EQ(reuse_in_index, 0);
+}
+
+TEST_F(UtestGraphUtils, IsRefFromInputRefOpFail) {
+  auto builder = ut::GraphBuilder("test0");
+  const auto &node1 = builder.AddNode("node", "node", 1, 1);
+  AttrUtils::SetBool(node1->GetOpDesc(), ATTR_NAME_REFERENCE, true);
+
+  int32_t reuse_in_index;
+  bool ret = GraphUtils::IsRefFromInput(node1->GetOutDataAnchor(0), reuse_in_index);
   EXPECT_EQ(ret, false);
 }
 
