@@ -915,9 +915,8 @@ message FlowgwResponse {
 
 message QueueStatus {
   QueueAttrs queue_attrs = 1;
-  uint32 logic_queue_id = 2;
-  uint32 queue_depth = 3;
-  uint32 input_consume_num = 4;
+  uint32 queue_depth = 2;
+  uint32 input_consume_num = 3;
 }
 
 message SubmodelStatus {
