@@ -2449,8 +2449,7 @@ graphStatus GraphUtils::HandleInAnchorMapping(const ComputeGraphPtr &graph, cons
       anchor_to_symbol[symbol] = symbol;
     } else {
       const NodeIndexIO exist_node_info(peer_out_anchor->GetOwnerNode(), peer_out_anchor->GetIdx(), kOut);
-      GE_ASSERT_GRAPH_SUCCESS(UpdateRefMapping(cur_node_info, exist_node_info.ToString(),
-                                               symbol_to_anchors, anchor_to_symbol));
+      GE_ASSERT_GRAPH_SUCCESS(UpdateRefMapping(cur_node_info, exist_node_info, symbol_to_anchors, anchor_to_symbol));
     }
   }
 
@@ -2467,23 +2466,22 @@ graphStatus GraphUtils::HandleOutAnchorMapping(const NodePtr &node,
       continue;
     }
 
-    std::string src_node_name;
-    const bool has_ref_var_attr = NodeUtils::HasRefVarAttr(out_data_anchor, src_node_name);
-    const auto src_node_name_index_type_str = NodeIndexIO::ToValueByNameIndexType(src_node_name, kOut, 0U);
-    if (has_ref_var_attr && anchor_to_symbol.find(src_node_name_index_type_str) != anchor_to_symbol.end()) {
-      GELOGD("Node %s output:%d is ref form node %s.", node->GetName().c_str(), out_data_anchor->GetIdx(),
-             src_node_name.c_str());
+    NodePtr ref_node;
+    const bool is_ref_from_refdata = IsRefFromRefData(out_data_anchor, ref_node);
+    if (is_ref_from_refdata) {
+      NodeIndexIO exist_ref_data_info(ref_node, 0U, kOut);
+      GELOGD("Node %s output:%d is ref form refdata: %s.", node->GetName().c_str(), out_data_anchor->GetIdx(),
+             exist_ref_data_info.ToString().c_str());
       GE_ASSERT_GRAPH_SUCCESS(
-          UpdateRefMapping(cur_node_info, src_node_name_index_type_str, symbol_to_anchors, anchor_to_symbol));
+          UpdateRefMapping(cur_node_info, exist_ref_data_info, symbol_to_anchors, anchor_to_symbol));
     }
 
     // 这里ref from input和ref from refdata不冲突
     int32_t reuse_in_index = -1;
-    const bool reuse_input_flag = NodeUtils::IsRefFromInput(out_data_anchor, reuse_in_index);
+    const bool reuse_input_flag = IsRefFromInput(out_data_anchor, reuse_in_index);
     if (reuse_input_flag && (node->GetInDataAnchor(reuse_in_index) != nullptr)) {
       const NodeIndexIO exist_node_info(node, reuse_in_index, kIn);
-      if (UpdateRefMapping(cur_node_info, exist_node_info.ToString(),
-                           symbol_to_anchors, anchor_to_symbol) != GRAPH_SUCCESS) {
+      if (UpdateRefMapping(cur_node_info, exist_node_info, symbol_to_anchors, anchor_to_symbol) != GRAPH_SUCCESS) {
         GE_LOGE("[Update][SymbolMapping] failed.");
         return GRAPH_FAILED;
       }
@@ -2524,8 +2522,7 @@ graphStatus GraphUtils::HandleSubgraphInput(const NodePtr &node,
     // Data has and only has one input
     const NodeIndexIO cur_node_info(node, 0, kIn);
     const NodeIndexIO exist_node_info(peer_out_anchor->GetOwnerNode(), peer_out_anchor->GetIdx(), kOut);
-    if (UpdateRefMapping(cur_node_info, exist_node_info.ToString(),
-                         symbol_to_anchors, anchor_to_symbol) != GRAPH_SUCCESS) {
+    if (UpdateRefMapping(cur_node_info, exist_node_info, symbol_to_anchors, anchor_to_symbol) != GRAPH_SUCCESS) {
       GE_LOGE("[Update][SymbolMapping] failed.");
       return GRAPH_FAILED;
     }
@@ -2682,15 +2679,15 @@ graphStatus GraphUtils::UnionSymbolMapping(const NodeIndexIO &exist_node_info1, 
   return GRAPH_SUCCESS;
 }
 
-graphStatus GraphUtils::UpdateRefMapping(const NodeIndexIO &cur_node_info, const std::string &exist_node,
+graphStatus GraphUtils::UpdateRefMapping(const NodeIndexIO &cur_node_info, const NodeIndexIO &exist_node_info,
                                          SymbolToAnchors &symbol_to_anchors,
                                          AnchorToSymbol &anchor_to_symbol) {
-  const auto iter1 = anchor_to_symbol.find(exist_node);
+  const auto iter1 = anchor_to_symbol.find(exist_node_info.ToString());
   if (iter1 == anchor_to_symbol.end()) {
     REPORT_INNER_ERROR("E18888", "data_anchor %s is not visible before data_anchor %s, maybe TopoSorting is missing.",
-                       exist_node.c_str(), cur_node_info.ToString().c_str());
+                       exist_node_info.ToString().c_str(), cur_node_info.ToString().c_str());
     GE_LOGE("[Check][Param] data_anchor %s is not visible before data_anchor %s, maybe TopoSorting is missing.",
-            exist_node.c_str(), cur_node_info.ToString().c_str());
+            exist_node_info.ToString().c_str(), cur_node_info.ToString().c_str());
     return GRAPH_FAILED;
   }
 
@@ -2793,12 +2790,115 @@ graphStatus GraphUtils::GetSubgraphsRecursively(const ComputeGraphPtr &graph, st
   return GRAPH_SUCCESS;
 }
 
+/// Check if out_data_anchor is reference of input
+/// @param [in] out_data_anchor
+/// @param [out] reuse_in_index
+/// @return bool
 bool GraphUtils::IsRefFromInput(const OutDataAnchorPtr &out_data_anchor, int32_t &reuse_in_index) {
-  return NodeUtils::IsRefFromInput(out_data_anchor, reuse_in_index);
+  if (out_data_anchor == nullptr) {
+    GELOGW("[Check][Param] out_data_anchor is null");
+    return false;
+  }
+  const int32_t output_index = out_data_anchor->GetIdx();
+
+  // pass-through op
+  const auto node = out_data_anchor->GetOwnerNodeBarePtr();
+  const std::string &type = node->GetType();
+  static const std::unordered_set<std::string> pass_through_types = {NETOUTPUT, WHILE, _WHILE, STATELESSWHILE};
+  if ((pass_through_types.count(type) > 0U) || (NodeUtils::IsSubgraphInput(node))) {
+    reuse_in_index = output_index;
+    GELOGI("Pass-Through node name[%s] index[%u].", node->GetName().c_str(), reuse_in_index);
+    return true;
+  }
+
+  // Merge op 0th output
+  const bool is_ge_local_op = ((type == MERGE) || (type == RESHAPE)) && (output_index == 0);
+  if (is_ge_local_op) {
+    reuse_in_index = 0;
+    GELOGI("%s name[%s] output_index[0] reuse input 0.", type.c_str(), node->GetName().c_str());
+    return true;
+  }
+
+  // ref op
+  // op_desc of node should not be null
+  const auto op_desc = node->GetOpDescBarePtr();
+  bool is_ref = false;
+  (void)ge::AttrUtils::GetBool(op_desc, ATTR_NAME_REFERENCE, is_ref);
+  if (is_ref) {
+    const std::string &output_name = op_desc->GetOutputNameByIndex(static_cast<uint32_t>(output_index));
+    for (const auto &input_name : op_desc->GetAllInputNames()) {
+      if ((!input_name.empty()) && (output_name == input_name)) {
+        reuse_in_index = op_desc->GetInputIndexByName(input_name);
+        GELOGD("Reference name[%s] output[%s][%d] ref to input[%s][%d].", op_desc->GetName().c_str(),
+               output_name.c_str(), output_index, input_name.c_str(), reuse_in_index);
+        return true;
+      }
+    }
+  }
+
+  // reuse input
+  const auto output_op_desc = op_desc->GetOutputDescPtr(static_cast<uint32_t>(output_index));
+  if (output_op_desc != nullptr) {
+    bool reuse_input = false;
+    if ((TensorUtils::GetReuseInput(*output_op_desc, reuse_input) == GRAPH_SUCCESS) && reuse_input) {
+      uint32_t reuse_input_index = 0U;
+      if (TensorUtils::GetReuseInputIndex(*output_op_desc, reuse_input_index) == GRAPH_SUCCESS) {
+        reuse_in_index = static_cast<int32_t>(reuse_input_index);
+        GELOGI("ReuseInput name[%s] output[%d] reuse input[%d].", op_desc->GetName().c_str(),
+               output_index, reuse_in_index);
+        return true;
+      }
+    }
+  }
+  // nopadding reuse
+  return IsNoPaddingRefFromInput(out_data_anchor, reuse_in_index);
+}
+
+bool GraphUtils::IsRefFromRefData(const OutDataAnchorPtr &out_data_anchor, NodePtr &ref_data) {
+  GE_ASSERT_NOTNULL(out_data_anchor);
+  const auto owner_node = out_data_anchor->GetOwnerNode();
+  GE_ASSERT_NOTNULL(owner_node);
+  const auto out_desc = owner_node->GetOpDesc()->GetOutputDescPtr(static_cast<uint32_t>(out_data_anchor->GetIdx()));
+  GE_ASSERT_NOTNULL(out_desc);
+  std::string ref_var_src_var_name;
+  bool has_ref_attr = ge::AttrUtils::GetStr(out_desc, REF_VAR_SRC_VAR_NAME, ref_var_src_var_name);
+  if (!has_ref_attr) {
+    return false;
+  }
+  // find src ref_data_node
+  const auto &ower_graph = owner_node->GetOwnerComputeGraph();
+  GE_ASSERT_NOTNULL(ower_graph);
+  const auto ref_data_node = ower_graph->FindNode(ref_var_src_var_name);
+  if (ref_data_node == nullptr) {
+    GELOGW("Can not find refdata named %s. Please check ref relation on graph.", ref_var_src_var_name.c_str());
+    return false;
+  }
+  if (ref_data_node->GetType() != REFDATA) {
+    return false;
+  }
+  ref_data = ref_data_node;
+  return true;
 }
 
 bool GraphUtils::IsNoPaddingRefFromInput(const OutDataAnchorPtr &out_data_anchor, int32_t &reuse_in_index) {
-  return NodeUtils::IsNoPaddingRefFromInput(out_data_anchor, reuse_in_index);
+  const auto node = out_data_anchor->GetOwnerNodeBarePtr();
+  // nopadding means output[0] reuse input[0], but as history reason,
+  // other output index also return true for mem assign in block_mem_assigner
+  bool attr_reuse = false;
+  bool is_input_continuous = false;
+  bool is_out_continuous = false;
+  (void)ge::AttrUtils::GetBool(node->GetOpDescBarePtr(), ATTR_NAME_NOPADDING_CONTINUOUS_INPUT, is_input_continuous);
+  (void)ge::AttrUtils::GetBool(node->GetOpDescBarePtr(), ATTR_NAME_NOPADDING_CONTINUOUS_OUTPUT, is_out_continuous);
+  const bool get_reuse_flag = ge::AttrUtils::GetBool(node->GetOpDescBarePtr(), ATTR_NAME_OUTPUT_REUSE_INPUT,
+                                                     attr_reuse);
+  const bool is_no_padding_reuse_input = (is_input_continuous || is_out_continuous) && get_reuse_flag && attr_reuse;
+  if (is_no_padding_reuse_input) {
+    reuse_in_index = 0;
+    GELOGI("Nopadding ReuseInput name[%s] output[%d] reuse input[%d].", node->GetName().c_str(),
+           out_data_anchor->GetIdx(), reuse_in_index);
+    return true;
+  }
+  return false;
 }
 
 bool GraphUtils::IsNodeInGraphRecursively(const ComputeGraphPtr &graph, const Node &node) {
