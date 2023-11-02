@@ -47,7 +47,7 @@ struct GETaskKernelHcclInfo {
   void *inputDataAddr;
   void *outputDataAddr;
   void *workSpaceAddr;
-  int32_t count;
+  int64_t count;
   int32_t dataType;
   int32_t opType;
   int64_t rootId;
