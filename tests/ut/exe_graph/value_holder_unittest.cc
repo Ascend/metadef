@@ -478,6 +478,12 @@ TEST_F(ValueHolderUt, AddDependencyOk) {
   ASSERT_EQ(node2->GetNode()->GetInControlNodes().size(), 1);
   EXPECT_EQ(node1->GetNode()->GetOutControlAnchor()->GetPeerInControlAnchors().begin()->get()->GetOwnerNode().get(),
             node2->GetNode());
+
+  auto data3 = ValueHolder::CreateFeed(2);
+  ASSERT_NE(data3, nullptr);
+  ValueHolder::AddDependency(data3, data3);
+  ASSERT_EQ(data3->GetNode()->GetOutControlNodes().size(), 0);
+  ASSERT_EQ(data3->GetNode()->GetInControlNodes().size(), 0);
 }
 
 /*
