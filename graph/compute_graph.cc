@@ -41,7 +41,7 @@ namespace {
 const size_t OUTPUT_PARAM_SIZE = 2UL;
 constexpr int32_t kTopoSortingBfs = 0;
 constexpr int32_t kTopoSortingDfs = 1;
-constexpr int32_t kTopoSortingDfsPostOrder = 2;
+constexpr int32_t kTopoSortingReverseDfs = 2;
 const std::string kMemoryPriority = "MemoryPriority";
 TopoSortingMode GetTopoSortingStrategy() {
   std::string topo_sorting_mode_str;
@@ -53,8 +53,8 @@ TopoSortingMode GetTopoSortingStrategy() {
       return TopoSortingMode::kBFS;
     } else if (topo_sorting_mode == kTopoSortingDfs) {
       return TopoSortingMode::kDFS;
-    } else if (topo_sorting_mode == kTopoSortingDfsPostOrder) {
-      return TopoSortingMode::kDFS_POSTORDER;
+    } else if (topo_sorting_mode == kTopoSortingReverseDfs) {
+      return TopoSortingMode::kRDFS;
     } else {
       GELOGW("OPTION_TOPOSORTING_MODE = %s is invalid", topo_sorting_mode_str.c_str());
     }
@@ -1021,10 +1021,10 @@ graphStatus ComputeGraphImpl::DFSTopologicalSorting(std::vector<NodePtr> &node_v
   return GRAPH_SUCCESS;
 }
 
-graphStatus ComputeGraphImpl::DFSPOSTORDERTopologicalSorting(std::vector<NodePtr> &node_vec, const bool reverse,
-                                                             const ConstComputeGraphPtr &compute_graph) {
+graphStatus ComputeGraphImpl::RDFSTopologicalSorting(std::vector<NodePtr> &node_vec, const bool reverse,
+                                                     const ConstComputeGraphPtr &compute_graph) {
   (void) reverse;
-  GELOGD("Runing_Dfs_Post_Order_Sort: %s", name_.c_str());
+  GELOGD("Runing_Reverse_Dfs_Sort: %s", name_.c_str());
   std::vector<NodeStatus> reverse_dfs_nodes_info;
   InitNodeStatus(compute_graph, reverse_dfs_nodes_info);
 
@@ -1184,7 +1184,7 @@ graphStatus ComputeGraphImpl::TopologicalSorting(const ComputeGraphPtr &const_gr
   return GRAPH_SUCCESS;
 }
 
-bool InputIsLongLifeTimeNode(const NodePtr& node) {
+bool InputIsLongLifeTimeNode(const NodePtr& node, const ConstComputeGraphPtr &graph) {
   bool match = false;
   for (const auto &in_data_anchor : node->GetAllInDataAnchors()) {
     if (in_data_anchor == nullptr) {
@@ -1198,9 +1198,11 @@ bool InputIsLongLifeTimeNode(const NodePtr& node) {
     if (peer_node == nullptr) {
       continue;
     }
+    const bool is_io_data =
+        ((graph.get() == peer_node->GetOwnerComputeGraphBarePtr()) && OpTypeUtils::IsDataNode(peer_node->GetType()));
     std::string op_type;
     if ((!NodeUtils::GetConstOpType(peer_node, op_type)) && (!OpTypeUtils::IsVariableNode(peer_node->GetType()))
-        && (peer_node->GetType() != REFDATA)) {
+        && (!is_io_data)) {
       return false;
     } else {
       match = true;
@@ -1220,13 +1222,14 @@ bool InputIsLongLifeTimeNode(const NodePtr& node) {
 ///   last node
 ///     /  |
 /// node1  node2
-graphStatus GetOutNodeIndex(std::vector<NodePtr> &nodes, size_t &index, size_t &out_count) {
+graphStatus GetOutNodeIndex(std::vector<NodePtr> &nodes, size_t &index, size_t &out_count,
+                            const ConstComputeGraphPtr &graph) {
   if (nodes.empty()) {
     return GRAPH_FAILED;
   }
 
   // first node's inputs muse be long life time
-  if ((nodes.size() == 1U) && (!InputIsLongLifeTimeNode(nodes.front()))) {
+  if ((nodes.size() == 1U) && (!InputIsLongLifeTimeNode(nodes.front(), graph))) {
     return GRAPH_FAILED;
   }
 
@@ -1264,7 +1267,7 @@ graphStatus GetOutNodeIndex(std::vector<NodePtr> &nodes, size_t &index, size_t &
   return GRAPH_FAILED;
 }
 
-void DelayTopoSort(std::vector<NodePtr> &nodes) {
+void DelayTopoSort(std::vector<NodePtr> &nodes, const ConstComputeGraphPtr &graph) {
   // pair.first:  this node can be delay or not
   // pair.second: delayed nodes to this node
   std::vector<std::pair<bool, std::vector<NodePtr>>> delay_nodes;
@@ -1283,7 +1286,7 @@ void DelayTopoSort(std::vector<NodePtr> &nodes) {
     size_t delay_to_index = 0U;
     size_t out_count = 0U;
     if (delay_nodes[i].first
-        && (GetOutNodeIndex(delay_nodes[i].second, delay_to_index, out_count) == GRAPH_SUCCESS)
+        && (GetOutNodeIndex(delay_nodes[i].second, delay_to_index, out_count, graph) == GRAPH_SUCCESS)
         && (delay_to_index < delay_nodes.size()) && (delay_to_index > (i + 1U))) {
       delay_nodes[delay_to_index].second.insert(delay_nodes[delay_to_index].second.begin(),
                                                 delay_nodes[i].second.begin(),
@@ -1314,7 +1317,7 @@ graphStatus ComputeGraphImpl::TopologicalSortingGraph(const ConstComputeGraphPtr
   static const std::map<TopoSortingMode, TopoSortingStrategy> topo_sorting_strategy{
       {TopoSortingMode::kBFS, &ComputeGraphImpl::BFSTopologicalSorting},
       {TopoSortingMode::kDFS, &ComputeGraphImpl::DFSTopologicalSorting},
-      {TopoSortingMode::kDFS_POSTORDER, &ComputeGraphImpl::DFSPOSTORDERTopologicalSorting}};
+      {TopoSortingMode::kRDFS, &ComputeGraphImpl::RDFSTopologicalSorting}};
 
   std::vector<NodePtr> node_vec;
   const auto use_topo_strategy = GetTopoSortingStrategy();
@@ -1346,8 +1349,8 @@ graphStatus ComputeGraphImpl::TopologicalSortingGraph(const ConstComputeGraphPtr
   }
 
   ClearNodeList();
-  if (IsMemoryPriority()) {
-    DelayTopoSort(node_vec);
+  if (IsMemoryPriority() || (use_topo_strategy == TopoSortingMode::kRDFS)) {
+    DelayTopoSort(node_vec, compute_graph);
   }
   for (size_t i = 0UL; i < node_vec.size(); i++) {
     const NodePtr node = node_vec[i];   // [node: should not be null]

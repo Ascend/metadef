@@ -173,11 +173,11 @@ ge::ComputeGraphPtr BuildDelayTopoGraph(const std::string &name) {
  *               \       |      /
  *                     node5
  */
-ge::ComputeGraphPtr BuildDelayTopoGraphMultiInput(const std::string &name, bool all_is_log_life = true) {
+ge::ComputeGraphPtr BuildDelayTopoGraphMultiInput(const std::string &name, bool all_is_long_life = true) {
   auto builder = ge::ut::GraphBuilder(name);
   const auto &constant = builder.AddNode("const", ge::CONSTANT, 0, 1);
   auto type = ge::CONSTANTOP;
-  if (!all_is_log_life) {
+  if (!all_is_long_life) {
     type = "test";
   }
   const auto &constantop = builder.AddNode("constant", type, 0, 1);
@@ -1012,10 +1012,10 @@ TEST_F(UtestComputeGraph, DelayTopologicalSorting) {
 TEST_F(UtestComputeGraph, NoDelayTopologicalSorting) {
   auto graph = BuildDelayTopoGraph("test_delay_topo_graph");
   std::map<std::string, std::string> options_map;
-  options_map["ge.topoSortingMode"] = "2";
+  options_map["ge.topoSortingMode"] = "1";
   GetThreadLocalContext().SetGraphOption(options_map);
   EXPECT_EQ(graph->TopologicalSorting(), GRAPH_SUCCESS);
-  std::vector<std::string> expected_dfs_names = {"variable", "node1", "node2", "data", "node3", "node4", "node5"};
+  std::vector<std::string> expected_dfs_names = {"variable", "node2", "node1", "data", "node3", "node4", "node5"};
   std::vector<std::string> dfs_names;
   const auto &graph_dfs_topo = graph->GetAllNodes();
   for (auto &node : graph_dfs_topo) {

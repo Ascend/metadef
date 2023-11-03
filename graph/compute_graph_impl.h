@@ -23,7 +23,7 @@ namespace ge {
 enum class TopoSortingMode {
   kBFS = 0,
   kDFS,
-  kDFS_POSTORDER
+  kRDFS
 };
 
 enum class WalkStatus {
@@ -172,8 +172,8 @@ class ComputeGraphImpl {
                                     const ConstComputeGraphPtr &compute_graph);
   graphStatus BFSTopologicalSorting(std::vector<NodePtr> &node_vec, const bool reverse,
                                     const ConstComputeGraphPtr &compute_graph);
-  graphStatus DFSPOSTORDERTopologicalSorting(std::vector<NodePtr> &node_vec, const bool reverse,
-                                             const ConstComputeGraphPtr &compute_graph);
+  graphStatus RDFSTopologicalSorting(std::vector<NodePtr> &node_vec, const bool reverse,
+                                     const ConstComputeGraphPtr &compute_graph);
   graphStatus CollectBreadthOutNode(const NodePtr &node, std::map<NodePtr, uint32_t> &map_in_edge_num,
                                     std::map<std::string, NodePtr> &breadth_node_map) const;
   void TopologicalSorting(const std::function<bool (const NodePtr &, const NodePtr &)> comp);
