@@ -110,18 +110,18 @@ graphStatus IRDataTypeSymbolStore::InferDtype(const OpDescPtr &op) const {
   std::map<SymDtype *, TypeOrTypes> cached;  // 缓存每个Sym的求值结果，避免重复求值
   for (auto &item : named_syms_) {
     auto *sym = item.second;
-    GE_ASSERT_GRAPH_SUCCESS(sym->Eval(*op, cached[sym]), "Failed eval sym %s of op %s", sym->DebugString().c_str(),
-                            op->GetType().c_str());
+    GE_WARN_ASSERT_GRAPH_SUCCESS(sym->Eval(*op, cached[sym]), "Failed eval sym %s of op %s", sym->DebugString().c_str(),
+                                 op->GetType().c_str());
     GELOGD("Succeed eval and checking sym %s", sym->DebugString().c_str());
   }
 
   std::map<size_t, std::pair<size_t, size_t>> ir_output_2_range;
-  GE_ASSERT_GRAPH_SUCCESS(ge::GetIrOutputDescRange(op, ir_output_2_range));
-  GE_ASSERT(ir_output_2_range.size() == op->GetIrOutputs().size(), "Failed get output instance info of %s %s",
-            op->GetName().c_str(), op->GetType().c_str());
+  GE_WARN_ASSERT_GRAPH_SUCCESS(ge::GetIrOutputDescRange(op, ir_output_2_range));
+  GE_WARN_ASSERT(ir_output_2_range.size() == op->GetIrOutputs().size(), "Failed get output instance info of %s %s",
+                 op->GetName().c_str(), op->GetType().c_str());
 
-  GE_ASSERT(output_syms_.size() == op->GetIrOutputs().size(), "Op %s %s has %zu ir outputs, but %zu output syms",
-            op->GetName().c_str(), op->GetType().c_str(), op->GetIrOutputs().size(), output_syms_.size());
+  GE_WARN_ASSERT(output_syms_.size() == op->GetIrOutputs().size(), "Op %s %s has %zu ir outputs, but %zu output syms",
+                 op->GetName().c_str(), op->GetType().c_str(), op->GetIrOutputs().size(), output_syms_.size());
   // 对全部输出表达式进行求值，并更新到op上
   for (size_t i = 0U; i < output_syms_.size(); i++) {
     auto *sym = output_syms_[i];
@@ -137,7 +137,7 @@ graphStatus IRDataTypeSymbolStore::InferDtype(const OpDescPtr &op) const {
     if (cached_iter != cached.end()) {
       type_or_types = cached_iter->second;
     } else {
-      GE_ASSERT_GRAPH_SUCCESS(sym->Eval(*op, type_or_types));
+      GE_WARN_ASSERT_GRAPH_SUCCESS(sym->Eval(*op, type_or_types));
     }
 
     auto &output_range = ir_output_2_range[i];
@@ -145,12 +145,13 @@ graphStatus IRDataTypeSymbolStore::InferDtype(const OpDescPtr &op) const {
     size_t end = output_range.first + output_range.second;
 
     if (type_or_types.IsListType()) {  // ListType表示输出为动态输出，并且每个输出的类型可以不同
-      GE_ASSERT(output_name_and_types_[i].second == kIrOutputDynamic, "Op %s %s output %s bind to list-type sym %s",
-                op->GetType().c_str(), ToString(output_name_and_types_[i].second),
-                output_name_and_types_[i].first.c_str(), sym->Id().c_str());
-      GE_ASSERT_GRAPH_SUCCESS(UpdateOpOuputListDtype(op, start, end, type_or_types.UnsafeGetTypes()));
+      GE_WARN_ASSERT(output_name_and_types_[i].second == kIrOutputDynamic,
+                     "Op %s %s output %s bind to list-type sym %s", op->GetType().c_str(),
+                     ToString(output_name_and_types_[i].second), output_name_and_types_[i].first.c_str(),
+                     sym->Id().c_str());
+      GE_WARN_ASSERT_GRAPH_SUCCESS(UpdateOpOuputListDtype(op, start, end, type_or_types.UnsafeGetTypes()));
     } else {
-      GE_ASSERT_GRAPH_SUCCESS(UpdateOpOuputDtype(op, start, end, type_or_types.UnsafeGetType()));
+      GE_WARN_ASSERT_GRAPH_SUCCESS(UpdateOpOuputDtype(op, start, end, type_or_types.UnsafeGetType()));
     }
   }
 

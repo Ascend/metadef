@@ -81,6 +81,15 @@ inline std::vector<char> CreateErrorMsg() {
     }                                                                                                                  \
   } while (false)
 
+#define GE_WARN_ASSERT(exp, ...)                                                                                       \
+  do {                                                                                                                 \
+    if (!(exp)) {                                                                                                      \
+      auto msg = CreateErrorMsg(__VA_ARGS__);                                                                          \
+      GELOGW("Assert failed: %s", (msg.empty() ? #exp : msg.data()));                                                  \
+      return ::ErrorResult();                                                                                          \
+    }                                                                                                                  \
+  } while (false)
+
 #define GE_ASSERT(exp, ...)                                                                                            \
   do {                                                                                                                 \
     if (!(exp)) {                                                                                                      \
@@ -103,4 +112,6 @@ inline std::vector<char> CreateErrorMsg() {
 #define GE_ASSERT_EOK(v, ...) GE_ASSERT(((v) == EOK), __VA_ARGS__)
 #define GE_ASSERT_TRUE(v, ...) GE_ASSERT((v), __VA_ARGS__)
 #define GE_ASSERT_HYPER_SUCCESS(v, ...) GE_ASSERT(((v).IsSuccess()), __VA_ARGS__)
+
+#define GE_WARN_ASSERT_GRAPH_SUCCESS(v, ...) GE_WARN_ASSERT(((v) == ge::GRAPH_SUCCESS), __VA_ARGS__)
 #endif  // METADEF_CXX_INC_COMMON_CHECKER_H_
