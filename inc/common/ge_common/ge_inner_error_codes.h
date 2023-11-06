@@ -68,6 +68,11 @@
              ge::InnErrorLevel::COMMON_LEVEL, ge::InnSystemIdType::SYSID_GE, \
              ge::InnSubModuleId::GENERATOR_MODULE, name, (value), (desc))
 
+#define LLM_ERRORNO_COMMON(name, value, desc)                                \
+  GE_ERRORNO(ge::InnLogRuntime::RT_HOST, ge::InnErrorCodeType::ERROR_CODE,   \
+             ge::InnErrorLevel::COMMON_LEVEL, ge::InnSystemIdType::SYSID_GE, \
+             ge::InnSubModuleId::LLM_ENGINE_MODULE, name, (value), (desc))
+
 // Get error code description
 #define GE_GET_ERRORNO_STR(value) ge::StatusFactory::Instance()->GetErrDesc(value)
 
@@ -95,6 +100,7 @@ enum class InnSubModuleId {
   RUNTIME_MODULE = 8,
   EXECUTOR_MODULE = 9,
   GENERATOR_MODULE = 10,
+  LLM_ENGINE_MODULE = 11,
 };
 
 // Error code type
@@ -336,6 +342,13 @@ GE_ERRORNO_GENERATOR(GE_GENERATOR_GRAPH_MANAGER_ADD_GRAPH_FAILED, 2, "Graph mana
 GE_ERRORNO_GENERATOR(GE_GENERATOR_GRAPH_MANAGER_BUILD_GRAPH_FAILED, 3, "Graph manager build graph failed.");
 GE_ERRORNO_GENERATOR(GE_GENERATOR_GRAPH_MANAGER_FINALIZE_FAILED, 4, "Graph manager finalize failed.");
 GE_ERRORNO_GENERATOR(GE_GENERATOR_GRAPH_MANAGER_SAVE_MODEL_FAILED, 5, "Graph manager save model failed.");
+
+LLM_ERRORNO_COMMON(LLM_WAIT_PROC_TIMEOUT, 1, "request wait to be processed timeout!");
+LLM_ERRORNO_COMMON(LLM_KV_CACHE_NOT_EXIST, 2, "not receive kv cache!");
+LLM_ERRORNO_COMMON(LLM_REPEAT_REQUEST, 3, "repeat request!");
+LLM_ERRORNO_COMMON(LLM_REQUEST_ALREADY_COMPLETED, 4, "request already complete!");
+LLM_ERRORNO_COMMON(LLM_PARAM_INVALID, 5, "Parameter's invalid!");
+LLM_ERRORNO_COMMON(LLM_ENGINE_FINALIZED, 6, "llm engine finalized!");
 }  // namespace ge
 
 #endif  // INC_COMMON_GE_INNER_ERROR_CODES_H_
