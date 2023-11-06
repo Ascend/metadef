@@ -1330,7 +1330,7 @@ IRMetaData &OpDescImpl::MutableIRMeta() {
 const IRMetaData &OpDescImpl::GetIRMeta() const {
   return meta_data_.ir_meta_;
 }
-graphStatus OpDescImpl::DefaultInferDataType(const OpDescPtr &op_desc) {
+graphStatus OpDescImpl::DefaultInferDataType(const OpDescPtr &op_desc) const {
   return GetIRMeta().GetIRDataTypeSymbolStore().InferDtype(op_desc);
 }
 

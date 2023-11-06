@@ -283,6 +283,24 @@ TEST_F(UTInferDataType, sym_infer_from_attr_list_dtype_out_of_range) {
       .AssertFailed();
 }
 
+TEST_F(UTInferDataType, sym_infer_from_attr_but_type_mismatch_1) {
+  OpDtypeInfer("Op4")
+      .Attr("dtype1", int32_t(DT_FLOAT16))
+      .Attr("dtype2", std::vector<int32_t>{DT_FLOAT16, DT_FLOAT})  // 需要单个类型，但是传入List
+      .Attr("dtype3", std::vector<int32_t>{DT_FLOAT16, DT_FLOAT})
+      .Attr("dtype4", std::vector<DataType>{DT_FLOAT16, DT_FLOAT})
+      .AssertFailed();
+}
+
+TEST_F(UTInferDataType, sym_infer_from_attr_but_type_mismatch_2) {
+  OpDtypeInfer("Op4")
+      .Attr("dtype1", int32_t(DT_FLOAT16))
+      .Attr("dtype2", DT_FLOAT16)
+      .Attr("dtype3", DT_FLOAT16)  // 需要List类型，但是传入单个类型
+      .Attr("dtype4", std::vector<DataType>{DT_FLOAT16, DT_FLOAT})
+      .AssertFailed();
+}
+
 /* ---------- 输出类型唯一场景，支持推导（类似Equal算子固定输出bool） ---------- */
 REG_OP(Op6)
     .OUTPUT(output1, "T")

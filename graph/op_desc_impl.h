@@ -135,7 +135,7 @@ class OpDescImpl {
   void AddVerifierFunc(const std::function<graphStatus(Operator &)> &func);
   void AddInferDataSliceFunc(const std::function<graphStatus(Operator &)> &func);
 
-  graphStatus DefaultInferDataType(const OpDescPtr &op_desc);
+  graphStatus DefaultInferDataType(const OpDescPtr &op_desc) const;
   graphStatus DefaultInferFormat(const ConstOpDescPtr &op_desc) const;
 
   std::string GetInputNameByIndex(const uint32_t index) const;
