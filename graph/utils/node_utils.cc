@@ -653,7 +653,13 @@ NodePtr NodeUtils::GetParentInput(const Node &node) {
   GE_CHECK_NOTNULL_EXEC(graph, return nullptr);
 
   const NodePtr &parent_node = graph->GetParentNode();
-  GE_CHECK_NOTNULL_EXEC(parent_node, return nullptr);
+  if (parent_node == nullptr) {
+    GELOGW("Node {%s %s} has attr %s but has no parent node.",
+           node.GetNamePtr(),
+           node.GetTypePtr(),
+           ATTR_NAME_PARENT_NODE_INDEX.c_str());
+    return nullptr;
+  }
 
   const InDataAnchorPtr &in_anchor = parent_node->GetInDataAnchor(static_cast<int32_t>(parent_index));
   GE_CHECK_NOTNULL_EXEC(in_anchor, return nullptr);
