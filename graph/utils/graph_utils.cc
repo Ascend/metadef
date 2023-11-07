@@ -2468,8 +2468,8 @@ graphStatus GraphUtils::HandleOutAnchorMapping(const NodePtr &node,
 
     NodePtr ref_node;
     const bool is_ref_from_refdata = IsRefFromRefData(out_data_anchor, ref_node);
-    if (is_ref_from_refdata) {
-      NodeIndexIO exist_ref_data_info(ref_node, 0U, kOut);
+    NodeIndexIO exist_ref_data_info(ref_node, 0U, kOut);
+    if (is_ref_from_refdata && (anchor_to_symbol.find(exist_ref_data_info.ToString()) != anchor_to_symbol.end())) {
       GELOGD("Node %s output:%d is ref form refdata: %s.", node->GetName().c_str(), out_data_anchor->GetIdx(),
              exist_ref_data_info.ToString().c_str());
       GE_ASSERT_GRAPH_SUCCESS(
