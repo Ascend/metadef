@@ -157,6 +157,9 @@ class OpDescImpl {
   void SetStreamId(const int64_t stream_id);
   int64_t GetStreamId() const;
 
+  void SetAttachedStreamId(const int64_t stream_id);
+  int64_t GetAttachedStreamId() const;
+
   void SetInputName(const std::vector<std::string> &input_name);
   std::vector<std::string> GetInputName() const;
 

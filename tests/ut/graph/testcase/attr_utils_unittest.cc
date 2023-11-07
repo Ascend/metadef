@@ -17,6 +17,7 @@
 #include "graph/utils/attr_utils.h"
 #include "graph/op_desc.h"
 #include "graph/compute_graph.h"
+#include "graph/debug/ge_attr_define.h"
 #include "graph_builder_utils.h"
 #include "test_std_structs.h"
 
@@ -1205,6 +1206,67 @@ TEST_F(AttrUtilsUt, SetGetNamedAttrs_CopyValidation) {
   EXPECT_EQ(out_nas.GetAttr("bcd", av), GRAPH_SUCCESS);
   EXPECT_NE(av.Get<bool>(), nullptr);
   EXPECT_EQ(*av.Get<bool>(), true);
+}
+
+TEST_F(AttrUtilsUt, SetGetNamedAttrs_AttachedStreamInfo) {
+  auto op_desc = std::make_shared<OpDesc>();
+  // *********设置流程**********
+  NamedAttrs nas_stream_info;
+  // 这个名字不太重要
+  nas_stream_info.SetName("nas0");
+  // 下面的SetAttr方法的第一个参数涉及到跨组件的named_attr的进一步解析，所以需要写对
+
+  // attach策略
+  AttrUtils::SetStr(nas_stream_info, "_attached_stream_policy", "group");
+  // group id
+  AttrUtils::SetStr(nas_stream_info, "group", "group0");
+  // attach流名称
+  AttrUtils::SetStr(nas_stream_info, "_attached_stream_key", "kfc_stream");
+  // nas_stream_info填充好之后，使用ATTR_NAME_ATTACHED_STREAM_INFO设置到opdesc上
+  EXPECT_TRUE(AttrUtils::SetNamedAttrs(op_desc, ge::ATTR_NAME_ATTACHED_STREAM_INFO, nas_stream_info));
+
+  // *********解析流程**********
+  NamedAttrs attrs_for_assign_attached_stream;
+  EXPECT_TRUE(AttrUtils::GetNamedAttrs(op_desc, ge::ATTR_NAME_ATTACHED_STREAM_INFO, attrs_for_assign_attached_stream));
+  EXPECT_EQ(attrs_for_assign_attached_stream.GetName(), nas_stream_info.GetName());
+  std::string tmp;
+  EXPECT_TRUE(AttrUtils::GetStr(attrs_for_assign_attached_stream, "_attached_stream_policy", tmp));
+  EXPECT_EQ(tmp, "group");
+  EXPECT_TRUE(AttrUtils::GetStr(attrs_for_assign_attached_stream, "group", tmp));
+  EXPECT_EQ(tmp, "group0");
+  EXPECT_TRUE(AttrUtils::GetStr(attrs_for_assign_attached_stream, "_attached_stream_key", tmp));
+  EXPECT_EQ(tmp, "kfc_stream");
+}
+
+TEST_F(AttrUtilsUt, SetGetNamedAttrs_AttachedNotifyInfo) {
+  auto op_desc = std::make_shared<OpDesc>();
+  // *********设置流程**********
+  NamedAttrs nas;
+  // 这个名字不太重要
+  nas.SetName("nas0");
+  // 下面的map的key涉及到跨组件的named_attr的进一步解析，所以需要按照约定字符串填写
+  static const std::unordered_map<std::string, std::string>
+      nas_infos = {{"_attached_notify_policy", "group"}, {"group", "group0"}, {"_attached_notify_key", "kfc_notify"},
+                   {"_attached_notify_type", "on_device"}};
+  for (const auto &pair: nas_infos) {
+    AttrUtils::SetStr(nas, pair.first, pair.second);
+  }
+  // nas填充好之后，使用ATTR_NAME_ATTACHED_NOTIFY_INFO设置到opdesc上
+  EXPECT_TRUE(AttrUtils::SetNamedAttrs(op_desc, ge::ATTR_NAME_ATTACHED_NOTIFY_INFO, nas));
+
+  // *********解析流程**********
+  NamedAttrs parser_nas;
+  EXPECT_TRUE(AttrUtils::GetNamedAttrs(op_desc, ge::ATTR_NAME_ATTACHED_NOTIFY_INFO, parser_nas));
+  EXPECT_EQ(parser_nas.GetName(), nas.GetName());
+  std::string tmp;
+  EXPECT_TRUE(AttrUtils::GetStr(parser_nas, "_attached_notify_policy", tmp));
+  EXPECT_EQ(tmp, "group");
+  EXPECT_TRUE(AttrUtils::GetStr(parser_nas, "group", tmp));
+  EXPECT_EQ(tmp, "group0");
+  EXPECT_TRUE(AttrUtils::GetStr(parser_nas, "_attached_notify_key", tmp));
+  EXPECT_EQ(tmp, "kfc_notify");
+  EXPECT_TRUE(AttrUtils::GetStr(parser_nas, "_attached_notify_type", tmp));
+  EXPECT_EQ(tmp, "on_device");
 }
 
 TEST_F(AttrUtilsUt, SetGetListNamedAttrs) {
