@@ -28,6 +28,7 @@
 #include "graph/operator_factory_impl.h"
 #include "graph/compute_graph_impl.h"
 #include "graph/anchor.h"
+#include "graph/debug/ge_attr_define.h"
 
 #undef private
 #undef protected
@@ -1055,6 +1056,15 @@ TEST_F(UtestNodeUtils, TryGetWeightByDataNode_invalid) {
   auto node = std::make_shared<Node>();
   auto ge_tensor = std::make_shared<const GeTensor>();
   EXPECT_NE(NodeUtils::TryGetWeightByDataNode(node, ge_tensor), GRAPH_SUCCESS);
+}
+
+TEST_F(UtestNodeUtils, GetParentInput_invalid) {
+  auto builder = ut::GraphBuilder("test_graph0");
+  const auto &data_node = builder.AddNode("data", DATA, 0, 0);
+  auto graph = builder.GetGraph();
+  auto node = graph->FindNode("data");
+  AttrUtils::SetInt(node->GetOpDesc(), ge::ATTR_NAME_PARENT_NODE_INDEX,1);
+  EXPECT_EQ(NodeUtils::GetParentInput(node), nullptr);
 }
 
 TEST_F(UtestNodeUtils, TryGetWeightByPlaceHolderNode_fail) {
