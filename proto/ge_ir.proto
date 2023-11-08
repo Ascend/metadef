@@ -176,7 +176,6 @@ message OpDef
     repeated TensorDescriptor input_desc = 33;
     repeated TensorDescriptor output_desc = 34;
     repeated string subgraph_name = 35;
-    int64 attached_stream_id = 36;
 }
 
 // Graph definition

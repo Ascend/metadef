@@ -129,7 +129,6 @@ TEST_F(UtestOpDesc, SerializeMetadata) {
   impl.meta_data_.workspaces.push_back(222);
   impl.meta_data_.workspace_bytes_list_.push_back(111);
   impl.meta_data_.is_input_consts_.push_back(false);
-  impl.meta_data_.attached_stream_id_ = 2;
 
   proto::OpDef def;
   impl.SerializeMetaDataToOpDef(&def);
@@ -144,7 +143,6 @@ TEST_F(UtestOpDesc, SerializeMetadata) {
   EXPECT_EQ(def.workspace(0), 222);
   EXPECT_EQ(def.workspace_bytes(0), 111);
   EXPECT_EQ(def.is_input_const(0), false);
-  EXPECT_EQ(def.attached_stream_id(), 2);
 }
 
 TEST_F(UtestOpDesc, DeSerializeMetadata) {
@@ -160,7 +158,6 @@ TEST_F(UtestOpDesc, DeSerializeMetadata) {
   def.add_workspace(222);
   def.add_workspace_bytes(222);
   def.add_is_input_const(false);
-  def.set_attached_stream_id(2);
   OpDescImpl impl;
   impl.DeSerializeOpDefToMetaData(def);
   EXPECT_EQ(impl.meta_data_.inputs_.size(), 1);
@@ -185,7 +182,6 @@ TEST_F(UtestOpDesc, DeSerializeMetadata) {
   EXPECT_EQ(impl.meta_data_.workspace_bytes_list_[0], 222);
   EXPECT_EQ(impl.meta_data_.is_input_consts_.size(), 1);
   EXPECT_EQ(impl.meta_data_.is_input_consts_[0], false);
-  EXPECT_EQ(impl.meta_data_.attached_stream_id_, 2);
 
   OpDescImpl impl1;
   impl1.DeSerializeOpDefToMetaData(def);
@@ -693,12 +689,6 @@ TEST_F(UtestOpDesc, GetStreamId_success) {
   auto op_desc = std::make_shared<OpDesc>();
   op_desc->SetStreamId(1);
   EXPECT_EQ(op_desc->GetStreamId(), 1);
-}
-
-TEST_F(UtestOpDesc, AttachedStreamId_success) {
-  auto op_desc = std::make_shared<OpDesc>();
-  op_desc->SetAttachedStreamId(2);
-  EXPECT_EQ(op_desc->GetAttachedStreamId(), 2);
 }
 
 TEST_F(UtestOpDesc, Set_GetInputName_success) {
