@@ -163,7 +163,6 @@ void OpDescImpl::DeSerializeOpDefToMetaData(const proto::OpDef &op_def) {
   meta_data_.has_out_attr_ = op_def.has_out_attr();
   meta_data_.id_ = op_def.id();
   meta_data_.stream_id_ = op_def.stream_id();
-  meta_data_.attached_stream_id_ = op_def.attached_stream_id();
   meta_data_.inputs_.clear();
   (void)meta_data_.inputs_.insert(meta_data_.inputs_.cend(), op_def.input().cbegin(), op_def.input().cend());
   meta_data_.input_names_.clear();
@@ -207,7 +206,6 @@ void OpDescImpl::SerializeMetaDataToOpDef(proto::OpDef * const op_def) {
   op_def->set_has_out_attr(meta_data_.has_out_attr_);
   op_def->set_id(meta_data_.id_);
   op_def->set_stream_id(meta_data_.stream_id_);
-  op_def->set_attached_stream_id(meta_data_.attached_stream_id_);
   op_def->clear_input();
   for (const auto &input : meta_data_.inputs_) {op_def->add_input(input);}
   op_def->clear_input_name();
@@ -490,7 +488,6 @@ bool OpDescImpl::OpDescAttrsAreEqual(const OpDescImpl &r_op_desc) const {
   IsEqual(meta_data_.inputs_, r_data.inputs_, "meta_data_.inputs_") &&
   IsEqual(meta_data_.has_out_attr_, r_data.has_out_attr_, "meta_data_.has_out_attr_") &&
   IsEqual(meta_data_.stream_id_, r_data.stream_id_, "meta_data_.stream_id_") &&
-  IsEqual(meta_data_.attached_stream_id_, r_data.attached_stream_id_, "meta_data_.attached_stream_id_") &&
   IsEqual(meta_data_.input_names_, r_data.input_names_, "meta_data_.input_names_") &&
   IsEqual(meta_data_.src_names_, r_data.src_names_, "meta_data_.src_names_") &&
   IsEqual(meta_data_.dst_names_, r_data.dst_names_, "meta_data_.dst_names_") &&
@@ -1138,17 +1135,6 @@ void OpDescImpl::SetStreamId(const int64_t stream_id) {
 
 int64_t OpDescImpl::GetStreamId() const {
   return meta_data_.stream_id_;
-}
-
-void OpDescImpl::SetAttachedStreamId(const int64_t stream_id) {
-  meta_data_.attached_stream_id_ = stream_id;
-
-  TRACE_GEN_RECORD(TraceManager::GetTraceHeader(), "modify", TraceManager::GetOutGraphName(), this->GetName(),
-                   "attached_stream_id", "", "", stream_id);
-}
-
-int64_t OpDescImpl::GetAttachedStreamId() const {
-  return meta_data_.attached_stream_id_;
 }
 
 void OpDescImpl::SetInputName(const vector<string> &input_name) {
@@ -1799,14 +1785,6 @@ GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY void OpDesc::SetStreamId(const in
 
 GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY int64_t OpDesc::GetStreamId() const {
   return impl_->GetStreamId();
-}
-
-GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY void OpDesc::SetAttachedStreamId(const int64_t stream_id) {
-  impl_->SetAttachedStreamId(stream_id);
-}
-
-GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY int64_t OpDesc::GetAttachedStreamId() const {
-  return impl_->GetAttachedStreamId();
 }
 
 GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY void OpDesc::SetInputName(const std::vector<std::string> &input_name) {

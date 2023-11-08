@@ -20,7 +20,6 @@ set(GRAPH_BASE_SOURCE_LIST
     "sym_dtype.cc"
     "ge_attr_define.cc"
     "ge_tensor.cc"
-    "hcom/hcom_topo_info.cc"
     "common/large_bm.cc"
     "common/plugin/plugin_manager.cc"
     "common/hyper_status.cc"

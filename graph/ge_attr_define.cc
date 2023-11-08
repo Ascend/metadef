@@ -1457,12 +1457,6 @@ const std::string ATTR_NAME_USE_COUNTER_FILTER = "_use_counter_filter";
 const std::string ATTR_MODEL_HOST_ENV_OS = "host_env_os";
 const std::string ATTR_MODEL_HOST_ENV_CPU = "host_env_cpu";
 
-// for mc2 stream assign, named_attr类型
-const std::string ATTR_NAME_ATTACHED_STREAM_INFO = "_attached_stream_info";
-
-// for mc2 notify assign, named_attr类型
-const std::string ATTR_NAME_ATTACHED_NOTIFY_INFO = "_attached_notify_info";
-
 // for static shape reuse operator binary
 const std::string ATTR_NAME_OP_RUN_INFO = "op_run_info";
 

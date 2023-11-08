@@ -132,7 +132,6 @@ class OpMetadata {
   bool has_out_attr_{false};
   int64_t id_{0};
   int64_t stream_id_{0};
-  int64_t attached_stream_id_{-1};
   std::vector<std::string> input_names_;
   std::vector<std::string> src_names_;
   std::vector<int64_t> src_indexes_;
