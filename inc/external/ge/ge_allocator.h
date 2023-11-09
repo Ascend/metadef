@@ -14,9 +14,8 @@
  * limitations under the License.
  */
 
-// 此处编译宏为了防止跟air仓的声明冲突，后续air仓的头文件改动后会改动
-#ifndef AIR_CXX_INC_EXTERNAL_GE_ALLOCATOR_H_
-#define AIR_CXX_INC_EXTERNAL_GE_ALLOCATOR_H_
+#ifndef METADEF_CXX_INC_EXTERNAL_GE_ALLOCATOR_H_
+#define METADEF_CXX_INC_EXTERNAL_GE_ALLOCATOR_H_
 #include <cstdlib>
 #include <memory>
 namespace ge {
@@ -81,4 +80,4 @@ private:
 
 using AllocatorPtr = std::shared_ptr<Allocator>;
 }  // namespace ge
-#endif  // AIR_CXX_INC_EXTERNAL_GE_ALLOCATOR_H_
+#endif  // METADEF_CXX_INC_EXTERNAL_GE_ALLOCATOR_H_
