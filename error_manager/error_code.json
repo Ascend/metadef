@@ -2267,6 +2267,17 @@
       }
     },
     {
+      "errClass": "HCCL Errors",
+      "errTitle": "Transport Init Error",
+      "ErrCode": "EI0009",
+      "ErrMessage": "Transport init error. Reason: %s",
+      "Arglist": "reason",
+      "suggestion": {
+        "Possible Cause": "N/A",
+        "Solution": "Check other NPUs that are not reporting errors, or check if there are any abnormalities on the other end's NPU."
+      }
+    },
+    {
       "errClass": "HCCP Errors",
       "errTitle": "HCCP Process Initialization Failure",
       "ErrCode": "EJ0001",
