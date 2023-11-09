@@ -73,6 +73,10 @@ struct EngineParallelOption {
 
 struct GraphParallelOption {
   bool auto_deploy = false;
+  int32_t num_search_output = 1; // AOE strategies number
+  std::string mode;              // AOE mode, search_and_run/search_strategy/search_and_shard_graph/
+                                 // load_strategy_and_run/load_and_eval_strategy
+  std::string work_dir;          // AOE dump/load path for strategies or GE IR graph
   std::string opt_level;
   int32_t global_batch_size = -1;
   DataParallelOption data_parallel_option;
