@@ -1787,6 +1787,26 @@ GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY int64_t OpDesc::GetStreamId() con
   return impl_->GetStreamId();
 }
 
+GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY void OpDesc::SetAttachedStreamId(const int64_t stream_id) {
+  const auto ret = AttrUtils::SetInt(this, ATTR_NAME_ATTACHED_STREAM_ID, stream_id);
+  if (!ret) {
+    GELOGW("[Set][Attr] %s to op failed.", ATTR_NAME_ATTACHED_STREAM_ID.c_str());
+  }
+
+  TRACE_GEN_RECORD(TraceManager::GetTraceHeader(), "modify", TraceManager::GetOutGraphName(), this->GetName(),
+                   ATTR_NAME_ATTACHED_STREAM_ID, "", "", stream_id);
+}
+
+GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY int64_t OpDesc::GetAttachedStreamId() const {
+  int64_t attached_stream_id = -1; // default invalid value
+  (void) AttrUtils::GetInt(this, ATTR_NAME_ATTACHED_STREAM_ID, attached_stream_id);
+  return attached_stream_id;
+}
+
+GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY bool OpDesc::HasValidAttachedStreamId() const {
+  return GetAttachedStreamId() != -1; // -1 is default invalid value
+}
+
 GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY void OpDesc::SetInputName(const std::vector<std::string> &input_name) {
   impl_->SetInputName(input_name);
 }

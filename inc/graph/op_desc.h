@@ -253,6 +253,10 @@ class OpDesc : public std::enable_shared_from_this<OpDesc>, public AttrHolder {
   int64_t GetId() const;
   void SetStreamId(const int64_t stream_id);
   int64_t GetStreamId() const;
+  void SetAttachedStreamId(const int64_t stream_id);
+  int64_t GetAttachedStreamId() const;
+  bool HasValidAttachedStreamId() const;
+
   void SetInputName(const std::vector<std::string> &input_name);
   std::vector<std::string> GetInputName() const;
   void SetSrcName(const std::vector<std::string> &src_name);

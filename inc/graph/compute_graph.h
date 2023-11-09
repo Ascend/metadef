@@ -106,7 +106,7 @@ class ComputeGraph : public std::enable_shared_from_this<ComputeGraph>, public A
   /// Add a subgraph to this graph. The subgraph must has a parent graph and parent node,
   /// which means the member functions `SetParentGraph` and `SetParentNode` of the subgraph
   /// must be called before add it to the root graph. and subgraph->GetParentNode()->GetOwnerGraph()
-  /// must equal to subgraph->GetOwnerGraph().
+  /// must equal to subgraph->GetParentGraph().
   /// The subgraphs can only be added to a *root graph*. A root graph is a graph without any parent graph.
   /// The subgraph's name SHOULD(not must) be the same as the parameter `name`
   graphStatus AddSubgraph(const std::string &name, const std::shared_ptr<ComputeGraph> &subgraph);

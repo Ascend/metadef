@@ -750,6 +750,8 @@ const std::string ATTR_MODEL_EVENT_NUM = "event_num";
 
 const std::string ATTR_MODEL_NOTIFY_NUM = "notify_num";
 
+const std::string ATTR_MODEL_NOTIFY_TYPES = "notify_types";
+
 const std::string ATTR_MODEL_HUGE_STREAM_LIST = "huge_stream_list";
 
 const std::string ATTR_MODEL_LABEL_NUM = "label_num";
@@ -1457,6 +1459,21 @@ const std::string ATTR_NAME_USE_COUNTER_FILTER = "_use_counter_filter";
 
 const std::string ATTR_MODEL_HOST_ENV_OS = "host_env_os";
 const std::string ATTR_MODEL_HOST_ENV_CPU = "host_env_cpu";
+
+// for mc2 stream assign, named_attr类型
+const std::string ATTR_NAME_ATTACHED_STREAM_INFO = "_attached_stream_info";
+// 下面的是name_attr上设置的属性名称，不要直接设置到op_desc上
+const std::string ATTR_NAME_ATTACHED_STREAM_KEY = "_attached_stream_key";
+const std::string ATTR_NAME_ATTACHED_STREAM_POLICY = "_attached_stream_policy";
+
+const std::string ATTR_NAME_ATTACHED_STREAM_ID = "_attached_stream_id";
+
+// for mc2 notify assign, named_attr类型
+const std::string ATTR_NAME_ATTACHED_NOTIFY_INFO = "_attached_notify_info";
+// 下面的是name_attr上设置的属性名称，不要直接设置到op_desc上
+const std::string ATTR_NAME_ATTACHED_NOTIFY_KEY = "_attached_notify_key";
+const std::string ATTR_NAME_ATTACHED_NOTIFY_TYPE = "_attached_notify_type";
+const std::string ATTR_NAME_ATTACHED_NOTIFY_POLICY = "_attached_notify_policy";
 
 // for static shape reuse operator binary
 const std::string ATTR_NAME_OP_RUN_INFO = "op_run_info";
