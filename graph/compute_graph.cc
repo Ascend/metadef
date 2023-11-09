@@ -966,7 +966,7 @@ graphStatus ComputeGraphImpl::InsertGraphEvents(const ConstComputeGraphPtr &comp
 }
 
 graphStatus ComputeGraphImpl::DFSTopologicalSorting(std::vector<NodePtr> &node_vec, const bool reverse,
-                                                    const ConstComputeGraphPtr &compute_graph) {
+                                                    const ConstComputeGraphPtr &compute_graph) const {
   GELOGD("Runing_Dfs_Sort: %s", name_.c_str());
   std::vector<NodePtr> stack;
   std::map<NodePtr, uint32_t> map_in_edge_num;
@@ -1022,7 +1022,7 @@ graphStatus ComputeGraphImpl::DFSTopologicalSorting(std::vector<NodePtr> &node_v
 }
 
 graphStatus ComputeGraphImpl::RDFSTopologicalSorting(std::vector<NodePtr> &node_vec, const bool reverse,
-                                                     const ConstComputeGraphPtr &compute_graph) {
+                                                     const ConstComputeGraphPtr &compute_graph) const {
   (void) reverse;
   GELOGD("Runing_Reverse_Dfs_Sort: %s", name_.c_str());
   std::vector<NodeStatus> reverse_dfs_nodes_info;
@@ -1058,7 +1058,7 @@ graphStatus ComputeGraphImpl::RDFSTopologicalSorting(std::vector<NodePtr> &node_
 }
 
 graphStatus ComputeGraphImpl::BFSTopologicalSorting(std::vector<NodePtr> &node_vec, const bool reverse,
-                                                    const ConstComputeGraphPtr &compute_graph) {
+                                                    const ConstComputeGraphPtr &compute_graph) const {
   GELOGD("Runing_Bfs_Sort: %s", name_.c_str());
   (void) reverse;
   const bool is_mem_priority = IsMemoryPriority();
@@ -1364,7 +1364,7 @@ graphStatus ComputeGraphImpl::TopologicalSortingGraph(const ConstComputeGraphPtr
 
 graphStatus ComputeGraphImpl::SortNodes(std::vector<NodePtr> &stack,
                                         std::map<NodePtr, uint32_t> &map_in_edge_num,
-                                        const ConstComputeGraphPtr &compute_graph) {
+                                        const ConstComputeGraphPtr &compute_graph) const {
   // Record the number of non data nodes but no input nodes
   uint32_t spec_node_size = 0U;
   for (const auto &node : GetDirectNode(compute_graph)) {
