@@ -37,6 +37,8 @@ public:
   bool auto_contiguous = false;
   bool is_scalar = false;
   bool is_scalar_list = false;
+  ge::AscendString scalar_name = "";
+  ge::DataType scalar_type = ge::DT_UNDEFINED;
 };
 
 class OpParamTrunk {

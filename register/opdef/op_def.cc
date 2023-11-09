@@ -114,7 +114,18 @@ ge::AscendString &OpDef::GetOpType(void) {
   return this->impl_->op_type;
 }
 std::vector<OpParamDef> &OpDef::GetInputs(void) {
-  return this->impl_->op_params.GetInputs();
+  std::vector<OpParamDef> &inputs = this->impl_->op_params.GetInputs();
+  for (auto &def : inputs) {
+    const char *const name = def.GetScalarName().GetString();
+    if (strcmp(name, "") != 0) {
+      for (auto input : inputs) {
+        if (strcmp(name, input.GetParamName().GetString()) == 0) {
+          def.DataType(input.GetDataTypes());
+        }
+      }
+    }
+  }
+  return inputs;
 }
 
 std::vector<OpParamDef> &OpDef::GetOutputs(void) {
