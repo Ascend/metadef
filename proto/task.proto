@@ -111,6 +111,7 @@ message KernelContext {
     bool is_flowtable = 5;                         // Identify whether args is a flowtable structure
     bytes args_offset = 6;                         // args offset information
     uint32 args_count = 7;                         // args count
+    string args_format = 10;
     repeated uint32 origin_op_index = 8;
 }
 
