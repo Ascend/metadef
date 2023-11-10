@@ -174,7 +174,8 @@
 #define GE_CHECK_GE(lhs, rhs)                                       \
   do {                                                              \
     if ((lhs) < (rhs)) {                                            \
-      GELOGE(ge::FAILED, "param[%s] is less than[%s]", #lhs, #rhs); \
+      GELOGE(ge::FAILED, "param[%s][%ld] is less than[%s][%ld]",    \
+          #lhs, static_cast<int64_t>(lhs), #rhs, static_cast<int64_t>(rhs)); \
       return ge::PARAM_INVALID;                                     \
     }                                                               \
   } while (false)
@@ -183,7 +184,8 @@
 #define GE_CHECK_LE(lhs, rhs)                                          \
   do {                                                                 \
     if ((lhs) > (rhs)) {                                               \
-      GELOGE(ge::FAILED, "param[%s] is greater than[%s]", #lhs, #rhs); \
+      GELOGE(ge::FAILED, "param[%s][%ld] is greater than[%s][%ld]",    \
+          #lhs, static_cast<int64_t>(lhs), #rhs, static_cast<int64_t>(rhs)); \
       return ge::PARAM_INVALID;                                        \
     }                                                                  \
   } while (false)

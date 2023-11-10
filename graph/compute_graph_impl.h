@@ -169,11 +169,11 @@ class ComputeGraphImpl {
   graphStatus InsertGraphEvents(const ConstComputeGraphPtr &compute_graph);
 
   graphStatus DFSTopologicalSorting(std::vector<NodePtr> &node_vec, const bool reverse,
-                                    const ConstComputeGraphPtr &compute_graph);
+                                    const ConstComputeGraphPtr &compute_graph) const;
   graphStatus BFSTopologicalSorting(std::vector<NodePtr> &node_vec, const bool reverse,
-                                    const ConstComputeGraphPtr &compute_graph);
+                                    const ConstComputeGraphPtr &compute_graph) const;
   graphStatus RDFSTopologicalSorting(std::vector<NodePtr> &node_vec, const bool reverse,
-                                     const ConstComputeGraphPtr &compute_graph);
+                                     const ConstComputeGraphPtr &compute_graph) const;
   graphStatus CollectBreadthOutNode(const NodePtr &node, std::map<NodePtr, uint32_t> &map_in_edge_num,
                                     std::map<std::string, NodePtr> &breadth_node_map) const;
   void TopologicalSorting(const std::function<bool (const NodePtr &, const NodePtr &)> comp);
@@ -182,7 +182,7 @@ class ComputeGraphImpl {
   graphStatus TopologicalSortingGraph(const ConstComputeGraphPtr &compute_graph,
                                       const bool dfs_reverse = false);
   graphStatus SortNodes(std::vector<NodePtr> &stack, std::map<NodePtr, uint32_t> &map_in_edge_num,
-                        const ConstComputeGraphPtr &compute_graph);
+                        const ConstComputeGraphPtr &compute_graph) const;
 
   size_t GetInEdgeSize(const NodePtr &node) const;
   size_t GetOutEdgeSize(const NodePtr &node) const;

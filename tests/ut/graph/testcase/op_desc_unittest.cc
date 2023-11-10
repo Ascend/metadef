@@ -691,6 +691,21 @@ TEST_F(UtestOpDesc, GetStreamId_success) {
   EXPECT_EQ(op_desc->GetStreamId(), 1);
 }
 
+TEST_F(UtestOpDesc, AttachedStreamId) {
+  OpDescPtr op_desc_null = nullptr;
+  op_desc_null->SetAttachedStreamId(2);
+
+  auto op_desc = std::make_shared<OpDesc>();
+  EXPECT_EQ(op_desc->GetAttachedStreamId(), -1); // default is -1
+  EXPECT_FALSE(op_desc->HasValidAttachedStreamId());
+
+  op_desc->SetAttachedStreamId(2);
+  EXPECT_EQ(op_desc->GetAttachedStreamId(), 2);
+  EXPECT_TRUE(op_desc->HasValidAttachedStreamId());
+  op_desc->SetAttachedStreamId(-1); // reset to invalid
+  EXPECT_FALSE(op_desc->HasValidAttachedStreamId());
+}
+
 TEST_F(UtestOpDesc, Set_GetInputName_success) {
   auto op_desc = std::make_shared<OpDesc>();
   std::vector<std::string> input_name {"name1", "name2"};

@@ -30,6 +30,7 @@ set(SRC_LIST
     "ffts_node_calculater_registry.cc"
     "op_ext_gentask_registry.cc"
     "host_cpu_context.cc"
+    "hidden_input_func_registry.cc"
     "tensor_assign.cpp"
     "infer_data_slice_registry.cc"
     "infer_axis_slice_registry.cc"
