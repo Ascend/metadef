@@ -140,7 +140,7 @@ build_metadef()
 {
   echo "create build directory and build Metadef";
 
-  if [[ "X$ENABLE_METADEF_UT" = "Xon" || "X$ENABLE_METADEF_COV" = "Xon" ]]; then
+  if [[ "X$ENABLE_METADEF_UT" = "Xon" || "X$ENABLE_METADEF_COV" = "Xon" || "X$ENABLE_BENCHMARK" = "Xon" ]]; then
     BUILD_RELATIVE_PATH="build_gcov"
     CMAKE_BUILD_TYPE="GCOV"
   fi
@@ -162,7 +162,7 @@ build_metadef()
   if [[ "X$ENABLE_METADEF_UT" = "Xon" || "X$ENABLE_METADEF_COV" = "Xon" ]]; then
     make ut_graph ut_register ut_error_manager ut_exe_graph ${VERBOSE} -j${THREAD_NUM}
   elif [ "X$ENABLE_BENCHMARK" = "Xon" ]; then
-    make exec_graph_benchmark ${VERBOSE} -j${THREAD_NUM}
+    make exec_graph_benchmark fast_graph_benchmark ${VERBOSE} -j${THREAD_NUM}
   else
     make graph graph_base exe_graph register register_static rt2_registry_static error_manager error_manager_static ${VERBOSE} -j${THREAD_NUM} && make install
   fi
@@ -190,7 +190,8 @@ build_metadef || { echo "Metadef build failed."; return; }
 echo "---------------- Metadef build finished ----------------"
 
 if [ "X$ENABLE_BENCHMARK" = "Xon" ]; then
-  RUN_TEST_CASE=${BUILD_PATH}/tests/benchmark/exec_graph_benchmark && ${RUN_TEST_CASE}
+  RUN_TEST_CASE=${BUILD_PATH}/tests/benchmark/exe_graph/exec_graph_benchmark && ${RUN_TEST_CASE}
+  RUN_TEST_CASE=${BUILD_PATH}/tests/benchmark/fast_graph/fast_graph_benchmark && ${RUN_TEST_CASE}
 fi
 
 if [[ "X$ENABLE_METADEF_UT" = "Xon" || "X$ENABLE_METADEF_COV" = "Xon" ]]; then

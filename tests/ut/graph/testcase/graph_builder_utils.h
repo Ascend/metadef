@@ -23,21 +23,22 @@
 #include "graph/compute_graph.h"
 #include "graph/graph.h"
 #include "graph/node.h"
+#include "graph/execute_graph.h"
 
 namespace ge {
 namespace ut {
 class GraphBuilder {
  public:
-  explicit GraphBuilder(const std::string &name) { graph_ = std::make_shared<ComputeGraph>(name); }
+  explicit GraphBuilder(const std::string &name) {
+    graph_ = std::make_shared<ComputeGraph>(name);
+  }
   NodePtr AddNode(const std::string &name, const std::string &type, int in_cnt, int out_cnt,
                   Format format = FORMAT_NCHW, DataType data_type = DT_FLOAT,
                   std::vector<int64_t> shape = {1, 1, 224, 224});
 
-  NodePtr AddNode(const std::string &name, const std::string &type,
-                  std::initializer_list<std::string> input_names,
-                  std::initializer_list<std::string> output_names,
-                  Format format = FORMAT_NCHW, DataType data_type = DT_FLOAT,
-                  std::vector<int64_t> shape = {1, 1, 224, 224});
+  NodePtr AddNode(const std::string &name, const std::string &type, std::initializer_list<std::string> input_names,
+                  std::initializer_list<std::string> output_names, Format format = FORMAT_NCHW,
+                  DataType data_type = DT_FLOAT, std::vector<int64_t> shape = {1, 1, 224, 224});
   void AddDataEdge(const NodePtr &src_node, int src_idx, const NodePtr &dst_node, int dst_idx);
   void AddControlEdge(const NodePtr &src_node, const NodePtr &dst_node);
   ComputeGraphPtr GetGraph() {
@@ -47,6 +48,29 @@ class GraphBuilder {
 
  private:
   ComputeGraphPtr graph_;
+};
+
+class ExecuteGraphBuilder {
+ public:
+  explicit ExecuteGraphBuilder(const std::string &name) {
+    graph_ = std::make_shared<ExecuteGraph>(name);
+  }
+  FastNode *AddNode(const std::string &name, const std::string &type, int in_cnt, int out_cnt,
+                     Format format = FORMAT_NCHW, DataType data_type = DT_FLOAT,
+                     std::vector<int64_t> shape = {1, 1, 224, 224});
+
+  FastNode *AddNode(const std::string &name, const std::string &type, std::initializer_list<std::string> input_names,
+                     std::initializer_list<std::string> output_names, Format format = FORMAT_NCHW,
+                     DataType data_type = DT_FLOAT, std::vector<int64_t> shape = {1, 1, 224, 224});
+  FastEdge *AddDataEdge(FastNode *src_node, int src_idx, FastNode *dst_node, int dst_idx);
+  FastEdge *AddControlEdge(FastNode *src_node, FastNode *dst_node);
+  std::shared_ptr<ExecuteGraph> GetGraph() {
+    graph_->TopologicalSorting();
+    return graph_;
+  }
+
+ private:
+  std::shared_ptr<ExecuteGraph> graph_;
 };
 }  // namespace ut
 }  // namespace ge

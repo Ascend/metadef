@@ -20,8 +20,9 @@
 
 namespace ge {
 namespace ut {
-NodePtr GraphBuilder::AddNode(const std::string &name, const std::string &type, int in_cnt, int out_cnt, Format format,
-                              DataType data_type, std::vector<int64_t> shape) {
+
+GeTensorDescPtr GetTensorDesc(const std::string &name, const std::string &type, Format format, DataType data_type,
+                              std::vector<int64_t> shape) {
   auto tensor_desc = std::make_shared<GeTensorDesc>();
   tensor_desc->SetShape(GeShape(shape));
   tensor_desc->SetFormat(format);
@@ -30,6 +31,13 @@ NodePtr GraphBuilder::AddNode(const std::string &name, const std::string &type, 
   tensor_desc->SetOriginShape(GeShape(shape));
   tensor_desc->SetOriginDataType(data_type);
 
+  return tensor_desc;
+}
+
+NodePtr GraphBuilder::AddNode(const std::string &name, const std::string &type, int in_cnt, int out_cnt, Format format,
+                              DataType data_type, std::vector<int64_t> shape) {
+  auto tensor_desc = GetTensorDesc(name, type, format, data_type, shape);
+
   auto op_desc = std::make_shared<OpDesc>(name, type);
   for (int i = 0; i < in_cnt; ++i) {
     op_desc->AddInputDesc(tensor_desc->Clone());
@@ -37,7 +45,6 @@ NodePtr GraphBuilder::AddNode(const std::string &name, const std::string &type, 
   for (int i = 0; i < out_cnt; ++i) {
     op_desc->AddOutputDesc(tensor_desc->Clone());
   }
-
   return graph_->AddNode(op_desc);
 }
 
@@ -50,23 +57,55 @@ void GraphBuilder::AddControlEdge(const NodePtr &src_node, const NodePtr &dst_no
 NodePtr GraphBuilder::AddNode(const string &name, const string &type, std::initializer_list<std::string> input_names,
                               std::initializer_list<std::string> output_names, Format format, DataType data_type,
                               std::vector<int64_t> shape) {
-  auto tensor_desc = std::make_shared<GeTensorDesc>();
-  tensor_desc->SetShape(GeShape(shape));
-  tensor_desc->SetFormat(format);
-  tensor_desc->SetDataType(data_type);
-  tensor_desc->SetOriginFormat(format);
-  tensor_desc->SetOriginShape(GeShape(shape));
-  tensor_desc->SetOriginDataType(data_type);
+  auto tensor_desc = GetTensorDesc(name, type, format, data_type, shape);
 
-  auto op_desc = std::make_shared<OpDesc>(name, type);
+  auto op_desc_ptr = std::make_shared<OpDesc>(name, type);
   for (auto &input_name : input_names) {
-    op_desc->AddInputDesc(input_name, tensor_desc->Clone());
+    op_desc_ptr->AddInputDesc(input_name, tensor_desc->Clone());
   }
-  for (auto &output_name :output_names) {
-    op_desc->AddOutputDesc(output_name, tensor_desc->Clone());
+  for (auto &output_name : output_names) {
+    op_desc_ptr->AddOutputDesc(output_name, tensor_desc->Clone());
   }
 
-  return graph_->AddNode(op_desc);
+  return graph_->AddNode(op_desc_ptr);
+}
+
+FastNode *ExecuteGraphBuilder::AddNode(const std::string &name, const std::string &type, int in_cnt, int out_cnt,
+                                    Format format, DataType data_type, std::vector<int64_t> shape) {
+  auto tensor_desc = GetTensorDesc(name, type, format, data_type, shape);
+
+  auto op_desc_ptr = std::make_shared<OpDesc>(name, type);
+  for (int i = 0; i < in_cnt; ++i) {
+    op_desc_ptr->AddInputDesc(tensor_desc->Clone());
+  }
+  for (int i = 0; i < out_cnt; ++i) {
+    op_desc_ptr->AddOutputDesc(tensor_desc->Clone());
+  }
+
+  return graph_->AddNode(op_desc_ptr);
+}
+
+FastEdge *ExecuteGraphBuilder::AddDataEdge(FastNode *src_node, int src_idx, FastNode *dst_node, int dst_idx) {
+  return graph_->AddEdge(src_node, src_idx, dst_node, dst_idx);
+}
+FastEdge *ExecuteGraphBuilder::AddControlEdge(FastNode *src_node, FastNode *dst_node) {
+  return graph_->AddEdge(src_node, -1, dst_node, -1);
+}
+FastNode *ExecuteGraphBuilder::AddNode(const string &name, const string &type,
+                                    std::initializer_list<std::string> input_names,
+                                    std::initializer_list<std::string> output_names, Format format, DataType data_type,
+                                    std::vector<int64_t> shape) {
+  auto tensor_desc = GetTensorDesc(name, type, format, data_type, shape);
+
+  auto op_desc_ptr = std::make_shared<OpDesc>(name, type);
+  for (auto &input_name : input_names) {
+    op_desc_ptr->AddInputDesc(input_name, tensor_desc->Clone());
+  }
+  for (auto &output_name : output_names) {
+    op_desc_ptr->AddOutputDesc(output_name, tensor_desc->Clone());
+  }
+
+  return graph_->AddNode(op_desc_ptr);
 }
 
 }  // namespace ut
