@@ -103,13 +103,47 @@ graphStatus OpDescUtilsEx::CallInferFunc(const OpDescPtr &op_desc, Operator &op)
   }
   // priority of use infer func v1
   // when v2 func is ready, remove v1 func, it will automatically follow the V2 process
-  if (infer_func != nullptr) {
+  graphStatus ret;
+  bool can_support_rt1 = (infer_func != nullptr);
+  GELOGD("Op %s Call InferShapeFuncV%s", op_desc->GetName().c_str(), can_support_rt1 ? "1" : "2");
+  if (can_support_rt1) {
     op_desc->AddInferFunc(infer_func);
-    return CallInferFuncV1(op_desc, op);
+    ret = CallInferFuncV1(op_desc, op);
   } else {
-    GELOGD("Op %s Call InferShapeFuncV2", op_desc->GetName().c_str());
-    return CallInferFuncV2(op_desc, op);
+    ret = CallInferFuncV2(op_desc, op);
   }
+  if (ret == GRAPH_SUCCESS) {
+    GE_ASSERT_SUCCESS(InferShapeByOutputShapesAttr(op_desc), "[Infer][ByShapeValue] failed, op = %s",
+                      op_desc->GetNamePtr());
+  }
+  return ret;
+}
+
+graphStatus OpDescUtilsEx::InferShapeByOutputShapesAttr(const OpDescPtr &op_desc) {
+  std::vector<std::vector<int64_t>> shape_values;
+  const bool got = ge::AttrUtils::GetListListInt(op_desc, ATTR_NAME_OUTPUT_SHAPES, shape_values);
+  if (!got) {
+    GELOGD("Do not need infer op = %s by shape value, got = %d, shape_values = %zu.",
+           op_desc->GetNamePtr(), got, shape_values.size());
+    return GRAPH_SUCCESS;
+  }
+  GE_ASSERT_TRUE(op_desc->GetAllOutputsDescSize() == static_cast<uint32_t>(shape_values.size()),
+                 "op = %s has output size = %u, but shape values size = %zu.", op_desc->GetNamePtr(),
+                 op_desc->GetAllOutputsDescSize(), shape_values.size());
+  size_t output_idx = 0UL;
+  for (const auto &shape_value : shape_values) {
+    const auto &output_desc = op_desc->MutableOutputDesc(output_idx);
+    GE_ASSERT_NOTNULL(output_desc, "[Get][Output] failed, id = %zu, op = %s.", output_idx, op_desc->GetNamePtr());
+    output_idx++;
+    const auto output_shape = GeShape(shape_value);
+    GE_ASSERT_TRUE(TensorUtils::IsShapeEqual(output_desc->GetShape(), output_shape),
+                   "[Check][ShapeEqual] op = %s inferred shape is %s, but shape value set shape is %s, is not same.",
+                   output_desc->GetShape().ToString().c_str(), output_shape.ToString().c_str());
+    output_desc->SetShape(output_shape);
+    GELOGD("Update op = %s output[%zu] shape = %s", op_desc->GetNamePtr(), output_idx,
+           ToString(output_shape.GetDims()).c_str());
+  }
+  return GRAPH_SUCCESS;
 }
 
 graphStatus OpDescUtilsEx::CallInferFormatFunc(const OpDescPtr &op_desc, Operator &op) {
