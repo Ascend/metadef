@@ -205,6 +205,18 @@ TEST_F(TilingDataUT, AppendAttrFloat32ToFloat16Ok) {
   EXPECT_EQ(tiling_data->GetDataSize(), sizeof(uint16_t));
 }
 
+TEST_F(TilingDataUT, AppendAttrFloat32ToBfloat16Ok) {
+  auto data = TilingData::CreateCap(20);
+  auto tiling_data = reinterpret_cast<TilingData *>(data.get());
+  auto holder = BuildTestContext();
+  auto context = holder.GetContext<TilingContext>();
+  EXPECT_NE(context, nullptr);
+  EXPECT_EQ(tiling_data->AppendConvertedAttrVal(context->GetAttrs(), 3, AttrDataType::kFloat32, AttrDataType::kBfloat16),
+            ge::GRAPH_SUCCESS);
+  EXPECT_EQ(*reinterpret_cast<uint16_t *>(tiling_data->GetData()), optiling::FloatToBfloat16(10.101));
+  EXPECT_EQ(tiling_data->GetDataSize(), sizeof(uint16_t));
+}
+
 TEST_F(TilingDataUT, AppendAttrFloat32ToInt32Ok) {
   auto data = TilingData::CreateCap(20);
   auto tiling_data = reinterpret_cast<TilingData *>(data.get());
