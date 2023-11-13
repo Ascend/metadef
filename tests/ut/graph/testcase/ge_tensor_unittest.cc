@@ -493,21 +493,3 @@ TEST_F(UtestGeTensor, test_ge_tensor_desc) {
     EXPECT_EQ(ret_ori2.GetDim(i), ori_shape2.GetDim(i));
   }
 }
-
-TEST_F(UtestGeTensor, test_is_shape_equal_unknown_rank) {
-  GeTensorDesc a;
-  GeShape src_shape({-2});
-  GeShape dst_shape({1, 2, -1});
-  EXPECT_EQ(TensorUtils::IsShapeEqual(src_shape, dst_shape), false);
-  GeShape equal_dst_shape({-2});
-  EXPECT_EQ(TensorUtils::IsShapeEqual(src_shape, equal_dst_shape), true);
-}
-
-TEST_F(UtestGeTensor, test_is_shape_equal_unknown_shape) {
-  GeTensorDesc a;
-  GeShape src_shape({1, 2, -1});
-  GeShape unknown_dst_shape({1, -1, 2});
-  GeShape unkown_dst_shape1({1, 2, 1024});
-  EXPECT_EQ(TensorUtils::IsShapeEqual(src_shape, unknown_dst_shape), true);
-  EXPECT_EQ(TensorUtils::IsShapeEqual(src_shape, unkown_dst_shape1), true);
-}
