@@ -43,7 +43,6 @@ class GEContext {
  private:
   thread_local static uint64_t session_id_;
   thread_local static uint64_t context_id_;
-  thread_local static int32_t thread_device_id_;
   uint32_t device_id_ = 0U;
   uint64_t trace_id_ = 0U;
   int32_t stream_sync_timeout_ = -1;
