@@ -113,6 +113,16 @@ ge::graphStatus AppendConvertedFpAttr(TilingData *tiling_data, const RuntimeAttr
   return tiling_data->Append<uint16_t>(target_attr_val);
 }
 
+// convert float32 attr to Bfloat16 and append
+ge::graphStatus AppendConvertedFpAttrToBf16(TilingData *tiling_data, const RuntimeAttrs *attrs,
+                                            const size_t attr_index) {
+  GE_CHECK_NOTNULL(tiling_data);
+  const float *attr = attrs->GetAttrPointer<float>(attr_index);
+  GE_CHECK_NOTNULL(attr);
+  const uint16_t target_attr_val = optiling::FloatToBfloat16(*attr);
+  return tiling_data->Append<uint16_t>(target_attr_val);
+}
+
 // convert list_float32 attr to list_uint16 and append
 ge::graphStatus AppendConvertedListFpAttr(TilingData *tiling_data, const RuntimeAttrs *attrs, const size_t attr_index) {
   GE_CHECK_NOTNULL(tiling_data);
@@ -177,7 +187,8 @@ const auto kAttrTable =
         .Add(AttrDataType::kFloat32, AttrDataType::kInt32, AppendConvertedAttr<float, int32_t>)
         .Add(AttrDataType::kListFloat32, AttrDataType::kListInt32, AppendConvertedListAttr<float, int32_t>)
         .Add(AttrDataType::kInt32, AttrDataType::kInt32, AppendAttr<int32_t>)
-        .Add(AttrDataType::kListInt32, AttrDataType::kListInt32, AppendConvertedListAttr<int64_t, int32_t>);
+        .Add(AttrDataType::kListInt32, AttrDataType::kListInt32, AppendConvertedListAttr<int64_t, int32_t>)
+        .Add(AttrDataType::kFloat32, AttrDataType::kBfloat16, AppendConvertedFpAttrToBf16);
 }  // namespace
 
 // src type and dst type are enum data

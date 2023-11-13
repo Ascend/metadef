@@ -25,6 +25,12 @@ union Fp32 {
   ge::float32_t f;
 };
 
+inline uint16_t FloatToBfloat16(const ge::float32_t value) {
+  constexpr uint32_t right_shift_16 = 16U;
+  const ge::float32_t *pValue = &value;
+  return (*reinterpret_cast<const uint32_t*>(pValue)) >> right_shift_16;
+}
+
 inline uint16_t FloatToUint16(const ge::float32_t value) {
   constexpr Fp32 f32infty = {static_cast<uint32_t>(255) << static_cast<uint32_t>(23)};
   constexpr uint32_t sign_mask = 0x80000000U;

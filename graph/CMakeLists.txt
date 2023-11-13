@@ -114,9 +114,16 @@ SET(GRAPH_SOURCE_LIST
     "${METADEF_DIR}/ops/op_imp.cpp"
 )
 
+SET(FAST_GRAPH_SOURCE_LIST
+        "fast_graph/fast_node.cc"
+        "fast_graph/execute_graph.cc"
+        "fast_graph/fast_node_utils.cc"
+        )
+
 ######### libgraph_base.so #############
 add_library(graph_base SHARED
     ${GRAPH_BASE_SOURCE_LIST}
+    ${FAST_GRAPH_SOURCE_LIST}
     $<TARGET_OBJECTS:metadef_graph_protos_obj>
 )
 

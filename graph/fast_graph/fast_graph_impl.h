@@ -136,7 +136,7 @@ class FastGraphImpl {
    * 1. set node to nodes_
    * 2. if it is data, set it to input_nodes_
    */
-  graphStatus SetNodes(const QuickList<NodeT> &nodes) {
+  graphStatus SetNodes(const std::vector<FastNode *> &nodes) {
     nodes_.clear();
     for (size_t i = 0UL; i < nodes.size(); i++) {
       auto node = nodes[i];
@@ -145,7 +145,7 @@ class FastGraphImpl {
         GELOGE(GRAPH_FAILED, "[Check][Param] The node ptr or op_desc should not be null.");
         return PARAM_INVALID;
       }
-      RecordNodeAndInputDataToGraph(FastGraphUtils::GetListElementAddr(node));
+      RecordNodeAndInputDataToGraph(node);
     }
     return GRAPH_SUCCESS;
   }
@@ -826,6 +826,7 @@ class FastGraphImpl {
         continue;
       }
       copy_sub_graph->CompleteCopy(*(origin_graph_listnode->data));
+      owner_graph_->ClearAllSubGraph();
       owner_graph_->AddSubGraph(copy_sub_graph, name);
     }
   }

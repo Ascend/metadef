@@ -58,7 +58,7 @@ add_library(benchmark SHARED IMPORTED)
 target_include_directories(benchmark INTERFACE ${BENCHMARK_PKG_DIR}/include)
 
 set_target_properties(benchmark PROPERTIES
-        IMPORTED_LOCATION ${BENCHMARK_PKG_DIR}/${CMAKE_INSTALL_LIBDIR}/libbenchmark.so
+        IMPORTED_LOCATION ${BENCHMARK_PKG_DIR}/${CMAKE_INSTALL_LIBDIR}/lib/libbenchmark.so
         )
 
 add_library(benchmark_main SHARED IMPORTED)

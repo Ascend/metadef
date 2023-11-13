@@ -33,13 +33,13 @@
 namespace ge {
 template <typename T>
 struct QuickIterator {
-  typedef QuickIterator<T> Self;
-  typedef ListElement<T> Element;
-  typedef ptrdiff_t difference_type;
-  typedef std::bidirectional_iterator_tag iterator_category;
-  typedef T value_type;
-  typedef T *pointer;
-  typedef T &reference;
+  using Self = QuickIterator<T>;
+  using Element = ListElement<T>;
+  using difference_type = ptrdiff_t;
+  using iterator_category = std::bidirectional_iterator_tag;
+  using value_type = T;
+  using pointer = T *;
+  using reference = T &;
 
   QuickIterator() noexcept : element_() {}
 
@@ -89,21 +89,20 @@ struct QuickIterator {
 
 template <typename T>
 struct ConstQuickIterator {
-  typedef ConstQuickIterator<T> Self;
-  typedef const ListElement<T> Element;
-  typedef QuickIterator<T> iterator;
-
-  typedef ptrdiff_t difference_type;
-  typedef std::bidirectional_iterator_tag iterator_category;
-  typedef T value_type;
-  typedef const T *pointer;
-  typedef const T &reference;
+  using Self = ConstQuickIterator<T>;
+  using Element = const ListElement<T>;
+  using iterator_category = std::bidirectional_iterator_tag;
+  using iterator = QuickIterator<T>;
+  using difference_type = ptrdiff_t;
+  using value_type = T;
+  using pointer = const T *;
+  using reference = const T &;
 
   ConstQuickIterator() noexcept : element_() {}
 
   explicit ConstQuickIterator(Element *x) noexcept : element_(x) {}
 
-  ConstQuickIterator(const iterator &x) noexcept : element_(x.element_) {}
+  explicit ConstQuickIterator(const iterator &x) noexcept : element_(x.element_) {}
 
   Element *operator*() const noexcept {
     return element_;
@@ -176,7 +175,7 @@ class QuickList {
   QuickList &operator=(const QuickList &list) = delete;
 
   QuickList(QuickList &&list) {
-    if (this = &list) {
+    if (this == &list) {
       return;
     }
     clear();
@@ -189,7 +188,7 @@ class QuickList {
   }
 
   QuickList &operator=(QuickList &&list) {
-    if (this = &list) {
+    if (this == &list) {
       return *this;
     }
 
