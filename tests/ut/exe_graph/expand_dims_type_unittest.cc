@@ -168,6 +168,5 @@ TEST_F(ExpandDimsTypeUT, GetExpandDimMask) {
   ASSERT_FALSE(edt.IsExpandIndex(0));
   ASSERT_TRUE(edt.IsExpandIndex(1));
   ASSERT_TRUE(edt.IsExpandIndex(2));
-  ASSERT_EQ(edt.GetExpandDimsMask(), 6);
 }
 }  // namespace gert

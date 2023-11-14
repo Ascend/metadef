@@ -15,9 +15,8 @@
  */
 
 #include "register/hidden_input_func_registry.h"
-#include "common/ge_common/debug/ge_log.h"
 #include <iostream>
-
+#include "common/ge_common/debug/ge_log.h"
 namespace ge {
 GetHiddenAddr HiddenInputFuncRegistry::FindHiddenInputFunc(const HiddenInputType input_type) {
   const auto &iter = type_to_funcs_.find(input_type);
@@ -28,7 +27,7 @@ GetHiddenAddr HiddenInputFuncRegistry::FindHiddenInputFunc(const HiddenInputType
   return nullptr;
 }
 
-void HiddenInputFuncRegistry::Register(const HiddenInputType input_type, const GetHiddenAddr &func) {
+void HiddenInputFuncRegistry::Register(const HiddenInputType input_type, const GetHiddenAddr func) {
   type_to_funcs_[input_type] = func;
 }
 HiddenInputFuncRegistry &HiddenInputFuncRegistry::GetInstance() {
@@ -36,8 +35,7 @@ HiddenInputFuncRegistry &HiddenInputFuncRegistry::GetInstance() {
   return registry;
 }
 
-HiddenInputFuncRegister::HiddenInputFuncRegister(const HiddenInputType input_type, const GetHiddenAddr &func) {
+HiddenInputFuncRegister::HiddenInputFuncRegister(const HiddenInputType input_type, const GetHiddenAddr func) {
   HiddenInputFuncRegistry::GetInstance().Register(input_type, func);
 }
-
 }  // namespace ge

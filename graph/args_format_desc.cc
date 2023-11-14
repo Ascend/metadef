@@ -24,10 +24,12 @@
 #include <functional>
 #include <map>
 #include <sstream>
+
 namespace ge {
 constexpr size_t kMaxDimNum = 25UL;
 constexpr size_t kMaxWorkspaceNum = 16UL;
 constexpr int32_t kDecimalCarry = 10;
+constexpr int32_t kAsciiZero = 48;
 
 using ParseFunc =
     std::function<graphStatus(const OpDescPtr &, const std::string &, const AddrType type, std::vector<ArgDesc> &)>;
@@ -102,7 +104,7 @@ graphStatus WorkspaceParser(const OpDescPtr &op_desc, const std::string &pattern
   int32_t ir_idx = 0;
   for (size_t i = 2UL; i < pattern_str.size(); ++i) {
     if (isdigit(pattern_str[i])) {
-      ir_idx = ir_idx * kDecimalCarry + pattern_str[i] - '0';
+      ir_idx = ir_idx * kDecimalCarry + static_cast<int32_t>(pattern_str[i]) - kAsciiZero;
     }
   }
   args_desc.push_back({type, ir_idx, false, {0}});
@@ -167,7 +169,7 @@ graphStatus InputParser(const OpDescPtr &op_desc, const std::string &pattern_str
     bool has_idx{false};
     for (size_t i = 1UL; i < pattern_str.size(); ++i) {
       if (isdigit(pattern_str[i])) {
-        ir_idx = ir_idx * kDecimalCarry + pattern_str[i] - '0';
+        ir_idx = ir_idx * kDecimalCarry + static_cast<int32_t>(pattern_str[i]) - kAsciiZero;
         has_idx = true;
       }
     }
@@ -242,7 +244,7 @@ graphStatus OutputParser(const OpDescPtr &op_desc, const std::string &pattern_st
     bool has_idx{false};
     for (size_t i = 1UL; i < pattern_str.size(); ++i) {
       if (isdigit(pattern_str[i])) {
-        ir_idx = ir_idx * kDecimalCarry + pattern_str[i] - '0';
+        ir_idx = ir_idx * kDecimalCarry + static_cast<int32_t>(pattern_str[i]) - kAsciiZero;
         has_idx = true;
       }
     }
@@ -325,7 +327,7 @@ graphStatus IODescParser(const OpDescPtr &op_desc, const std::string &pattern_st
   bool has_idx{false};
   for (size_t i = 6UL; i < pattern_str.size(); ++i) {  // start after i_desc/o_desc
     if (isdigit(pattern_str[i])) {
-      ir_idx = ir_idx * kDecimalCarry + pattern_str[i] - '0';
+      ir_idx = ir_idx * kDecimalCarry + static_cast<int32_t>(pattern_str[i]) - kAsciiZero;
       has_idx = true;
     }
   }
@@ -370,16 +372,16 @@ std::string ArgsFormatDesc::ToString() const {
   return ss.str();
 }
 
-graphStatus ArgsFormatDesc::GetArgsSize(const OpDescPtr &op_desc, size_t &size) const {
-  size_t args_size{0UL};
+graphStatus ArgsFormatDesc::GetArgsSize(const OpDescPtr &op_desc, size_t &args_size) const {
+  size_t total_size{0UL};
   for (const auto &arg_desc : arg_descs_) {
     for (const auto &iter : kPatternToHandler) {
       if (iter.second.type == arg_desc.addr_type) {
-        GE_ASSERT_SUCCESS(iter.second.getArgsSize(op_desc, arg_desc, args_size));
+        GE_ASSERT_SUCCESS(iter.second.getArgsSize(op_desc, arg_desc, total_size));
       }
     }
   }
-  size = args_size;
+  args_size = total_size;
   return GRAPH_SUCCESS;
 }
 
