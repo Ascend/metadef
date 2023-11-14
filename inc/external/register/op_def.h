@@ -78,7 +78,7 @@ public:
   OpParamDef &Scalar();
   OpParamDef &ScalarList();
   OpParamDef &To(const ge::DataType type);
-  OpParamDef &To(const std::string &name);
+  OpParamDef &To(const char *name);
   ge::AscendString &GetParamName(void);
   Option GetParamType(void);
   std::vector<ge::DataType> &GetDataTypes(void);

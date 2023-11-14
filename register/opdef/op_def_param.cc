@@ -17,7 +17,6 @@
 #include <vector>
 #include "register/op_def.h"
 #include "op_def_impl.h"
-#include "common/ge_common/debug/ge_log.h"
 
 namespace ops {
 OpParamDef::OpParamDef(const char *name) : impl_(new(std::nothrow) OpParamDefImpl) {
@@ -108,10 +107,6 @@ OpParamDef &OpParamDef::UnknownShapeFormat(std::vector<ge::Format> formats) {
 }
 
 OpParamDef &OpParamDef::ValueDepend(Option value_depend) {
-  if ((this->impl_->is_scalar_list) || (this->impl_->is_scalar)) {
-    GELOGE(ge::PARAM_INVALID, "Valuedepend ans Scalar/ScalarList cannot be configured at the same time.");
-    return *this;
-  }
   if (value_depend == Option::REQUIRED) {
     this->impl_->value_depend = "required";
   } else if (value_depend == Option::OPTIONAL) {
@@ -133,19 +128,11 @@ OpParamDef &OpParamDef::AutoContiguous() {
 }
 
 OpParamDef &OpParamDef::Scalar() {
-  if (strcmp(this->impl_->value_depend.GetString(), "") != 0) {
-    GELOGE(ge::PARAM_INVALID, "Valuedepend ans Scalar/ScalarList cannot be configured at the same time.");
-    return *this;
-  }
   this->impl_->is_scalar = true;
   return *this;
 }
 
 OpParamDef &OpParamDef::ScalarList() {
-  if (strcmp(this->impl_->value_depend.GetString(), "") != 0) {
-    GELOGE(ge::PARAM_INVALID, "Valuedepend ans Scalar/ScalarList cannot be configured at the same time.");
-    return *this;
-  }
   this->impl_->is_scalar_list = true;
   return *this;
 }
@@ -155,8 +142,8 @@ OpParamDef &OpParamDef::To(const ge::DataType type) {
   return *this;
 }
 
-OpParamDef &OpParamDef::To(const std::string &name) {
-  this->impl_->scalar_name = name.c_str();
+OpParamDef &OpParamDef::To(const char *name) {
+  this->impl_->scalar_name = name;
   return *this;
 }
 
