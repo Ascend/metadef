@@ -31,7 +31,6 @@
 #include "common/util/mem_utils.h"
 #include "graph/utils/tensor_utils.h"
 #include "graph/utils/math_util.h"
-#include "inc/common/checker.h"
 
 namespace ge {
 namespace {
@@ -1833,21 +1832,5 @@ void TensorUtils::CopyTensor(const GeTensor &from, GeTensor &to) {
     (void)to.impl_->tensor_data_.SetData(from.impl_->tensor_data_);
     to.impl_->tensor_data_.impl_->tensor_descriptor_ = to.impl_->desc_.impl_;
   }
-}
-
-bool TensorUtils::IsShapeEqual(const GeShape &src, const GeShape &dst) {
-  GE_ASSERT_TRUE(src.GetDimNum() == dst.GetDimNum(), "src(%s) dims num is not equal to dst(%s) dim num.",
-                 src.ToString().c_str(), dst.ToString().c_str());
-  const auto src_dims = src.GetDims();
-  const auto dst_dims = dst.GetDims();
-  for (size_t i = 0UL; i < src_dims.size(); ++i) {
-    if ((src_dims[i] == -1) || (dst_dims[i] == -1)) {
-      GELOGW("src dim %d is %d, dst dim %d is %d, there has unknown shape.", i, src_dims[i], i, dst_dims[i]);
-      continue;
-    }
-    GE_ASSERT_TRUE(src_dims[i] == dst_dims[i], "src(%s) dim(%zu) = %ld is not equal to dst(%s) dim(%zu) = %ld.",
-                   src.ToString().c_str(), i, src_dims[i], dst.ToString().c_str(), i, dst_dims[i]);
-  }
-  return true;
 }
 }  // namespace ge

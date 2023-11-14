@@ -36,7 +36,6 @@ class OpDescUtilsEx {
   static graphStatus CallInferFuncV1(const OpDescPtr &op_desc, Operator &op);
   static graphStatus CallInferFuncV2(const OpDescPtr &op_desc, Operator &op);
   static graphStatus CallInferFuncV2Inner(const OpDescPtr &op_desc, Operator &op);
-  static graphStatus InferShapeByOutputShapesAttr(const OpDescPtr &op_desc);
 };
 } // namespace ge
 #endif // __INC_METADEF_OP_DESC_UTILS_EX_H

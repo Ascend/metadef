@@ -1489,7 +1489,4 @@ const std::string LOGIC_STREAM_ID = "_logic_stream_id";
 const std::string ATTR_NAME_IS_HEAVY_OP = "_is_heavy_op";
 // tiling depend
 const std::string ATTR_NAME_DYNAMIC_TILING_DEPEND_OP = "_dynamic_tiling_depend_op";
-
-// for infer shape
-const std::string ATTR_NAME_OUTPUT_SHAPES = "_output_shapes";
 }  // namespace ge
