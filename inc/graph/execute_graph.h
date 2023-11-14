@@ -33,7 +33,7 @@ class ExecuteGraph : public AttrHolder {
     void *quick_graph;
   };
   explicit ExecuteGraph(const std::string &name);
-  ~ExecuteGraph();
+  ~ExecuteGraph() override{};
 
   /**
    * The function is shallow copy for ExecuteGraph
@@ -50,7 +50,7 @@ class ExecuteGraph : public AttrHolder {
    * The node push back to container in graph.
    */
   FastNode *AddNode(const OpDescPtr &op);
-  FastNode *AddNode(FastNode *FastNode);
+  FastNode *AddNode(FastNode *fast_node);
   FastNode *AddNode(const OpDescPtr &op, int64_t id);
 
   /**
@@ -58,13 +58,13 @@ class ExecuteGraph : public AttrHolder {
    * The node push front to container in graph.
    */
   FastNode *AddNodeFront(const OpDescPtr &op);
-  FastNode *AddNodeFront(FastNode *quick_node);
+  FastNode *AddNodeFront(FastNode *fast_node);
 
   /**
    * The function is used to remove node of graph.
    * The node don`t release and it will push to free container which is used to store free obj.
    */
-  graphStatus RemoveJustNode(FastNode *node_ptr);
+  graphStatus RemoveJustNode(FastNode *fast_node);
 
   /**
    * The function is used to add input node of graph.
@@ -74,17 +74,17 @@ class ExecuteGraph : public AttrHolder {
   /**
    * The function is used to remove input node of graph.
    */
-  graphStatus RemoveInputNode(FastNode *node);
+  graphStatus RemoveInputNode(FastNode *fast_node);
 
   /**
    * The function is used to add output node of graph.
    */
-  FastNode *AddOutputNodeByIndex(FastNode *node, const int32_t index);
+  FastNode *AddOutputNodeByIndex(FastNode *fast_node, int32_t index);
 
   /**
    * The function is used to remove output node of graph.
    */
-  graphStatus RemoveOutputNode(FastNode *node);
+  graphStatus RemoveOutputNode(FastNode *fast_node);
 
   /**
    * The function is used to add edge of graph.
@@ -95,7 +95,7 @@ class ExecuteGraph : public AttrHolder {
    * The function is used to remove edge of graph.
    * The edge don`t release and it will push to free container which is used to store free obj.
    */
-  graphStatus RemoveEdge(FastEdge *e);
+  graphStatus RemoveEdge(FastEdge *edge);
 
   const FastNode *GetParentNodeBarePtr() const;
   void SetParentNode(FastNode *node);
@@ -110,13 +110,13 @@ class ExecuteGraph : public AttrHolder {
    * The function will add subgraph After strict checking the valid of subgraph.
    * The shared pointer of subgraph will record in graph.
    */
-  ExecuteGraph *AddSubGraph(std::shared_ptr<ExecuteGraph> &sub_graph, std::string &name);
+  ExecuteGraph *AddSubGraph(std::shared_ptr<ExecuteGraph> &sub_graph_ptr, std::string &name);
 
   /**
    * The function is used to remove subgraph of graph.
    * The shared pointer of subgraph will clear in graph.
    */
-  graphStatus RemoveSubGraph(ExecuteGraph *sub_graph);
+  graphStatus RemoveSubGraph(const ExecuteGraph *sub_graph);
   graphStatus RemoveSubGraph(const std::string &name);
 
   /**
@@ -160,7 +160,7 @@ class ExecuteGraph : public AttrHolder {
   /**
    * is is topo sort (include dfs, bfs, DFS_POSTORDER).
    */
-  graphStatus TopologicalSortingGraph(const ExecuteGraph *compute_graph, const bool dfs_reverse);
+  graphStatus TopologicalSortingGraph(const ExecuteGraph *execute_graph, const bool dfs_reverse);
 
   /**
    * get name of graph.
@@ -189,7 +189,7 @@ class ExecuteGraph : public AttrHolder {
   /**
    * push node to free edge.
    */
-  graphStatus RecycleQuickNode(FastNode *node_ptr);
+  graphStatus RecycleQuickNode(FastNode *fast_node);
 
   /**
    * get all of nodes in graph (include subgraph).
@@ -215,7 +215,7 @@ class ExecuteGraph : public AttrHolder {
   std::vector<FastNode *> AllGraphNodes(std::vector<ExecuteGraph *> &subgraphs) const;
   void GetAllNodesFromOpdesc(std::vector<ExecuteGraph *> &subgraphs, const OpDesc &op_desc,
                              std::deque<FastNode *> &candidates) const;
-  void RemoveNodeFromNodesFree(FastNode *fast_node);
+  void RemoveNodeFromNodesFree(FastNode *fast_node) const;
   graphStatus SortNodes(std::vector<FastNode *> &stack, std::map<FastNode *, uint32_t> &map_in_edge_num) const;
   void GetOutNodesFromEdgesToMap(std::map<FastNode *, uint32_t> &map_in_edge_num, FastNode *node,
                                  std::map<std::string, FastNode *> &breadth_node_map) const;
@@ -227,7 +227,7 @@ class ExecuteGraph : public AttrHolder {
                                     const ExecuteGraph *compute_graph) const;
   graphStatus RDFSTopologicalSorting(std::vector<FastNode *> &node_vec, const bool reverse,
                                      const ExecuteGraph *compute_graph) const;
-  void GetInNodes(FastNode *current, std::vector<FastNode *> &input_nodes) const;
+  void GetInNodes(const FastNode *current, std::vector<FastNode *> &input_nodes) const;
 
  private:
   std::shared_ptr<FastGraphImpl<FastNode, ExecuteGraph>> graph_shared_;

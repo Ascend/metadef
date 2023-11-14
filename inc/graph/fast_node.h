@@ -21,7 +21,6 @@
 #include <mutex>
 #include <set>
 #include <vector>
-#include "graph/types.h"
 #include "graph/op_desc.h"
 #include "graph/edge.h"
 
@@ -152,7 +151,7 @@ class FastNode {
   /**
    * adjust the position of the edge in the node record.
    */
-  graphStatus MoveEdge(DirectionType type, int32_t idx, int32_t cur_index, int32_t replace_index);
+  graphStatus MoveEdge(DirectionType type, int32_t io_idx, int32_t cur_array_index, int32_t replace_array_index);
 
   /**
    * get a unique identifier of node.
@@ -238,12 +237,12 @@ class FastNode {
   /**
    * collecting the peer nodes which is input data edge.
    */
-  std::vector<FastNode *> GetPeerNodesInDataEdge(const int32_t idx) const;
+  std::vector<FastNode *> GetPeerNodesInDataEdge(int32_t idx) const;
 
   /**
    * collecting the peer nodes which is input control edge.
    */
-  std::vector<FastNode *> GetPeerNodesInControlEdge(const int32_t idx) const;
+  std::vector<FastNode *> GetPeerNodesInControlEdge(int32_t idx) const;
 
   /**
    * collecting the peer nodes which input information from this.
@@ -289,7 +288,7 @@ class FastNode {
   /**
    * get the total number of edge with input index or output index.
    */
-  size_t GetAllPeerEdgesSizeByIndex(DirectionType type, int32_t idx_) const;
+  size_t GetAllPeerEdgesSizeByIndex(DirectionType type, int32_t idx) const;
 
   /**
    * get the total number of edge with input index.
@@ -359,7 +358,8 @@ class FastNode {
   size_t GetInEdgeSize() const;
 
  private:
-  graphStatus CheckAllInputParamter(DirectionType type, int32_t idx, int32_t cur_index, int32_t replace_index) const;
+  graphStatus CheckAllInputParamter(DirectionType type, int32_t io_idx, int32_t cur_array_index,
+                                    int32_t replace_array_index) const;
   inline bool CheckDataIndexIsValid(int32_t index, DirectionType type) const;
   graphStatus Reset();
   void UpdateDataForIoNumChange();
@@ -367,11 +367,11 @@ class FastNode {
   graphStatus RecordOutControlEdge(FastEdge *edge);
   graphStatus RecordInDataEdge(FastEdge *edge, int32_t index);
   graphStatus RecordOutDataEdge(FastEdge *edge, int32_t index);
-  graphStatus EraseInControlEdge(FastEdge *edge);
-  graphStatus EraseOutControlEdge(FastEdge *edge);
+  graphStatus EraseInControlEdge(const FastEdge *edge);
+  graphStatus EraseOutControlEdge(const FastEdge *edge);
   graphStatus EraseInDataEdge(int32_t index);
-  graphStatus EraseOutDataEdge(FastEdge *edge, int32_t index);
-  graphStatus ModifySizeByNodeType(FastEdge *fast_edge, size_t &in_edge_size) const;
+  graphStatus EraseOutDataEdge(const FastEdge *edge, int32_t index);
+  graphStatus ModifySizeByNodeType(const FastEdge *fast_edge, size_t &in_edge_size) const;
 
  private:
   std::string name_;

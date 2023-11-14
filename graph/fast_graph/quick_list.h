@@ -23,11 +23,12 @@
 
 #ifndef D_INC_GRAPH_QUICK_LIST_H
 #define D_INC_GRAPH_QUICK_LIST_H
+#include <algorithm>
+#include <cassert>
 #include <iostream>
 #include <list>
 #include <unordered_map>
 #include <vector>
-#include <cassert>
 #include "graph/list_element.h"
 
 namespace ge {
