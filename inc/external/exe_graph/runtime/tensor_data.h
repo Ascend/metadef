@@ -198,6 +198,8 @@ class TensorData {
   TensorPlacement placement_;
   uint32_t reserved_0_;  // Reserved field, 8-byte aligned for TensorPlacement
   uint8_t reserved_1_[40]; // Reserved field, 32+8, do not directly use when only 8-byte left
+
+  friend class TensorUtils;
 };
 }  // namespace gert
 
