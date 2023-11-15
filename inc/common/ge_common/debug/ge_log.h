@@ -90,7 +90,7 @@ inline bool IsLogEnable(const int32_t module_name, const int32_t log_level) {
 #define GEEVENT(fmt, ...)                                                                        \
   do {                                                                                                               \
     dlog_info((static_cast<uint32_t>(RUN_LOG_MASK) | static_cast<uint32_t>(GE_MODULE_NAME)), "[EVENT]%" PRIu64 " %s:" \
-              fmt, GeLog::GetTid(), &__FUNCTION__[0U], ##__VA_ARGS__);                                                    \
+              fmt, GeLog::GetTid(), &__FUNCTION__[0U], ##__VA_ARGS__);                                                \
     if (IsLogEnable(GE_MODULE_NAME, DLOG_INFO)) {                                                \
       dlog_info(GE_MODULE_NAME, "%" PRIu64 " %s:" fmt, GeLog::GetTid(), &__FUNCTION__[0U], ##__VA_ARGS__); \
     }                                                                                            \
