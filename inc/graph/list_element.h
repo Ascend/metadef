@@ -30,7 +30,7 @@ struct ListElement {
   QuickList<T> *owner;
   ListMode mode;
   T data;
-  ListElement(const T &x) : data(x), next(nullptr), prev(nullptr), owner(nullptr), mode(ListMode::kFreeMode) {}
+  explicit ListElement(const T &x) : data(x), next(nullptr), prev(nullptr), owner(nullptr), mode(ListMode::kFreeMode) {}
   bool operator==(const ListElement<T> &r_ListElement) const {
     return data == r_ListElement.data;
   }

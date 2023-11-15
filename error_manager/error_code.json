@@ -585,6 +585,17 @@
     },
     {
       "errClass": "GE Errors",
+      "errTitle": "Invalid Argument",
+      "ErrCode": "E10057",
+      "ErrMessage": "[--%s] and [--%s] can only be used together",
+      "Arglist": "parameter0, parameter1",
+      "suggestion": {
+      "Possible Cause": "N/A",
+      "Solution": "If the value of --mode is 6, it only needs to be used with --om. Please check and try again."
+      }
+    },
+    {
+      "errClass": "GE Errors",
       "errTitle": "Invalid Operator Input Count",
       "ErrCode": "E10401",
       "ErrMessage": "The number of operator inputs ([%s]) exceeds the allowed maximum ([%s]).",

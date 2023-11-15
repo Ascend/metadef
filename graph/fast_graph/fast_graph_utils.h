@@ -17,6 +17,7 @@
 #ifndef FAST_GRAPH_FAST_GRAPH_UTILS_H
 #define FAST_GRAPH_FAST_GRAPH_UTILS_H
 
+#include <string.h>
 #include "graph/anchor.h"
 #include "quick_list.h"
 #include "graph/execute_graph.h"

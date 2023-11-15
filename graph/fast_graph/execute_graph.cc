@@ -70,7 +70,7 @@ void GetOutNodesFromEdge(std::map<FastNode *, uint32_t> &map_in_edge_num, FastNo
   }
 }
 
-bool InputIsLongLifeTimeNode(FastNode *node, const ExecuteGraph *execute_graph) {
+bool InputIsLongLifeTimeNode(const FastNode *node, const ExecuteGraph *execute_graph) {
   bool match = false;
   auto num = node->GetDataInNum();
   for (size_t i = 0LL; i < num; ++i) {
@@ -215,8 +215,6 @@ ExecuteGraph::ExecuteGraph(const std::string &name) {
   graph_shared_->SetOwnerGraph(this);
 }
 
-ExecuteGraph::~ExecuteGraph() {}
-
 ExecuteGraph &ExecuteGraph::operator=(ge::ExecuteGraph &exec_graph) {
   if (&exec_graph == this) {
     return *this;
@@ -258,7 +256,7 @@ FastNode *ExecuteGraph::AddNode(const OpDescPtr &op, int64_t id) {
   return graph_shared_->AddNode(op, this, id);
 }
 
-void ExecuteGraph::RemoveNodeFromNodesFree(FastNode *fast_node) {
+void ExecuteGraph::RemoveNodeFromNodesFree(FastNode *fast_node) const {
   auto quick_node = FastGraphUtils::GetListElementAddr(fast_node);
   auto owner = quick_node->owner;
   auto mode = quick_node->mode;
@@ -345,7 +343,7 @@ ExecuteGraph *ExecuteGraph::AddSubGraph(std::shared_ptr<ExecuteGraph> &sub_graph
   return ret->data;
 }
 
-graphStatus ExecuteGraph::RemoveSubGraph(ExecuteGraph *sub_graph) {
+graphStatus ExecuteGraph::RemoveSubGraph(const ExecuteGraph *sub_graph) {
   if (sub_graph == nullptr) {
     REPORT_INNER_ERROR("E18888", "Try to add a null subgraph");
     GE_LOGE("[Check][Param] Try to add a null subgraph");
@@ -476,7 +474,7 @@ graphStatus ExecuteGraph::RemoveInputNode(FastNode *fast_node) {
   return graph_shared_->RemoveInputNode(fast_node);
 }
 
-FastNode *ExecuteGraph::AddOutputNodeByIndex(FastNode *fast_node, const int32_t index) {
+FastNode *ExecuteGraph::AddOutputNodeByIndex(FastNode *fast_node, int32_t index) {
   if (fast_node == nullptr) {
     REPORT_INNER_ERROR("E18888", "The node is nullptr.");
     GE_LOGE("[Check][Param] The node is nullptr.");
@@ -684,7 +682,7 @@ graphStatus ExecuteGraph::DFSTopologicalSorting(std::vector<FastNode *> &node_ve
   return GRAPH_SUCCESS;
 }
 
-void ExecuteGraph::GetInNodes(FastNode *current, std::vector<FastNode *> &input_nodes) const {
+void ExecuteGraph::GetInNodes(const FastNode *current, std::vector<FastNode *> &input_nodes) const {
   auto &in_data_edges = current->GetAllInDataEdgesRef();
   auto &ref = input_nodes;
   for (size_t i = 0UL; i < in_data_edges.size(); i++) {

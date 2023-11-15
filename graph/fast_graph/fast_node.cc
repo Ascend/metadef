@@ -15,10 +15,9 @@
  */
 
 #include "graph/fast_node.h"
-#include "common/util/error_manager/error_manager.h"
 #include <cstddef>
-#include <iterator>
 #include <memory>
+#include "common/util/error_manager/error_manager.h"
 #include "graph/anchor.h"
 #include "utils/ge_ir_utils.h"
 #include "fast_graph_utils.h"
@@ -194,13 +193,13 @@ graphStatus FastNode::RecordEdge(FastEdge *edge, DirectionType type) {
   return GRAPH_FAILED;
 }
 
-graphStatus FastNode::EraseInControlEdge(FastEdge *edge) {
+graphStatus FastNode::EraseInControlEdge(const FastEdge *edge) {
   in_control_edges_[edge->in_edge_index] = nullptr;
   in_control_edge_count_--;
   return GRAPH_SUCCESS;
 }
 
-graphStatus FastNode::EraseOutControlEdge(FastEdge *edge) {
+graphStatus FastNode::EraseOutControlEdge(const FastEdge *edge) {
   out_control_edges_[edge->out_edge_index] = nullptr;
   out_control_edges_count_--;
   return GRAPH_SUCCESS;
@@ -219,7 +218,7 @@ graphStatus FastNode::EraseInDataEdge(int32_t index) {
   return GRAPH_SUCCESS;
 }
 
-graphStatus FastNode::EraseOutDataEdge(FastEdge *edge, int32_t index) {
+graphStatus FastNode::EraseOutDataEdge(const FastEdge *edge, int32_t index) {
   if (!CheckDataIndexIsValid(index, DirectionType::kDirectionOutType)) {
     REPORT_INNER_ERROR("E18888", "The index [%d] exceeds the size [%zu] of out edge.", index, data_out_num_);
     GELOGE(GRAPH_FAILED, "The index [%d] exceeds the size [%zu] of out edge.", index, data_out_num_);
@@ -642,7 +641,7 @@ const std::vector<Edge<FastNode> *> &FastNode::GetOutEdgesRefByIndex(int32_t idx
   return out_data_edges_[idx];
 }
 
-graphStatus FastNode::ModifySizeByNodeType(FastEdge *fast_edge, size_t &in_edge_size) const {
+graphStatus FastNode::ModifySizeByNodeType(const FastEdge *fast_edge, size_t &in_edge_size) const {
   if ((fast_edge != nullptr) && (fast_edge->src != nullptr)) {
     auto type = fast_edge->src->GetType();
     if ((strcmp(type.c_str(), NEXTITERATION) == 0) || (strcmp(type.c_str(), REFNEXTITERATION) == 0)) {
