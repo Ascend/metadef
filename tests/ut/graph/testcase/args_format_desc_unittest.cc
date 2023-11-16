@@ -29,6 +29,7 @@
 #include "graph/utils/op_desc_utils.h"
 #include "graph/utils/tensor_utils.h"
 #include "graph/utils/type_utils.h"
+#include "register/hidden_input_func_registry.h"
 #undef private
 #undef protected
 #include "external/graph/operator_factory.h"
@@ -246,4 +247,46 @@ TEST_F(UtestArgsFormatDesc, serialize_dynamic_args) {
   EXPECT_EQ(descs[2].addr_type, AddrType::INPUT_DESC);
 }
 
+TEST_F(UtestArgsFormatDesc, serialize_hidden_input) {
+  auto op_desc = std::make_shared<OpDesc>("tmp_op", "Mul");
+  ArgsFormatDesc desc;
+  desc.AppendHiddenInput(HiddenInputType::HCOM);
+  desc.Append(AddrType::PLACEHOLDER);
+  std::string res = desc.ToString();
+  std::string expect_res = "{hi.hcom}{}";
+  EXPECT_EQ(expect_res, res);
+  size_t args_size{0UL};
+  EXPECT_EQ(desc.GetArgsSize(op_desc, args_size), ge::GRAPH_SUCCESS);
+  EXPECT_EQ(args_size, 16UL);
+  std::vector<ArgDesc> descs;
+  EXPECT_EQ(ArgsFormatDesc::Parse(op_desc, expect_res, descs), SUCCESS);
+  descs.push_back({AddrType::HIDDEN_INPUT, static_cast<int32_t>(HiddenInputType::HCOM), false, {0}});
+  std::string serialize_res = ArgsFormatDesc::Serialize(descs);
+  expect_res = "{hi.hcom}{}{hi.hcom}";
+  EXPECT_EQ(expect_res, serialize_res);
+}
+
+TEST_F(UtestArgsFormatDesc, deserialzie_placeholder) {
+  auto op_desc = std::make_shared<OpDesc>("tmp_op", "Mul");
+  std::string format1 = "{}";
+  std::vector<ArgDesc> descs;
+  EXPECT_EQ(ArgsFormatDesc::Parse(op_desc, format1, descs), SUCCESS);
+  EXPECT_EQ(descs.size(), 1UL);
+  EXPECT_EQ(descs[0UL].addr_type, AddrType::PLACEHOLDER);
+}
+
+TEST_F(UtestArgsFormatDesc, deserialzie_unsupported) {
+auto op_desc = std::make_shared<OpDesc>("tmp_op", "Mul");
+  std::string format1 = "{hehe}";
+  std::vector<ArgDesc> descs1;
+  EXPECT_NE(ArgsFormatDesc::Parse(op_desc, format1, descs1), SUCCESS);
+
+  std::string format2 = "{ }";
+  std::vector<ArgDesc> descs2;
+  EXPECT_NE(ArgsFormatDesc::Parse(op_desc, format2, descs2), SUCCESS);
+
+  std::string format3 = "{hi.unsupported}";
+  std::vector<ArgDesc> descs3;
+  EXPECT_NE(ArgsFormatDesc::Parse(op_desc, format3, descs3), SUCCESS);
+}
 }  // namespace ge

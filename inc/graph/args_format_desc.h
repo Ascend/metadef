@@ -23,6 +23,7 @@
 #include "common/ge_common/debug/ge_log.h"
 #include "graph/ge_error_codes.h"
 #include "graph/op_desc.h"
+#include "register/hidden_input_func_registry.h"
 
 namespace ge {
 enum class AddrType {
@@ -34,7 +35,9 @@ enum class AddrType {
   OUTPUT_DESC,
   FFTS_ADDR,
   OVERFLOW_ADDR,
-  TILING_FFTS
+  TILING_FFTS,
+  HIDDEN_INPUT,
+  PLACEHOLDER
 };
 
 struct ArgDesc {
@@ -53,12 +56,16 @@ class ArgsFormatDesc {
   // 对于其他类型, idx和fold 暂时没有意义
   void Append(AddrType type, int32_t ir_idx = -1, bool folded = false);
 
+  void AppendHiddenInput(HiddenInputType hidden_type);
+
   std::string ToString() const;
 
   graphStatus GetArgsSize(const OpDescPtr &op_desc, size_t &args_size) const;
 
   // 为了方便使用，字符串用i*这样的通配符时，返回的argDesc会按照实际个数展开
   static graphStatus Parse(const OpDescPtr &op_desc, const std::string &str, std::vector<ArgDesc> &arg_descs);
+
+  static std::string Serialize(const std::vector<ArgDesc> &arg_descs);
 
  private:
   std::vector<ArgDesc> arg_descs_;

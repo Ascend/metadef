@@ -15,21 +15,21 @@
  */
 
 #include "graph/args_format_desc.h"
-
-#include "common/checker.h"
-#include "common/ge_common/debug/ge_log.h"
-#include "graph/op_desc.h"
-#include "graph/utils/op_desc_utils.h"
 #include <cstring>
 #include <functional>
 #include <map>
 #include <sstream>
+#include "common/checker.h"
+#include "common/ge_common/debug/ge_log.h"
+#include "graph/op_desc.h"
+#include "graph/utils/op_desc_utils.h"
 
 namespace ge {
 constexpr size_t kMaxDimNum = 25UL;
 constexpr size_t kMaxWorkspaceNum = 16UL;
 constexpr int32_t kDecimalCarry = 10;
 constexpr int32_t kAsciiZero = 48;
+constexpr const char_t *kHiddenTypeHcom = "hi.hcom";
 
 using ParseFunc =
     std::function<graphStatus(const OpDescPtr &, const std::string &, const AddrType type, std::vector<ArgDesc> &)>;
@@ -54,6 +54,15 @@ graphStatus DefaultParser(const OpDescPtr &op_desc, const std::string &pattern_s
                           std::vector<ArgDesc> &args_desc) {
   (void) op_desc;
   (void) pattern_str;
+  args_desc.push_back({type, -1, false, {0}});
+  return GRAPH_SUCCESS;
+}
+
+graphStatus PlaceholderParser(const OpDescPtr &op_desc, const std::string &pattern_str, const AddrType type,
+                              std::vector<ArgDesc> &args_desc) {
+  (void) op_desc;
+  (void) pattern_str;
+  GE_ASSERT(pattern_str.empty(), "Args format [%s] matched failed, it may be unsupported.", pattern_str.c_str());
   args_desc.push_back({type, -1, false, {0}});
   return GRAPH_SUCCESS;
 }
@@ -336,6 +345,24 @@ graphStatus IODescParser(const OpDescPtr &op_desc, const std::string &pattern_st
   return GRAPH_SUCCESS;
 }
 
+graphStatus HiddenInputParser(const OpDescPtr &op_desc, const std::string &pattern_str, const AddrType type,
+                              std::vector<ArgDesc> &arg_descs) {
+  (void) op_desc;
+  if (strncmp(pattern_str.c_str(), kHiddenTypeHcom, pattern_str.length()) == 0) {
+    arg_descs.push_back({type, static_cast<int32_t>(HiddenInputType::HCOM), false, {0}});
+    return GRAPH_SUCCESS;
+  }
+  GELOGE(GRAPH_FAILED, "Hidden input type [%s] is unsupported.", pattern_str.c_str());
+  return GRAPH_FAILED;
+}
+
+void HiddenInputSerializer(std::stringstream &ss, const std::string &pattern, const ArgDesc &arg_desc) {
+  ss << pattern;
+  if (static_cast<HiddenInputType>(arg_desc.ir_idx) == HiddenInputType::HCOM) {
+    ss << ".hcom";
+  }
+}
+
 struct PatternCmp {
   bool operator()(const std::string &lhs, const std::string &rhs) const {
     return lhs.size() >= rhs.size();
@@ -343,33 +370,29 @@ struct PatternCmp {
 };
 
 static const std::map<std::string, PatternHandler, PatternCmp> kPatternToHandler = {
-    {"i", {&InputParser, &InputCalcSize, ArrayLikeSerializer, AddrType::INPUT}},
-    {"o", {&OutputParser, &OutputCalcSize, ArrayLikeSerializer, AddrType::OUTPUT}},
-    {"ws", {&WorkspaceParser, &WorkspaceCalcSize, ArrayLikeSerializer, AddrType::WORKSPACE}},
-    {"t", {&DefaultParser, &DefaultCalcSize, DefaultSerializer, AddrType::TILING}},
-    {"i_desc", {&IODescParser, &InputDescCalcSize, ArrayLikeSerializer, AddrType::INPUT_DESC}},
-    {"o_desc", {&IODescParser, &OutputDescCalcSize, ArrayLikeSerializer, AddrType::OUTPUT_DESC}},
-    {"ffts_addr", {&DefaultParser, &DefaultCalcSize, DefaultSerializer, AddrType::FFTS_ADDR}},
-    {"overflow_addr", {&DefaultParser, &DefaultCalcSize, DefaultSerializer, AddrType::OVERFLOW_ADDR}},
-    {"t_ffts", {&DefaultParser, &DefaultCalcSize, FftsTilingSerializer, AddrType::TILING_FFTS}},
+    {"i", {InputParser, InputCalcSize, ArrayLikeSerializer, AddrType::INPUT}},
+    {"o", {OutputParser, OutputCalcSize, ArrayLikeSerializer, AddrType::OUTPUT}},
+    {"ws", {WorkspaceParser, WorkspaceCalcSize, ArrayLikeSerializer, AddrType::WORKSPACE}},
+    {"t", {DefaultParser, DefaultCalcSize, DefaultSerializer, AddrType::TILING}},
+    {"i_desc", {IODescParser, InputDescCalcSize, ArrayLikeSerializer, AddrType::INPUT_DESC}},
+    {"o_desc", {IODescParser, OutputDescCalcSize, ArrayLikeSerializer, AddrType::OUTPUT_DESC}},
+    {"ffts_addr", {DefaultParser, DefaultCalcSize, DefaultSerializer, AddrType::FFTS_ADDR}},
+    {"overflow_addr", {DefaultParser, DefaultCalcSize, DefaultSerializer, AddrType::OVERFLOW_ADDR}},
+    {"t_ffts", {DefaultParser, DefaultCalcSize, FftsTilingSerializer, AddrType::TILING_FFTS}},
+    {"hi", {HiddenInputParser, DefaultCalcSize, HiddenInputSerializer, AddrType::HIDDEN_INPUT}},
+    {"", {PlaceholderParser, DefaultCalcSize, DefaultSerializer, AddrType::PLACEHOLDER}},
 };
 
 void ArgsFormatDesc::Append(AddrType type, int32_t ir_idx, bool folded) {
   arg_descs_.push_back({type, ir_idx, folded, {0}});
 }
 
+void ArgsFormatDesc::AppendHiddenInput(HiddenInputType hidden_type) {
+  arg_descs_.push_back({AddrType::HIDDEN_INPUT, static_cast<int32_t>(hidden_type), false, {0}});
+}
+
 std::string ArgsFormatDesc::ToString() const {
-  std::stringstream ss;
-  for (const auto &arg_desc : arg_descs_) {
-    for (const auto &iter : kPatternToHandler) {
-      if (iter.second.type == arg_desc.addr_type) {
-        ss << '{';
-        iter.second.serialize(ss, iter.first, arg_desc);
-        ss << '}';
-      }
-    }
-  }
-  return ss.str();
+  return Serialize(arg_descs_);
 }
 
 graphStatus ArgsFormatDesc::GetArgsSize(const OpDescPtr &op_desc, size_t &args_size) const {
@@ -404,13 +427,25 @@ graphStatus ArgsFormatDesc::Parse(const OpDescPtr &op_desc, const std::string &s
             break;
           }
         }
-        GE_ASSERT(parsed, "arg format [%s] is unsupported.", pattern_str.c_str());
-        break;
       }
       ++end_idx;
     }
     GE_ASSERT(parsed, "SyntaxError: argsformat should be surrounded by '{','}'");
   }
   return GRAPH_SUCCESS;
+}
+
+std::string ArgsFormatDesc::Serialize(const std::vector<ArgDesc> &arg_descs) {
+  std::stringstream ss;
+  for (const auto &arg_desc : arg_descs) {
+    for (const auto &iter : kPatternToHandler) {
+      if (iter.second.type == arg_desc.addr_type) {
+        ss << '{';
+        iter.second.serialize(ss, iter.first, arg_desc);
+        ss << '}';
+      }
+    }
+  }
+  return ss.str();
 }
 }  // namespace ge
