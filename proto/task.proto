@@ -901,6 +901,7 @@ message QueueInfo {
     int32 trans_id = 4;
     int32 route_label = 5;
     uint32 choose_logic_id = 6;
+    uint32 root_model_id = 7;
 }
 
 message FlowgwRequest {
