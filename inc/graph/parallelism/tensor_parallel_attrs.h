@@ -363,6 +363,20 @@ struct NodeSliceStrategy {
   size_t size = 1U;
 };
 
+struct ShardGraphExtAttrs {
+  // ExtAttr _device_index_to_logic_device_id, key is DeviceIndex, value is logic device id
+  std::map<DeviceIndex, std::vector<int32_t>> dev_index_to_logic_dev_id;
+  // ExtAttr _model_events, key1 is graph name, key2 is endpoint name, value is serialized endpoints
+  std::map<std::string, std::map<std::string, std::vector<std::string>>> graph_name_to_endpoints;
+  // ExtAttr _hcomgroups, key is group name, value is device ids
+  std::map<std::string, std::vector<std::string>> group_name_to_dev_ids;
+};
+
+struct ShardGraphNameToExtAttrs {
+  // key is graph name
+  std::map<std::string, ShardGraphExtAttrs> shard_graph_names_to_ext_attrs;
+};
+
 class TensorParallelAttrs {
  public:
   static Status FromJson(const std::string &json_str, DeviceIndex &device_index);
@@ -376,6 +390,7 @@ class TensorParallelAttrs {
   static Status FromJson(const std::string &json_str, CommStep &comm_step);
   static Status FromJson(const std::string &json_str, OutputReshardRes &output_reshard_res);
   static Status FromJson(const std::string &json_str, ReshardAttr &reshard_attr);
+  static Status FromJson(const std::string &json_str, ShardGraphNameToExtAttrs &shard_graph_name_to_ext_attrs);
 
   static std::string ToJson(const NodeDeployment &node_deployment);
   static std::string ToJson(const DeviceIndex &device_index);
@@ -385,6 +400,7 @@ class TensorParallelAttrs {
   static std::string ToJson(const NodeDeployments &node_deployments);
   static std::string ToJson(const ReshardAttr &reshard_attr);
   static std::string ToJson(const TensorDeployments &tensor_deployments);
+  static std::string ToJson(const ShardGraphNameToExtAttrs &shard_graph_name_to_ext_attrs);
 };
 }  // namespace tp
 }  // namespace ge

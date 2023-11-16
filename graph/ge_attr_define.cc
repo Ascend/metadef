@@ -1433,6 +1433,8 @@ const std::string ATTR_NAME_MODEL_INDEX_TO_LOGIC_DEVICE_ID = "_model_index_to_lo
 const std::string ATTR_NAME_ORIGINAL_CONST_NAME = "_original_const_name";
 const std::string ATTR_NAME_DEPLOY_DEVICE_LIST = "_deploy_device_list";
 const std::string ATTR_NAME_RECOMPUTE_MODE = "_recompute_mode";
+const std::string ATTR_NAME_MODEL_EVENTS = "_model_events";
+const std::string ATTR_NAME_HCOM_GROUPS = "_hcom_groups";
 
 // for tensor parallelism
 const std::string ATTR_NAME_TP_RESHARD_ATTR = "_reshard_attr";
