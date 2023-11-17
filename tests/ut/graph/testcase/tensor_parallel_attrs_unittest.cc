@@ -824,6 +824,61 @@ TEST_F(TensorParallelAttrsTest, NodeDeploymentsToAndFromJson) {
   EXPECT_TRUE(devices[1].engine_type == "NPU");
 }
 
+TEST_F(TensorParallelAttrsTest, ShardGraphExtAttrsClusterToAndFromJson) {
+  const std::string &json_str =
+      R"(
+{
+	"shard_graph_names_to_ext_attrs": {
+		"test_graph1": {
+			"dev_index_to_logic_dev_id": [
+				[{
+						"engine_type": "NPU",
+						"index": [0, 0, 0]
+					},
+					[1, 0, 0]
+				],
+				[{
+						"engine_type": "NPU",
+						"index": [0, 0, 1]
+					},
+					[1, 0, 1]
+				]
+			],
+			"graph_name_to_endpoints": {
+				"test_graph1": {
+					"endpoint1": ["SerializedString1"],
+					"endpoint2": ["SerializedString2"]
+				},
+				"test_graph2": {
+					"endpoint1": ["SerializedString3"],
+					"endpoint2": ["SerializedString4"]
+				}
+			},
+			"group_name_to_dev_ids": {
+				"group1": ["0:0:0:0", "0:0:1:0"],
+				"group2": ["0:0:0:1", "0:0:1:1"]
+			}
+		}
+	}
+}
+)";
+  ShardGraphNameToExtAttrs shard_graph_name_to_ext_attrs;
+  ASSERT_EQ(TensorParallelAttrs::FromJson(json_str, shard_graph_name_to_ext_attrs), SUCCESS);
+  const auto str = TensorParallelAttrs::ToJson(shard_graph_name_to_ext_attrs);
+  ShardGraphNameToExtAttrs shard_graph_name_to_ext_attrs_from_json;
+  ASSERT_EQ(TensorParallelAttrs::FromJson(str, shard_graph_name_to_ext_attrs_from_json), SUCCESS);
+  ASSERT_EQ(shard_graph_name_to_ext_attrs_from_json.shard_graph_names_to_ext_attrs.size(),
+            shard_graph_name_to_ext_attrs.shard_graph_names_to_ext_attrs.size());
+  for (const auto &item : shard_graph_name_to_ext_attrs_from_json.shard_graph_names_to_ext_attrs) {
+    const auto &graph_name_from_json = item.first;
+    const auto &ext_attrs_from_json = item.second;
+    const auto &ext_attrs = shard_graph_name_to_ext_attrs.shard_graph_names_to_ext_attrs[graph_name_from_json];
+    EXPECT_EQ(ext_attrs_from_json.graph_name_to_endpoints, ext_attrs.graph_name_to_endpoints);
+    EXPECT_EQ(ext_attrs_from_json.dev_index_to_logic_dev_id, ext_attrs.dev_index_to_logic_dev_id);
+    EXPECT_EQ(ext_attrs_from_json.group_name_to_dev_ids, ext_attrs.group_name_to_dev_ids);
+  }
+}
+
 TEST_F(TensorParallelAttrsTest, StructCmp) {
   SrcNodeInfo src_node_info;
   src_node_info.inserted_node_id = 0;

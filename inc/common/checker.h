@@ -49,6 +49,9 @@ struct ErrorResult {
   operator std::vector<T>() const {
     return {};
   }
+  operator std::string() const {
+    return "";
+  }
 };
 
 inline std::vector<char> CreateErrorMsg(const char *format, ...) {
