@@ -4028,6 +4028,83 @@
       "ErrCode": "EZ9903",
       "ErrMessage": "%s",
       "Arglist": "message"
+    },
+    {
+      "errClass": "Operator Errors",
+      "errTitle": "Invalid Input Shape",
+      "ErrCode": "EZ0001",
+      "ErrMessage": "OP[%s] %sth input has incorrect shape[: %s], it should be[: %s].",
+      "Arglist": "op_name, index, incorrect_shape, correct_shape",
+      "suggestion": {
+        "Possible Cause": "N/A",
+        "Solution": "1. Check whether the input shape is correct.\n2. Dump GE Graph, find error node in graph and check the shape."
+      }
+    },
+    {
+      "errClass": "Operator Errors",
+      "errTitle": "Invalid Attr",
+      "ErrCode": "EZ0002",
+      "ErrMessage": "OP[%s] attr[: %s], has incorrect value[: %s], it should be[: %s].",
+      "Arglist": "op_name, attr_name, incorrect_val, correct_val",
+      "suggestion": {
+        "Possible Cause": "N/A",
+        "Solution": "1. Check the value of the attribute in this api."
+      }
+    },
+    {
+      "errClass": "Operator Errors",
+      "errTitle": "Invalid Attr Size",
+      "ErrCode": "EZ0003",
+      "ErrMessage": "OP[%s] attr[: %s], has incorrect size[: %s], it should be[: %s].",
+      "Arglist": "op_name, attr_name, incorrect_size, correct_size",
+      "suggestion": {
+        "Possible Cause": "N/A",
+        "Solution": "1. Check the size of the attribute in this api"
+      }
+    },
+    {
+      "errClass": "Operator Errors",
+      "errTitle": "Invalid Input",
+      "ErrCode": "EZ0004",
+      "ErrMessage": "OP[%s] get [%s] failed.",
+      "Arglist": "op_name, param_name",
+      "suggestion": {
+        "Possible Cause": "N/A",
+        "Solution": "1. Check the input information of the operator.\n2. Dump GE Graph and check the input in graph."
+      }
+    },
+    {
+      "errClass": "Operator Errors",
+      "errTitle": "Invalid Input ShapeSize",
+      "ErrCode": "EZ0005",
+      "ErrMessage": "OP[%s] %sth input has incorrect shape size[: %s], it should be[: %s].",
+      "Arglist": "op_name, index, incorrect_size, correct_size",
+      "suggestion": {
+        "Possible Cause": "N/A",
+        "Solution": "1. Check input dimensions.\n2. Dump GE Graph, find error node in graph and check input dimension."
+      }
+    },
+    {
+      "errClass": "Operator Errors",
+      "errTitle": "Invalid Input Format",
+      "ErrCode": "EZ0006",
+      "ErrMessage": "OP[%s] %s has incorrect format[: %s], it should be %s.",
+      "Arglist": "op_name, param_name, data_format, expected_format_list",
+      "suggestion": {
+        "Possible Cause": "N/A",
+        "Solution": "1. Check input format.\n2. Dump GE Graph, find error node in graph and check input format."
+      }
+    },
+    {
+      "errClass": "Operator Errors",
+      "errTitle": "Invalid Input Dtype",
+      "ErrCode": "EZ0007",
+      "ErrMessage": "OP[%s] %s has incorrect dtype[: %s], it should be %s.",
+      "Arglist": "op_name, param_name, data_dtype, expected_dtype_list",
+      "suggestion": {
+        "Possible Cause": "N/A",
+        "Solution": "1. Check input dtype.\n2. Dump GE Graph, find error node in graph and check input dtype."
+      }
     }
   ]
 }
