@@ -26,6 +26,8 @@ const std::string ATTR_NAME_IS_UNKNOWN_SHAPE = "_is_unknown_shape";
 
 const std::string ATTR_NAME_DYNAMIC_SHAPE_PARTITIONED = "_dynamic_shape_partitioned";
 
+const std::string ATTR_NAME_GRAPH_UNKNOWN_FLAG = "_graph_unknown_flag";
+
 const std::string ATTR_NAME_UNKNOWN_SHAPE_TYPE = "_unknown_shape_type";
 
 const std::string ATTR_NAME_NAME = "name";

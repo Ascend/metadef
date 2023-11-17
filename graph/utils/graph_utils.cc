@@ -2197,7 +2197,6 @@ graphStatus GraphUtils::CopyMembers(const ComputeGraphPtr &src_compute_graph,
 
   // copy other members from old graph to new graph.
   dst_compute_graph->impl_->data_format_ = src_compute_graph->impl_->data_format_;
-  dst_compute_graph->impl_->is_unknown_shape_graph_ = src_compute_graph->impl_->is_unknown_shape_graph_;
   dst_compute_graph->impl_->need_iteration_ = src_compute_graph->impl_->need_iteration_;
   dst_compute_graph->impl_->is_summary_graph_ = src_compute_graph->impl_->is_summary_graph_;
   dst_compute_graph->impl_->is_valid_flag_ = src_compute_graph->impl_->is_valid_flag_;

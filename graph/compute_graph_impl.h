@@ -110,9 +110,6 @@ class ComputeGraphImpl {
   void SetInputSize(const uint32_t size) { input_size_ = size; }
   uint32_t GetInputSize() const { return input_size_; }
 
-  // false: known shape  true: unknow shape
-  bool GetGraphUnknownFlag() const { return is_unknown_shape_graph_; }
-  void SetGraphUnknownFlag(const bool flag) { is_unknown_shape_graph_ = flag; }
   void SetNeedIteration(const bool need_iteration) { need_iteration_ = need_iteration; }
   bool GetNeedIteration() const { return need_iteration_; }
 
@@ -266,8 +263,6 @@ class ComputeGraphImpl {
   std::map<uint32_t, std::string> op_name_map_;
   uint64_t session_id_ = 0UL;
   ge::Format data_format_ = ge::FORMAT_ND;
-  // unknown graph indicator, default is false, mean known shape
-  bool is_unknown_shape_graph_ = false;
   // Graph Before BFE
   ComputeGraphPtr origGraph_;
   std::weak_ptr<Node> graph_netoutput_;
