@@ -338,4 +338,17 @@ TEST_F(FlowGraphUTest, FlowGraph_FlowGraphImpl_nullptr) {
   flow_graph2.SetInputs({data0}).SetOutputs(output_indexes);
   ASSERT_EQ(flow_graph2.ToGeGraph().IsValid(), false);
 }
+
+TEST_F(FlowGraphUTest, FlowGraph_FlowGraphImpl_IndexOverOutSize) {
+  auto data0 = FlowData("Data0", 0);
+  auto flow_node = FlowNode("FlowNode", 1, 1);
+  flow_node.SetInput(0, data0);
+  auto flow_graph = FlowGraph("flow_graph");
+
+  std::vector<std::pair<FlowOperator, std::vector<size_t>>> output_indexes;
+  std::vector<size_t> part_out{1};
+  output_indexes.emplace_back(flow_node, part_out);
+  flow_graph.SetInputs({data0}).SetOutputs(output_indexes);
+  ASSERT_EQ(flow_graph.ToGeGraph().IsValid(), false);
+}
 }  // namespace ge
