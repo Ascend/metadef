@@ -33,6 +33,9 @@ class OpDefUT : public testing::Test {
 TEST_F(OpDefUT, Construct) {
   OpDef opDef("Test");
   opDef.Input("x1").DataType({ge::DT_FLOAT16});
+  opDef.Input("x2").DataType({ge::DT_FLOAT16}).Scalar().To("x3");
+  opDef.Input("x3").DataType({ge::DT_FLOAT});
+  opDef.Input("x4").DataType({ge::DT_FLOAT}).ScalarList().To(ge::DT_INT32);
   opDef.Output("y").DataType({ge::DT_FLOAT16});
   opDef.SetInferShape(ge::InferShape4AddAscendC);
   opDef.SetInferShapeRange(ge::InferShapeRange4AddAscendC);
@@ -49,7 +52,7 @@ TEST_F(OpDefUT, Construct) {
   aicConfig.ExtendCfgInfo("rangeLimit.value", "limited");
   EXPECT_EQ(ge::AscendString("Test"), opDef.GetOpType());
   std::vector<OpParamDef> inputs = opDef.GetMergeInputs(aicConfig);
-  EXPECT_EQ(inputs.size(), 1);
+  EXPECT_EQ(inputs.size(), 4);
   OpParamDef param = inputs[0];
   EXPECT_EQ(param.GetParamName(), ge::AscendString("x1"));
   EXPECT_EQ(param.GetParamType(), Option::OPTIONAL);
@@ -57,6 +60,11 @@ TEST_F(OpDefUT, Construct) {
   EXPECT_EQ(param.GetFormats()[0], ge::FORMAT_ND);
   EXPECT_EQ(param.GetUnknownShapeFormats()[0], ge::FORMAT_ND);
   EXPECT_EQ(param.GetValueDepend(), ge::AscendString("required"));
+  EXPECT_EQ(inputs[1].IsScalar(), true);
+  EXPECT_EQ(inputs[3].IsScalarList(), true);
+  EXPECT_EQ(inputs[1].GetDataTypes()[0], ge::DT_FLOAT);
+  EXPECT_EQ(inputs[3].GetDataTypes()[0], ge::DT_INT32);
+  EXPECT_EQ(inputs[3].GetScalarType(), ge::DT_INT32);
   std::vector<OpParamDef> outputs = opDef.GetMergeOutputs(aicConfig);
   EXPECT_EQ(outputs.size(), 1);
   OpParamDef paramOut = outputs[0];
@@ -68,7 +76,7 @@ TEST_F(OpDefUT, Construct) {
       .DataType({ge::DT_FLOAT})
       .Format({ge::FORMAT_ND, ge::FORMAT_NCHW});
   inputs = opDef.GetMergeInputs(aicConfig);
-  EXPECT_EQ(inputs.size(), 1);
+  EXPECT_EQ(inputs.size(), 4);
   param = inputs[0];
   EXPECT_EQ(param.GetDataTypes().size(), 1);
   EXPECT_EQ(param.GetFormats().size(), 2);

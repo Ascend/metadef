@@ -168,11 +168,13 @@ REGISTER_TILING_DATA_CLASS(MaxPool, MaxPoolTilingData)
    public:                                                                                                             \
     class_name() {                                                                                                     \
       class_name_ = #class_name;                                                                                       \
+      CheckAlignAndGenPlaceHolder(#class_name"PH", 8);                                                                 \
       StructSizeInfoBase::GetInstance().SetStructSize(#class_name, data_size_);                                        \
       InitData();                                                                                                      \
     }                                                                                                                  \
     class_name(void *ptr) {                                                                                            \
       class_name_ = #class_name;                                                                                       \
+      CheckAlignAndGenPlaceHolder(#class_name"PH", 8);                                                                 \
       StructSizeInfoBase::GetInstance().SetStructSize(#class_name, data_size_);                                        \
       if (ptr == nullptr) {                                                                                            \
         return;                                                                                                        \

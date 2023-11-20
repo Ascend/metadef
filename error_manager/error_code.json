@@ -2025,6 +2025,94 @@
       }
     },
     {
+      "errClass": "MdatDeploy Errors",
+      "errTitle": "Invalid Numa Configuration",
+      "ErrCode": "EF2001",
+      "ErrMessage": "Numa Configuration is incorrect.",
+      "Arglist": "",
+      "suggestion": {
+        "Possible Cause": "Invalid format in numa_config.json",
+        "Solution": "Set the environment variable or resource file correctly."
+      }
+    },
+    {
+      "errClass": "MdatDeploy Errors",
+      "errTitle": "Invalid Graph Parallel Option Configuration",
+      "ErrCode": "EF2002",
+      "ErrMessage": "Configuration of graph parallel option is incorrect.",
+      "Arglist": "",
+      "suggestion": {
+        "Possible Cause": "Tensor parallel size or data parallel size is incorrect.",
+        "Solution": "Make sure the options in graph_parallel_option.json are correct: 1. If both tensor_parallel_option and data_parallel_option are set, the total parallel size (i.e. tensor_parallel_size * data_parallel_size) must equal the total device num in numa_config.json; 2. If only either tensor_parallel_option or data_parallel_option is set, the tensor_parallel_size or data_parallel_size must equal the total device num in numa_config.json."
+      }
+    },
+    {
+      "errClass": "MdatDeploy Errors",
+      "errTitle": "Dynamic Shape Not Supported",
+      "ErrCode": "EF2003",
+      "ErrMessage": "Dynamic shape is not allowed in computation graphs.",
+      "Arglist": "",
+      "suggestion": {
+        "Possible Cause": "Graph contains operations with dynamic shape, which is not supported.",
+        "Solution": "Graph contains operations with dynamic shape, which is not supported by MDAT."
+      }
+    },
+    {
+      "errClass": "MdatDeploy Errors",
+      "errTitle": "Invalid Slice Number for a Node",
+      "ErrCode": "EF2004",
+      "ErrMessage": "The slice number %s that you set for node %s (%s) is invalid.",
+      "Arglist": "slice_num,node_name,node_type",
+      "suggestion": {
+        "Possible Cause": "An invalid character string is set as the slice number for the node.",
+        "Solution": "Set the slice number to a positive integer, or do not set the slice number at all, in which case the default slice number will be used."
+      }
+    },
+    {
+      "errClass": "MdatDeploy Errors",
+      "errTitle": "Unsupported Attribute for a Node",
+      "ErrCode": "EF2005",
+      "ErrMessage": "The attribute _process_node_engine_id marked as %s for node %s (%s) is invalid.",
+      "Arglist": "process_node_engine_id, node_name, node_type",
+      "suggestion": {
+        "Possible Cause": "The attribute _process_node_engine_id is marked with value other than 'NPU' for the node.",
+        "Solution": "Unset the attribute _process_node_engine_id in the compute graph or set the value to 'NPU'."
+      }
+    },
+    {
+      "errClass": "MdatDeploy Errors",
+      "errTitle": "Invalid Memory Budget for Recompute",
+      "ErrCode": "EF2006",
+      "ErrMessage": "The memory budget for recompute is %s, not larger than zero.",
+      "Arglist": "memory_budget",
+      "suggestion": {
+        "Possible Cause": "The memory budget for recompute is not larger than zero.",
+        "Solution": "The memory budget for recompute must larger than zero."
+      }
+    },
+    {
+      "errClass": "MdatDeploy Errors",
+      "errTitle": "Invalid GE graph",
+      "ErrCode": "EF2007",
+      "ErrMessage": "Invalid GE graph.",
+      "Arglist": "",
+      "suggestion": {
+        "Possible Cause": "The input GE graph may have folowing problems: 1. graph is cyclic; 2. missing some necessary op info and etc.",
+        "Solution": "Make sure the input ge graph is correct and have compelet information."
+      }
+    },
+    {
+      "errClass": "MdatDeploy Errors",
+      "errTitle": "Graph Pattern Matching Failed",
+      "ErrCode": "EF2008",
+      "ErrMessage": "Graph pattern with [%s] matching failed.",
+      "Arglist": "pattern",
+      "suggestion": {
+        "Possible Cause": "The input graph may not meet the specific pattern.",
+        "Solution": "Make sure the input graph is correct and have specific pattern."
+      }
+    },
+    {
       "errClass": "DVPP Errors",
       "errTitle": "Invalid Argument",
       "ErrCode": "EN0001",
@@ -2275,6 +2363,17 @@
       "suggestion": {
         "Possible Cause": "N/A",
         "Solution": "Install the same CANN version."
+      }
+    },
+    {
+      "errClass": "HCCL Errors",
+      "errTitle": "Transport Init Error",
+      "ErrCode": "EI0009",
+      "ErrMessage": "Transport init error. Reason: %s",
+      "Arglist": "reason",
+      "suggestion": {
+        "Possible Cause": "N/A",
+        "Solution": "Check other NPUs that are not reporting errors, or check if there are any abnormalities on the other end's NPU."
       }
     },
     {
@@ -3929,6 +4028,83 @@
       "ErrCode": "EZ9903",
       "ErrMessage": "%s",
       "Arglist": "message"
+    },
+    {
+      "errClass": "Operator Errors",
+      "errTitle": "Invalid Input Shape",
+      "ErrCode": "EZ0001",
+      "ErrMessage": "OP[%s] %sth input has incorrect shape[: %s], it should be[: %s].",
+      "Arglist": "op_name, index, incorrect_shape, correct_shape",
+      "suggestion": {
+        "Possible Cause": "N/A",
+        "Solution": "1. Check whether the input shape is correct.\n2. Dump GE Graph, find error node in graph and check the shape."
+      }
+    },
+    {
+      "errClass": "Operator Errors",
+      "errTitle": "Invalid Attr",
+      "ErrCode": "EZ0002",
+      "ErrMessage": "OP[%s] attr[: %s], has incorrect value[: %s], it should be[: %s].",
+      "Arglist": "op_name, attr_name, incorrect_val, correct_val",
+      "suggestion": {
+        "Possible Cause": "N/A",
+        "Solution": "1. Check the value of the attribute in this api."
+      }
+    },
+    {
+      "errClass": "Operator Errors",
+      "errTitle": "Invalid Attr Size",
+      "ErrCode": "EZ0003",
+      "ErrMessage": "OP[%s] attr[: %s], has incorrect size[: %s], it should be[: %s].",
+      "Arglist": "op_name, attr_name, incorrect_size, correct_size",
+      "suggestion": {
+        "Possible Cause": "N/A",
+        "Solution": "1. Check the size of the attribute in this api"
+      }
+    },
+    {
+      "errClass": "Operator Errors",
+      "errTitle": "Invalid Input",
+      "ErrCode": "EZ0004",
+      "ErrMessage": "OP[%s] get [%s] failed.",
+      "Arglist": "op_name, param_name",
+      "suggestion": {
+        "Possible Cause": "N/A",
+        "Solution": "1. Check the input information of the operator.\n2. Dump GE Graph and check the input in graph."
+      }
+    },
+    {
+      "errClass": "Operator Errors",
+      "errTitle": "Invalid Input ShapeSize",
+      "ErrCode": "EZ0005",
+      "ErrMessage": "OP[%s] %sth input has incorrect shape size[: %s], it should be[: %s].",
+      "Arglist": "op_name, index, incorrect_size, correct_size",
+      "suggestion": {
+        "Possible Cause": "N/A",
+        "Solution": "1. Check input dimensions.\n2. Dump GE Graph, find error node in graph and check input dimension."
+      }
+    },
+    {
+      "errClass": "Operator Errors",
+      "errTitle": "Invalid Input Format",
+      "ErrCode": "EZ0006",
+      "ErrMessage": "OP[%s] %s has incorrect format[: %s], it should be %s.",
+      "Arglist": "op_name, param_name, data_format, expected_format_list",
+      "suggestion": {
+        "Possible Cause": "N/A",
+        "Solution": "1. Check input format.\n2. Dump GE Graph, find error node in graph and check input format."
+      }
+    },
+    {
+      "errClass": "Operator Errors",
+      "errTitle": "Invalid Input Dtype",
+      "ErrCode": "EZ0007",
+      "ErrMessage": "OP[%s] %s has incorrect dtype[: %s], it should be %s.",
+      "Arglist": "op_name, param_name, data_dtype, expected_dtype_list",
+      "suggestion": {
+        "Possible Cause": "N/A",
+        "Solution": "1. Check input dtype.\n2. Dump GE Graph, find error node in graph and check input dtype."
+      }
     }
   ]
 }

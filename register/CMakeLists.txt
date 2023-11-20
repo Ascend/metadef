@@ -28,6 +28,7 @@ set(SRC_LIST
     "ffts_plus_update_manager.cc"
     "ffts_node_converter_registry.cc"
     "ffts_node_calculater_registry.cc"
+    "op_ext_gentask_registry.cc"
     "host_cpu_context.cc"
     "hidden_input_func_registry.cc"
     "tensor_assign.cpp"

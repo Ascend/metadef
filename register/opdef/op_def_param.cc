@@ -36,6 +36,8 @@ OpParamDef::OpParamDef(const OpParamDef &def) : impl_(new(std::nothrow) OpParamD
   this->impl_->auto_contiguous = def.impl_->auto_contiguous;
   this->impl_->is_scalar = def.impl_->is_scalar;
   this->impl_->is_scalar_list = def.impl_->is_scalar_list;
+  this->impl_->scalar_name = def.impl_->scalar_name;
+  this->impl_->scalar_type = def.impl_->scalar_type;
 }
 
 OpParamDef &OpParamDef::operator=(const OpParamDef &def) {
@@ -48,7 +50,9 @@ OpParamDef &OpParamDef::operator=(const OpParamDef &def) {
 void OpParamDef::MergeParam(const OpParamDef &def) {
   this->impl_->param_type = def.impl_->param_type;
   if (def.impl_->types.size() > 0) {
-    this->impl_->types = def.impl_->types;
+    if ((strcmp(this->impl_->scalar_name.GetString(), "") == 0) && (this->impl_->scalar_type == ge::DT_UNDEFINED)) {
+      this->impl_->types = def.impl_->types;
+    }
   }
   if (def.impl_->formats.size() > 0) {
     this->impl_->formats = def.impl_->formats;
@@ -69,6 +73,8 @@ void OpParamDef::MergeParam(const OpParamDef &def) {
   this->impl_->auto_contiguous = def.impl_->auto_contiguous;
   this->impl_->is_scalar = def.impl_->is_scalar;
   this->impl_->is_scalar_list = def.impl_->is_scalar_list;
+  this->impl_->scalar_name = def.impl_->scalar_name;
+  this->impl_->scalar_type = def.impl_->scalar_type;
 }
 
 OpParamDef::~OpParamDef() = default;
@@ -131,6 +137,16 @@ OpParamDef &OpParamDef::ScalarList() {
   return *this;
 }
 
+OpParamDef &OpParamDef::To(const ge::DataType type) {
+  this->impl_->scalar_type = type;
+  return *this;
+}
+
+OpParamDef &OpParamDef::To(const char *name) {
+  this->impl_->scalar_name = name;
+  return *this;
+}
+
 ge::AscendString &OpParamDef::GetParamName(void) {
   return this->impl_->name;
 }
@@ -138,6 +154,11 @@ Option OpParamDef::GetParamType(void) {
   return this->impl_->param_type;
 }
 std::vector<ge::DataType> &OpParamDef::GetDataTypes(void) {
+  if (this->impl_->scalar_type != ge::DT_UNDEFINED) {
+    for (size_t i = 0U; i < this->impl_->types.size(); i++) {
+      this->impl_->types[i] = this->impl_->scalar_type;
+    }
+  }
   return this->impl_->types;
 }
 std::vector<ge::Format> &OpParamDef::GetFormats(void) {
@@ -160,6 +181,12 @@ bool OpParamDef::IsScalar(void) {
 }
 bool OpParamDef::IsScalarList(void) {
   return this->impl_->is_scalar_list;
+}
+ge::AscendString &OpParamDef::GetScalarName(void) {
+  return this->impl_->scalar_name;
+}
+ge::DataType OpParamDef::GetScalarType(void) {
+  return this->impl_->scalar_type;
 }
 
 OpParamDef &OpParamTrunk::Input(const char *name) {

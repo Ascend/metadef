@@ -16,6 +16,8 @@
 
 #include "register/ffts_node_calculater_registry.h"
 #include "register/ffts_node_converter_registry.h"
+#include "register/op_ext_gentask_registry.h"
+#include "proto/task.pb.h"
 #include <gtest/gtest.h>
 
 class FFTSNodeRegistryUnittest : public testing::Test {};
@@ -56,5 +58,16 @@ TEST_F(FFTSNodeRegistryUnittest, SkipCtxRecord_Test) {
   EXPECT_EQ(ctx_type, 3);
   skip_record.ClearRecord();
   EXPECT_EQ(skip_record.GetCtxNum(), 0);
+}
+
+ge::Status TestOpExtGenTask(const ge::Node &node, ge::RunContext &context, std::vector<domi::TaskDef> &tasks) {
+  return ge::SUCCESS;
+}
+
+TEST_F(FFTSNodeRegistryUnittest, OpExtGenTask_test1) {
+  EXPECT_EQ(fe::OpExtGenTaskRegistry::GetInstance().FindRegisterFunc("Conv2D"), nullptr);
+  REGISTER_NODE_EXT_GENTASK("Conv2D", TestOpExtGenTask);
+  auto func = fe::OpExtGenTaskRegistry::GetInstance().FindRegisterFunc("Conv2D");
+  EXPECT_EQ(func, TestOpExtGenTask);
 }
 }
