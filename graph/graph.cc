@@ -432,7 +432,8 @@ Graph &Graph::SetInputs(const std::vector<ge::Operator> &inputs) {
   GE_CHK_BOOL_EXEC(impl_ != nullptr, REPORT_INNER_ERROR("E18888", "graph can not be used, impl is nullptr.");
                    return *this, "[Check][Param] SetInputs failed: graph can not be used, impl is nullptr.");
   GE_CHK_BOOL_EXEC(!inputs.empty(), REPORT_INNER_ERROR("E18888", "input operator size can not be 0");
-                   return *this, "[Check][Param] SetInputs failed: input operator size can not be 0.");
+                   return *this, "[Check][Param] SetInputs failed: input operator size can not be 0, graph: %s",
+                   impl_->GetName().c_str());
   (void)impl_->SetInputs(inputs);
   return *this;
 }
@@ -518,7 +519,7 @@ std::vector<GNode> Graph::GetAllNodes() const {
   const ComputeGraphPtr compute_graph_ptr = impl_->GetComputeGraph();
   if (compute_graph_ptr == nullptr) {
     REPORT_CALL_ERROR("E18888", "impl compute graph is nullptr.");
-    GELOGE(GRAPH_FAILED, "[Get][Graph] GetAllNodes: compute graph ptr is nullptr.");
+    GELOGE(GRAPH_FAILED, "[Get][Graph] GetAllNodes: compute graph ptr is nullptr, graph %s", impl_->GetName().c_str());
     return graph_nodes;
   }
 
@@ -540,7 +541,8 @@ std::vector<GNode> Graph::GetDirectNode() const {
   const ComputeGraphPtr compute_graph_ptr = impl_->GetComputeGraph();
   if (compute_graph_ptr == nullptr) {
     REPORT_CALL_ERROR("E18888", "impl compute graph is nullptr.");
-    GELOGE(GRAPH_FAILED, "[Get][Graph] GetDirectNode: compute graph ptr is nullptr.");
+    GELOGE(GRAPH_FAILED, "[Get][Graph] GetDirectNode: compute graph ptr is nullptr, graph %s",
+           impl_->GetName().c_str());
     return graph_nodes;
   }
 
@@ -781,7 +783,7 @@ GraphPtr Graph::ConstructFromInputs(const std::vector<Operator> &inputs, const A
 
   if (inputs.empty()) {
     REPORT_INNER_ERROR("E18888", "inputs size can not be 0.");
-    GELOGE(GRAPH_FAILED, "[Check][Param] inputs size can not be 0.");
+    GELOGE(GRAPH_FAILED, "[Check][Param] inputs size can not be 0, graph: %s", ascend_name);
     return nullptr;
   }
 
