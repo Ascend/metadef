@@ -1529,7 +1529,6 @@ void ComputeGraphImpl::Swap(ComputeGraphImpl &graph) {
   op_name_map_.swap(graph.op_name_map_);
   std::swap(session_id_, graph.session_id_);
   std::swap(data_format_, graph.data_format_);
-  std::swap(is_unknown_shape_graph_, graph.is_unknown_shape_graph_);
 }
 
 void ComputeGraphImpl::SetNodesOwner(const ComputeGraphPtr &compute_graph) {
@@ -2137,11 +2136,13 @@ GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY uint32_t ComputeGraph::GetInputSi
 
 // false: known shape  true: unknow shape
 GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY bool ComputeGraph::GetGraphUnknownFlag() const {
-  return impl_->GetGraphUnknownFlag();
+  bool is_unknown = false;
+  (void)AttrUtils::GetBool(this, ATTR_NAME_GRAPH_UNKNOWN_FLAG, is_unknown);
+  return is_unknown;
 }
 
 GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY void ComputeGraph::SetGraphUnknownFlag(const bool flag) {
-  impl_->SetGraphUnknownFlag(flag);
+  (void)AttrUtils::SetBool(this, ATTR_NAME_GRAPH_UNKNOWN_FLAG, flag);
 }
 
 GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY void ComputeGraph::SetNeedIteration(const bool need_iteration) {

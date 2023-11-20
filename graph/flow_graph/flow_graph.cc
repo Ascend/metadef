@@ -432,6 +432,18 @@ public:
     for (auto iter = output_indexes.cbegin(); iter != output_indexes.cend(); ++iter) {
       graph_output_indexes.emplace_back(iter->first, iter->second);
     }
+    for (const auto &item : graph_output_indexes) {
+      const Operator &output = item.first;
+      const std::vector<size_t> &indexs = item.second;
+      const size_t out_size = output.GetOutputsSize();
+      for (size_t index : indexs) {
+        if (index >= out_size) {
+          GELOGE(GRAPH_FAILED, "[SetOutputs]Defined index:%zu is equal or bigger than node output size: %zu", index,
+                 out_size);
+          REPORT_INNER_ERROR("E18888", "Defined output index should be smaller than node output size.");
+        }
+      }
+    }
     (void)graph_.SetOutputs(graph_output_indexes);
     return;
   }
