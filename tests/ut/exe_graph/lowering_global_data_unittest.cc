@@ -407,4 +407,12 @@ TEST_F(LoweringGlobalDataUT, GetValueHolersSizeTest) {
   gd.SetUniqueValueHolder("test3", nullptr);
   EXPECT_EQ(gd.GetValueHoldersSize("test3"), 1);
 }
+
+TEST_F(LoweringGlobalDataUT, StaticModelWsSizeTest) {
+  LoweringGlobalData gd;
+  int64_t require_ws_size = 1;
+  gd.SetStaicModelWsSize(require_ws_size);
+  auto result = gd.GetStaticModelWsSize();
+  EXPECT_EQ(result, require_ws_size);
+}
 }  // namespace gert
