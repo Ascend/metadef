@@ -302,6 +302,10 @@ TEST_F(UtestGraph, get_all_graph_nodes) {
   ComputeGraphPtr graph = BuildComputeGraph();
   auto nodes = graph->GetAllNodes();
   EXPECT_EQ(nodes.size(), 5);
+
+  Graph graph2("Test");
+  auto nodes_empty = graph2.GetAllNodes();
+  EXPECT_EQ(nodes_empty.size(), 0);
 }
 
 TEST_F(UtestGraph, SetOutputs_ops) {
