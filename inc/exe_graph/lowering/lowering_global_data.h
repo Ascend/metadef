@@ -70,6 +70,14 @@ class LoweringGlobalData {
   const LoweringOption &GetLoweringOption() const;
   void SetLoweringOption(const LoweringOption &lowering_option);
 
+  void SetStaicModelWsSize(const int64_t require_ws_size) {
+    static_model_ws_size = require_ws_size;
+  }
+
+  int64_t GetStaticModelWsSize() const {
+    return static_model_ws_size;
+  }
+
  private:
   struct HoldersByGraph {
     bg::ValueHolderPtr holders[static_cast<size_t>(ExecuteGraphType::kNum)];
@@ -86,6 +94,7 @@ class LoweringGlobalData {
   HoldersByGraph external_allocators_;
   // todo need delete and change to const_data after const_data is ready
   int64_t model_weight_size_;
+  int64_t static_model_ws_size;
   OpImplSpaceRegistryPtr space_registry_;
   LoweringOption lowering_option_;
 };
