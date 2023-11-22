@@ -42,7 +42,17 @@ public:
 };
 }  // namespace fe
 
-#define REGISTER_NODE_EXT_GENTASK(type, func)                \
+#ifdef __GNUC__
+#define ATTRIBUTE_USED __attribute__((used))
+#else
+#define ATTRIBUTE_USED
+#endif
+
+#define REGISTER_NODE_EXT_GENTASK_COUNTER2(type, func, counter)                  \
   static const fe::OpExtGenTaskRegister g_reg_op_ext_gentask_##counter ATTRIBUTE_USED =  \
       fe::OpExtGenTaskRegister(type, func)
+#define REGISTER_NODE_EXT_GENTASK_COUNTER(type, func, counter)                    \
+  REGISTER_NODE_EXT_GENTASK_COUNTER2(type, func, counter)
+#define REGISTER_NODE_EXT_GENTASK(type, func)                                \
+  REGISTER_NODE_EXT_GENTASK_COUNTER(type, func, __COUNTER__)
 #endif // INC_REGISTER_OP_EXTRA_GENTASK_REGISTRY_H
