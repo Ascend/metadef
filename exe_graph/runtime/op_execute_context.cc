@@ -15,7 +15,7 @@
  */
 
 #include "exe_graph/runtime/op_execute_context.h"
-#include "exe_graph/memory/gert_mem_allocator.h"
+#include "exe_graph/runtime/gert_mem_allocator.h"
 
 namespace gert {
   void *OpExecuteContext::MallocWorkspace(const size_t size) {

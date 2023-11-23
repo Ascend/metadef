@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 #include "exe_graph/runtime/op_execute_context.h"
-#include "exe_graph/memory/gert_mem_allocator.h"
+#include "exe_graph/runtime/gert_mem_allocator.h"
 #include "graph/ge_error_codes.h"
 #include <gtest/gtest.h>
 #include "faker/kernel_run_context_faker.h"
