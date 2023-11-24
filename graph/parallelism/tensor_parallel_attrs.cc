@@ -548,11 +548,6 @@ USED_BY_JSON void to_json(Json &j, const ShardGraphExtAttrs &shard_graph_ext_att
   j["group_name_to_dev_ids"] = shard_graph_ext_attrs.group_name_to_dev_ids;
 }
 
-USED_BY_JSON void to_json(Json &j, const ShardGraphNameToExtAttrs &shard_graph_name_to_ext_attrs) {
-  j = Json();
-  j["shard_graph_names_to_ext_attrs"] = shard_graph_name_to_ext_attrs.shard_graph_names_to_ext_attrs;
-}
-
 USED_BY_JSON void from_json(const Json &j, ShardGraphExtAttrs &shard_graph_ext_attrs) {
   shard_graph_ext_attrs.dev_index_to_logic_dev_id =
       j.at("dev_index_to_logic_dev_id").get<std::map<DeviceIndex, std::vector<int32_t>>>();
@@ -562,18 +557,12 @@ USED_BY_JSON void from_json(const Json &j, ShardGraphExtAttrs &shard_graph_ext_a
       j.at("group_name_to_dev_ids").get<std::map<std::string, std::vector<std::string>>>();
 }
 
-USED_BY_JSON void from_json(const Json &j, ShardGraphNameToExtAttrs &shard_graph_name_to_ext_attrs) {
-  shard_graph_name_to_ext_attrs.shard_graph_names_to_ext_attrs =
-      j.at("shard_graph_names_to_ext_attrs").get<std::map<std::string, ShardGraphExtAttrs>>();
-}
-
 USED_BY_JSON void from_json(const Json &j, ReshardAttr &reshard_attr) {
   reshard_attr.reshard_infos = j.get<std::vector<std::vector<OutputReshardRes>>>();
 }
 
-Status TensorParallelAttrs::FromJson(const std::string &json_str,
-                                     ShardGraphNameToExtAttrs &shard_graph_name_to_ext_attrs) {
-  return ParseFromJson("ShardGraphNameToExtAttrs", json_str, shard_graph_name_to_ext_attrs);
+Status TensorParallelAttrs::FromJson(const std::string &json_str, ShardGraphExtAttrs &shard_graph_ext_attrs) {
+  return ParseFromJson("ShardGraphExtAttrs", json_str, shard_graph_ext_attrs);
 }
 
 Status TensorParallelAttrs::FromJson(const std::string &json_str, DeviceIndex &device_index) {
@@ -626,8 +615,8 @@ Status TensorParallelAttrs::FromJson(const std::string &json_str, NodeDeployment
   return ParseFromJson("NodeDeployment", json_str, node_deployment);
 }
 
-std::string TensorParallelAttrs::ToJson(const ShardGraphNameToExtAttrs &shard_graph_name_to_ext_attrs) {
-  return ToJsonString(shard_graph_name_to_ext_attrs);
+std::string TensorParallelAttrs::ToJson(const ShardGraphExtAttrs &shard_graph_ext_attrs) {
+  return ToJsonString(shard_graph_ext_attrs);
 }
 
 std::string TensorParallelAttrs::ToJson(const DeviceIndex &device_index) {

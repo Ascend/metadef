@@ -372,11 +372,6 @@ struct ShardGraphExtAttrs {
   std::map<std::string, std::vector<std::string>> group_name_to_dev_ids;
 };
 
-struct ShardGraphNameToExtAttrs {
-  // key is graph name
-  std::map<std::string, ShardGraphExtAttrs> shard_graph_names_to_ext_attrs;
-};
-
 class TensorParallelAttrs {
  public:
   static Status FromJson(const std::string &json_str, DeviceIndex &device_index);
@@ -390,7 +385,7 @@ class TensorParallelAttrs {
   static Status FromJson(const std::string &json_str, CommStep &comm_step);
   static Status FromJson(const std::string &json_str, OutputReshardRes &output_reshard_res);
   static Status FromJson(const std::string &json_str, ReshardAttr &reshard_attr);
-  static Status FromJson(const std::string &json_str, ShardGraphNameToExtAttrs &shard_graph_name_to_ext_attrs);
+  static Status FromJson(const std::string &json_str, ShardGraphExtAttrs &shard_graph_ext_attrs);
 
   static std::string ToJson(const NodeDeployment &node_deployment);
   static std::string ToJson(const DeviceIndex &device_index);
@@ -400,7 +395,7 @@ class TensorParallelAttrs {
   static std::string ToJson(const NodeDeployments &node_deployments);
   static std::string ToJson(const ReshardAttr &reshard_attr);
   static std::string ToJson(const TensorDeployments &tensor_deployments);
-  static std::string ToJson(const ShardGraphNameToExtAttrs &shard_graph_name_to_ext_attrs);
+  static std::string ToJson(const ShardGraphExtAttrs &shard_graph_ext_attrs);
 };
 }  // namespace tp
 }  // namespace ge

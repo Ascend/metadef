@@ -1437,6 +1437,7 @@ const std::string ATTR_NAME_DEPLOY_DEVICE_LIST = "_deploy_device_list";
 const std::string ATTR_NAME_RECOMPUTE_MODE = "_recompute_mode";
 const std::string ATTR_NAME_MODEL_EVENTS = "_model_events";
 const std::string ATTR_NAME_HCOM_GROUPS = "_hcom_groups";
+const std::string ATTR_NAME_SHARD_GRAPH_EXT_ATTRS = "_shard_graph_ext_attrs";
 
 // for tensor parallelism
 const std::string ATTR_NAME_TP_RESHARD_ATTR = "_reshard_attr";
