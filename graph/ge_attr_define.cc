@@ -1318,6 +1318,7 @@ const std::string ATTR_NAME_RT_MEMCPY_KIND = "_rt_memcpy_kind";
 
 // for qos
 const std::string ATTR_NAME_QOS_SERVICE_LABEL = "_qos_service_label";
+const std::string ATTR_NAME_PARALLEL_GROUP_ID = "_parallel_group_id";
 
 // for constant folding, mark potential const
 const std::string ATTR_NAME_POTENTIAL_CONST = "_is_potential_const";
