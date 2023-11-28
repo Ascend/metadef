@@ -52,6 +52,7 @@ class ComputeGraph : public std::enable_shared_from_this<ComputeGraph>, public A
   using Vistor = RangeVistor<T, std::shared_ptr<ConstComputeGraph>>;
 
   explicit ComputeGraph(const std::string &name);
+  explicit ComputeGraph(const char_t *name);
   ~ComputeGraph() override;
   ComputeGraph(const ge::ComputeGraph& compute_graph);
   ComputeGraph(ge::ComputeGraph&& compute_graph);
