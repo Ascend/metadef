@@ -1484,6 +1484,9 @@ const std::string ATTR_NAME_ATTACHED_NOTIFY_POLICY = "_attached_notify_policy";
 
 // for static shape reuse operator binary
 const std::string ATTR_NAME_OP_RUN_INFO = "op_run_info";
+const std::string ATTR_NAME_ATOMIC_OP_RUN_INFO = "atomic_op_run_info";
+const std::string ATTR_NAME_MEMSET_NODE = "memset_node_ptr";
+const std::string ATTR_NAME_KERNEL_BIN_ID = "_kernel_bin_id";
 
 // for local reduce
 const std::string REDUCE_OP_ATTR_KEEP_DIMS = "keep_dims";
