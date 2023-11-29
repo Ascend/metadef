@@ -1847,18 +1847,6 @@ GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY ComputeGraph::ComputeGraph(const 
       AttrHolder(),
       impl_(ComGraphMakeShared<ComputeGraphImpl>(name)) {}
 
-GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY ComputeGraph::ComputeGraph(const char_t *name)
-    : enable_shared_from_this(),
-      AttrHolder() {
-  std::string name_str;
-  if (name != nullptr) {
-    name_str = std::string(name);
-  } else {
-    GELOGW("[Check][Param]Input name is nullptr");
-  }
-  impl_ = ComGraphMakeShared<ComputeGraphImpl>(name_str);
-}
-
 ComputeGraph::~ComputeGraph() {}
 
 GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY ComputeGraph::ComputeGraph(const ge::ComputeGraph& compute_graph)
