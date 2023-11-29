@@ -29,15 +29,15 @@ class FrameSelectorUT : public BgTest {
   std::unique_ptr<GraphFrame> de_init_frame;
   void InitTestFrames() {
     root_frame = ValueHolder::GetCurrentFrame();
-    auto init_node = ValueHolder::CreateVoid("Init", {});
+    auto init_node = ValueHolder::CreateVoid<bg::ValueHolder>("Init", {});
     ValueHolder::PushGraphFrame(init_node, "Init");
     init_frame = ValueHolder::PopGraphFrame();
 
-    auto de_init_node = ValueHolder::CreateVoid("DeInit", {});
+    auto de_init_node = ValueHolder::CreateVoid<bg::ValueHolder>("DeInit", {});
     ValueHolder::PushGraphFrame(de_init_node, "DeInit");
     de_init_frame = ValueHolder::PopGraphFrame();
 
-    auto main_node = ValueHolder::CreateVoid(GetExecuteGraphTypeStr(ExecuteGraphType::kMain), {});
+    auto main_node = ValueHolder::CreateVoid<bg::ValueHolder>(GetExecuteGraphTypeStr(ExecuteGraphType::kMain), {});
     ValueHolder::PushGraphFrame(main_node, "Main");
   }
 };

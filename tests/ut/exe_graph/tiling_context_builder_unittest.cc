@@ -195,9 +195,9 @@ TEST_F(TilingContextBuilderUT, BuildWithInputConstSuccess) {
 
   bg::ValueHolder::PopGraphFrame();
   (void)bg::ValueHolder::PushGraphFrame();
-  auto foo = bg::ValueHolder::CreateVoid("Foo", {});
+  auto foo = bg::ValueHolder::CreateVoid<bg::ValueHolder>("Foo", {});
   EXPECT_EQ(foo->GetNode()->GetAllOutDataAnchorsSize(), 0);
-  auto outputs = foo->AppendOutputs(2);
+  auto outputs = foo->AppendOutputs<bg::ValueHolder>(2);
   EXPECT_EQ(outputs.size(), 2);
   EXPECT_EQ(foo->GetNode()->GetAllOutDataAnchorsSize(), 2);
   auto bar = bg::ValueHolder::CreateSingleDataOutput("Bar", outputs);

@@ -25,8 +25,6 @@
 #include "graph/debug/ge_log.h"
 #include "graph/debug/ge_op_types.h"
 #include "graph/utils/graph_utils.h"
-#include "common/util/mem_utils.h"
-#include "graph/utils/node_utils.h"
 #include "common/checker.h"
 
 #include "exe_graph/lowering/exe_graph_attrs.h"
@@ -70,7 +68,7 @@ ge::InDataAnchorPtr EnsureHasDataEdge(const ge::NodePtr &src, int32_t src_index,
   auto src_anchor = src->GetOutDataAnchor(src_index);
   GE_ASSERT_NOTNULL(src_anchor);
   GE_ASSERT_NOTNULL(point.node);
- 
+
   for (const auto &dst_anchor : src_anchor->GetPeerInDataAnchors()) {
     GE_ASSERT_NOTNULL(dst_anchor);
     auto dst_node = dst_anchor->GetOwnerNode();
@@ -345,7 +343,7 @@ ValueHolder::NodeHolderPtr ValueHolder::CreateNode(const char *node_type, const 
   }
   return node;
 }
-ValueHolderPtr ValueHolder::CreateFromNode(ge::NodePtr node, int32_t index, ValueHolderType type) {
+ValueHolderPtr ValueHolder::CreateMateFromNode(NodeHolderPtr node, int32_t index, ValueHolderType type) {
   auto holder = std::shared_ptr<ValueHolder>(new (std::nothrow) ValueHolder());
   GE_ASSERT_NOTNULL(holder);
 
@@ -354,20 +352,9 @@ ValueHolderPtr ValueHolder::CreateFromNode(ge::NodePtr node, int32_t index, Valu
   holder->index_ = index;
   return holder;
 }
-std::vector<ValueHolderPtr> ValueHolder::CreateFromNode(const NodeHolderPtr &node, size_t out_count) {
-  return CreateFromNode(node, 0, out_count);
-}
-std::vector<ValueHolderPtr> ValueHolder::CreateFromNode(const NodeHolderPtr &node, size_t start_index,
-                                                        size_t create_count) {
-  if (node == nullptr) {
-    return {create_count, nullptr};
-  }
-  std::vector<ValueHolderPtr> holders;
-  for (size_t i = 0; i < create_count; ++i) {
-    holders.emplace_back(CreateFromNode(node, static_cast<int32_t>(i + start_index), ValueHolderType::kOutput));
-  }
 
-  return holders;
+void ValueHolder::SetErrorMsg(const char *fmt, va_list arg) {
+  error_msg_ = std::unique_ptr<char[]>(CreateMessage(fmt, arg));
 }
 std::vector<ValueHolderPtr> ValueHolder::CreateDataOutput(const char *node_type,
                                                           const std::vector<ValueHolderPtr> &inputs, size_t out_count) {
@@ -375,12 +362,7 @@ std::vector<ValueHolderPtr> ValueHolder::CreateDataOutput(const char *node_type,
   if (node == nullptr) {
     return {out_count, nullptr};
   }
-  return CreateFromNode(node, out_count);
-}
-ValueHolderPtr ValueHolder::CreateVoid(const char *node_type, const std::vector<ValueHolderPtr> &inputs) {
-  auto node = CreateNode(node_type, inputs, 0);
-  GE_ASSERT_NOTNULL(node);
-  return CreateFromNode(node, -1, ValueHolderType::kOutput);
+  return CreateFromNodeStart<ValueHolder>(node, out_count);
 }
 /**
  * @param data const数据
@@ -395,20 +377,20 @@ ValueHolderPtr ValueHolder::CreateConst(const void *data, size_t size, bool is_s
   GE_ASSERT_SUCCESS(node->GetOpDesc()->SetAttr("is_string", ge::AnyValue::CreateFrom(is_string)));
   GE_ASSERT_TRUE(ge::AttrUtils::SetZeroCopyBytes(node->GetOpDesc(), kConstValue,
                                                  ge::Buffer::CopyFrom(ge::PtrToPtr<void, uint8_t>(data), size)));
-  return CreateFromNode(node, 0, ValueHolderType::kConst);
+  return CreateFromNode<ValueHolder>(node, 0, ValueHolderType::kConst);
 }
 ValueHolderPtr ValueHolder::CreateFeed(int64_t index) {
   auto node = ValueHolder::CreateNode(kData, {}, 1U);
   GE_ASSERT_NOTNULL(node);
   GE_ASSERT_TRUE(ge::AttrUtils::SetInt(node->GetOpDesc(), kFeedIndex, index));
-  return CreateFromNode(node, 0, ValueHolderType::kFeed);
+  return CreateFromNode<ValueHolder>(node, 0, ValueHolderType::kFeed);
 }
 
 ValueHolderPtr ValueHolder::CreateConstData(int64_t index) {
   auto node = ValueHolder::CreateNode(kConstData, {}, 1U);
   GE_ASSERT_NOTNULL(node);
   GE_ASSERT_TRUE(ge::AttrUtils::SetInt(node->GetOpDesc(), kFeedIndex, index));
-  return CreateFromNode(node, 0, ValueHolderType::kConstData);
+  return CreateFromNode<ValueHolder>(node, 0, ValueHolderType::kConstData);
 }
 
 ValueHolderPtr ValueHolder::CreateSingleDataOutput(const char *node_type, const std::vector<ValueHolderPtr> &inputs) {
@@ -548,7 +530,7 @@ ValueHolderPtr ValueHolder::CreateVoidGuarder(const char *node_type, const Value
   inputs.reserve(args.size() + 1);
   inputs.emplace_back(resource);
   inputs.insert(inputs.cend(), args.cbegin(), args.cend());
-  auto ret = CreateVoid(node_type, inputs);
+  auto ret = CreateVoid<ValueHolder>(node_type, inputs);
   GE_ASSERT_NOTNULL(ret);
   GE_ASSERT_NOTNULL(ret->GetNode());
   GE_ASSERT_TRUE(ge::AttrUtils::SetInt(ret->GetNode()->GetOpDesc(), kReleaseResourceIndex, 0));
@@ -568,15 +550,6 @@ void ValueHolder::ReleaseAfter(const ValueHolderPtr &other) {
   }
   AddDependency(other, guarder_);
 }
-std::vector<ValueHolderPtr> ValueHolder::AppendOutputs(size_t append_count) {
-  auto node = node_->shared_from_this();
-  auto start_index = node->GetAllOutDataAnchorsSize();
-  auto ret = ge::NodeUtils::AppendOutputAnchor(node, start_index + append_count);
-  if (ret != ge::GRAPH_SUCCESS) {
-    return {};
-  }
-  return CreateFromNode(node, start_index, append_count);
-}
 std::unique_ptr<GraphFrame> ValueHolder::PopGraphFrame(const std::vector<ValueHolderPtr> &outputs,
                                                        const std::vector<ValueHolderPtr> &targets) {
   const char *node_type = kNetOutput;
@@ -590,7 +563,7 @@ std::unique_ptr<GraphFrame> ValueHolder::PopGraphFrame(const std::vector<ValueHo
                                                        const std::vector<ValueHolderPtr> &targets,
                                                        const char *out_node_type) {
   GE_ASSERT_NOTNULL(out_node_type);
-  auto out_holder = CreateVoid(out_node_type, outputs);
+  auto out_holder = CreateVoid<ValueHolder>(out_node_type, outputs);
   GE_ASSERT_NOTNULL(out_holder);
   if (strcmp(ge::NETOUTPUT, out_node_type) == 0) {
     // the name of NetOutput node must be `NetOutput`
