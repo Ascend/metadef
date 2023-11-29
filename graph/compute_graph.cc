@@ -1306,7 +1306,7 @@ void DelayTopoSort(std::vector<NodePtr> &nodes, const ConstComputeGraphPtr &grap
         nodes.insert(nodes.end(), delay_nodes[i].second.begin(), delay_nodes[i].second.end());
       }
     }
-    GELOGI("Delay %zu nodes.", delay_node_count);
+    GELOGI("Delay %zu nodes for %s.", delay_node_count, graph->GetName().c_str());
   }
 }
 
