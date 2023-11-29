@@ -22,7 +22,7 @@
 #include "common/checker.h"
 #include "node_converter_registry.h"
 #include "graph/node.h"
-#include "exe_graph/lowering/value_holder.h"
+#include "exe_graph/lowering/dev_mem_value_holder.h"
 #include "exe_graph/lowering/lowering_global_data.h"
 
 namespace gert {
@@ -85,7 +85,7 @@ struct SkipCtxRecord {
 
 struct FFTSLowerInput {
   std::vector<bg::ValueHolderPtr> input_shapes;
-  std::vector<bg::ValueHolderPtr> input_addrs;
+  std::vector<bg::DevMemValueHolderPtr> input_addrs;
   std::vector<uint32_t> mem_pool_types;
   LoweringGlobalData *global_data;
   bg::ValueHolderPtr task_info;

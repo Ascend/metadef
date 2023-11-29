@@ -124,8 +124,8 @@ ge::graphStatus ConnectOut(const ge::NodePtr &init_node,
       guarders_and_out_index.emplace_back(guarder, out_index);
     }
 
-    init_node_outputs.emplace_back(ValueHolder::CreateFromNode(init_node, static_cast<int32_t>(out_index),
-                                                               ValueHolder::ValueHolderType::kOutput));
+    init_node_outputs.emplace_back(holder->CreateMateFromNode(init_node, static_cast<int32_t>(out_index),
+                                                              ValueHolder::ValueHolderType::kOutput));
   }
 
   GE_ASSERT_SUCCESS(ge::NodeUtils::AppendOutputAnchor(init_node, index + new_out_num));
@@ -242,7 +242,7 @@ ValueHolderPtr HolderOnInit(const ValueHolderPtr &holder) {
     GE_ASSERT_NOTNULL(src_anchor);
     auto src_node = src_anchor->GetOwnerNode();
     GE_ASSERT_NOTNULL(src_node);
-    return ValueHolder::CreateFromNode(src_node, src_anchor->GetIdx(), ValueHolder::ValueHolderType::kOutput);
+    return holder->CreateMateFromNode(src_node, src_anchor->GetIdx(), ValueHolder::ValueHolderType::kOutput);
   }
 
   const auto holder_graph = holder_node->GetOwnerComputeGraph();

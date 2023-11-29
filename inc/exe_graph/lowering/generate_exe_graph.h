@@ -17,9 +17,10 @@
 #ifndef METADEF_CXX_INC_EXE_GRAPH_LOWERING_GENERATE_EXE_GRAPH_H_
 #define METADEF_CXX_INC_EXE_GRAPH_LOWERING_GENERATE_EXE_GRAPH_H_
 #include <vector>
-#include "value_holder.h"
-#include "lowering_global_data.h"
+
+#include "dev_mem_value_holder.h"
 #include "graph/compute_graph.h"
+#include "lowering_global_data.h"
 namespace gert {
 namespace bg {
 class GenerateExeGraph {
@@ -27,9 +28,10 @@ class GenerateExeGraph {
   struct ExeGraphGenerator {
     using InferShapeFunc = std::vector<ValueHolderPtr> (*)(const ge::NodePtr &node,
                                                            const std::vector<ValueHolderPtr> &shapes);
-    using AllocOutputMemoryFunc = std::vector<ValueHolderPtr> (*)(TensorPlacement placement, const ge::NodePtr &node,
-                                                                  const std::vector<ValueHolderPtr> &output_sizes,
-                                                                  LoweringGlobalData &global_data);
+    using AllocOutputMemoryFunc = std::vector<DevMemValueHolderPtr> (*)(TensorPlacement placement,
+                                                                        const ge::NodePtr &node,
+                                                                        const std::vector<ValueHolderPtr> &output_sizes,
+                                                                        LoweringGlobalData &global_data);
     using CalcTensorSizeFunc = std::vector<ValueHolderPtr> (*)(const ge::NodePtr &node,
                                                                const std::vector<ValueHolderPtr> &output_shapes);
 
@@ -45,9 +47,9 @@ class GenerateExeGraph {
     }
     return generator_.infer_shape(node, shapes);
   }
-  static std::vector<ValueHolderPtr> AllocOutputMemory(TensorPlacement placement, const ge::NodePtr &node,
-                                                       const std::vector<ValueHolderPtr> &output_sizes,
-                                                       LoweringGlobalData &global_data) {
+  static std::vector<DevMemValueHolderPtr> AllocOutputMemory(TensorPlacement placement, const ge::NodePtr &node,
+                                                             const std::vector<ValueHolderPtr> &output_sizes,
+                                                             LoweringGlobalData &global_data) {
     if (generator_.alloc_output_memory == nullptr) {
       return {};
     }

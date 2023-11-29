@@ -15,7 +15,7 @@
  */
 #include "exe_graph/lowering/generate_exe_graph.h"
 #include <gtest/gtest.h>
-#include "exe_graph/lowering/value_holder.h"
+#include "exe_graph/lowering/dev_mem_value_holder.h"
 #include "checker/bg_test.h"
 #include "checker/topo_checker.h"
 namespace gert {
@@ -24,10 +24,10 @@ namespace {
 std::vector<ValueHolderPtr> StubInferShape(const ge::NodePtr &node, const std::vector<ValueHolderPtr> &shapes) {
   return ValueHolder::CreateDataOutput("InferShape", shapes, 10);
 }
-std::vector<ValueHolderPtr> StubAllocOutputMemory(TensorPlacement placement, const ge::NodePtr &node,
-                                                  const std::vector<ValueHolderPtr> &output_sizes,
-                                                  LoweringGlobalData &global_data) {
-  return ValueHolder::CreateDataOutput("AllocOutputMemory", output_sizes, output_sizes.size());
+std::vector<DevMemValueHolderPtr> StubAllocOutputMemory(TensorPlacement placement, const ge::NodePtr &node,
+                                                        const std::vector<ValueHolderPtr> &output_sizes,
+                                                        LoweringGlobalData &global_data) {
+  return DevMemValueHolder::CreateDataOutput("AllocOutputMemory", output_sizes, output_sizes.size(), 0);
 }
 std::vector<ValueHolderPtr> StubCalcTensorSize(const ge::NodePtr &node,
                                                const std::vector<ValueHolderPtr> &output_shapes) {

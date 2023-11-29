@@ -40,29 +40,29 @@ class LoweringGlobalDataUT : public BgTest {
 
   void InitTestFrames() {
     root_frame = bg::ValueHolder::GetCurrentFrame();
-    auto init_node = bg::ValueHolder::CreateVoid("Init", {});
+    auto init_node = bg::ValueHolder::CreateVoid<bg::ValueHolder>("Init", {});
     bg::ValueHolder::PushGraphFrame(init_node, "Init");
     init_frame = bg::ValueHolder::PopGraphFrame();
 
-    auto de_init_node = bg::ValueHolder::CreateVoid("DeInit", {});
+    auto de_init_node = bg::ValueHolder::CreateVoid<bg::ValueHolder>("DeInit", {});
     bg::ValueHolder::PushGraphFrame(de_init_node, "DeInit");
     de_init_frame = bg::ValueHolder::PopGraphFrame();
 
-    auto main_node = bg::ValueHolder::CreateVoid(GetExecuteGraphTypeStr(ExecuteGraphType::kMain), {});
+    auto main_node = bg::ValueHolder::CreateVoid<bg::ValueHolder>(GetExecuteGraphTypeStr(ExecuteGraphType::kMain), {});
     bg::ValueHolder::PushGraphFrame(main_node, "Main");
   }
   void InitTestFramesWithStream(LoweringGlobalData &global_data) {
     root_frame = bg::ValueHolder::GetCurrentFrame();
-    auto init_node = bg::ValueHolder::CreateVoid("Init", {});
+    auto init_node = bg::ValueHolder::CreateVoid<bg::ValueHolder>("Init", {});
     bg::ValueHolder::PushGraphFrame(init_node, "Init");
     global_data.SetStream(bg::ValueHolder::CreateFeed(-1), ExecuteGraphType::kInit);
     init_frame = bg::ValueHolder::PopGraphFrame();
 
-    auto de_init_node = bg::ValueHolder::CreateVoid("DeInit", {});
+    auto de_init_node = bg::ValueHolder::CreateVoid<bg::ValueHolder>("DeInit", {});
     bg::ValueHolder::PushGraphFrame(de_init_node, "DeInit");
     de_init_frame = bg::ValueHolder::PopGraphFrame();
 
-    auto main_node = bg::ValueHolder::CreateVoid(GetExecuteGraphTypeStr(ExecuteGraphType::kMain), {});
+    auto main_node = bg::ValueHolder::CreateVoid<bg::ValueHolder>(GetExecuteGraphTypeStr(ExecuteGraphType::kMain), {});
     bg::ValueHolder::PushGraphFrame(main_node, "Main");
     global_data.SetStream(bg::ValueHolder::CreateFeed(-1), ExecuteGraphType::kMain);
   }
@@ -332,7 +332,7 @@ TEST_F(LoweringGlobalDataUT, GetOrCreateUniqueValueHolderOk) {
   EXPECT_NE(holder_0, nullptr);
 
   auto clear_builder = [&]() -> bg::ValueHolderPtr {
-    return bg::ValueHolder::CreateVoid("ClearStepContainer", {holder_0});
+    return bg::ValueHolder::CreateVoid<bg::ValueHolder>("ClearStepContainer", {holder_0});
   };
   auto clear_holder = bg::FrameSelector::OnMainRootLast(clear_builder);
   EXPECT_NE(clear_holder, nullptr);
@@ -363,7 +363,7 @@ TEST_F(LoweringGlobalDataUT, OnMainRootLastOk) {
       auto create_session_holder = bg::ValueHolder::CreateSingleDataOutput("CreateSession", {session_id_holder});
       bg::ValueHolder::CreateVoidGuarder("DestroySession", create_session_holder, {});
       auto clear_builder = [&]() -> bg::ValueHolderPtr {
-        return bg::ValueHolder::CreateVoid("ClearStepContainer", {session_id_holder, container_id_holder});
+        return bg::ValueHolder::CreateVoid<bg::ValueHolder>("ClearStepContainer", {session_id_holder, container_id_holder});
       };
       auto clear_holder = bg::FrameSelector::OnMainRootLast(clear_builder);
       EXPECT_NE(clear_holder, nullptr);

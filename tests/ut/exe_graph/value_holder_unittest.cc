@@ -259,7 +259,7 @@ TEST_F(ValueHolderUt, CreateDataOutOk2) {
   auto node2 = ValueHolder::CreateSingleDataOutput("Node1", {const2, data2});
 
   auto const3 = ValueHolder::CreateConst(&fmt, sizeof(fmt));
-  auto n2_holder = ValueHolder::CreateVoid("Node2", {node1, node2, const3});
+  auto n2_holder = ValueHolder::CreateVoid<ValueHolder>("Node2", {node1, node2, const3});
 
   for (const auto &holder : {const1, data1, node1, const2, data2, node2, const3, n2_holder}) {
     ASSERT_NE(holder, nullptr);
@@ -385,7 +385,7 @@ TEST_F(ValueHolderUt, MergeTwoGraphOk) {
   auto node3 = ValueHolder::CreateSingleDataOutput("Node3", {node1[0], node2[0]});
   ASSERT_NE(node3, nullptr);
 
-  auto node4 = ValueHolder::CreateVoid("Node4", {node3, node2[1]});
+  auto node4 = ValueHolder::CreateVoid<ValueHolder>("Node4", {node3, node2[1]});
   ASSERT_NE(node4, nullptr);
 
   EXPECT_NE(data1->GetNode()->GetOwnerComputeGraph(), nullptr);
@@ -418,7 +418,7 @@ TEST_F(ValueHolderUt, CreateVoidOk) {
   ASSERT_NE(data1, nullptr);
 
   std::vector<ValueHolderPtr> inputs = {data1, const1};
-  auto holder = ValueHolder::CreateVoid("TestNode", inputs);
+  auto holder = ValueHolder::CreateVoid<ValueHolder>("TestNode", inputs);
 
   ASSERT_NE(holder, nullptr);
 
@@ -522,7 +522,7 @@ TEST_F(ValueHolderUt, CurrentNodeOk) {
   auto shape = ValueHolder::CreateSingleDataOutput("InferShape", {shape1, shape2});
   auto compile_info = ValueHolder::CreateSingleDataOutput("TilingParse", {json1});
   auto tiling_ret = ValueHolder::CreateSingleDataOutput("Tiling", {shape, compile_info});
-  auto holder = ValueHolder::CreateVoid("KernelLaunch", {tiling_ret});
+  auto holder = ValueHolder::CreateVoid<ValueHolder>("KernelLaunch", {tiling_ret});
 
   ASSERT_NE(shape1, nullptr);
   ASSERT_NE(shape2, nullptr);
@@ -608,7 +608,7 @@ TEST_F(ValueHolderUt, CreateExeGraphWithTargetsOk) {
   auto data1 = ValueHolder::CreateFeed(1);
 
   ValueHolder::SetCurrentComputeNode(node);
-  auto hello = ValueHolder::CreateVoid("hello", {data0, data1});
+  auto hello = ValueHolder::CreateVoid<ValueHolder>("hello", {data0, data1});
   ASSERT_NE(graph, nullptr);
 }
 /*
@@ -662,13 +662,13 @@ TEST_F(ValueHolderUt, ScopedCurrentNodeOk) {
     auto guarder = ValueHolder::SetScopedCurrentComputeNode(clean_node);
     compile_info1 = ValueHolder::CreateSingleDataOutput("TilingParse", {json1});
     tiling_ret1 = ValueHolder::CreateSingleDataOutput("Tiling", {shape, compile_info1});
-    holder1 = ValueHolder::CreateVoid("AtomicKernelLaunch", {tiling_ret1});
+    holder1 = ValueHolder::CreateVoid<ValueHolder>("AtomicKernelLaunch", {tiling_ret1});
     EXPECT_TRUE(frame->GetCurrentNodeIndex(node1_index));
   }
 
   auto compile_info2 = ValueHolder::CreateSingleDataOutput("TilingParse", {json2});
   auto tiling_ret2 = ValueHolder::CreateSingleDataOutput("Tiling", {shape, compile_info2});
-  auto holder2 = ValueHolder::CreateVoid("KernelLaunch", {tiling_ret2});
+  auto holder2 = ValueHolder::CreateVoid<ValueHolder>("KernelLaunch", {tiling_ret2});
 
   ValueHolder::AddDependency(holder1, holder2);
 
@@ -729,7 +729,7 @@ TEST_F(ValueHolderUt, CreateExeGraphNoOutpus) {
   auto data1 = ValueHolder::CreateFeed(1);
 
   ValueHolder::SetCurrentComputeNode(node);
-  auto hello = ValueHolder::CreateVoid("hello", {data0, data1});
+  auto hello = ValueHolder::CreateVoid<ValueHolder>("hello", {data0, data1});
 }
 
 TEST_F(ValueHolderUt, CreateExeGraphNoFrame) {
@@ -752,7 +752,7 @@ TEST_F(ValueHolderUt, CreateExeGraphNoFrame) {
   auto data1 = ValueHolder::CreateFeed(1);
 
   ValueHolder::SetCurrentComputeNode(node);
-  auto hello = ValueHolder::CreateVoid("hello", {data0, data1});
+  auto hello = ValueHolder::CreateVoid<ValueHolder>("hello", {data0, data1});
 }
 /*
  *    hello
@@ -779,7 +779,7 @@ TEST_F(ValueHolderUt, GetCurrentGraphOk) {
   auto data1 = ValueHolder::CreateFeed(1);
 
   ValueHolder::SetCurrentComputeNode(node);
-  auto hello = ValueHolder::CreateVoid("hello", {data0, data1});
+  auto hello = ValueHolder::CreateVoid<ValueHolder>("hello", {data0, data1});
 
   EXPECT_NE(hello->GetCurrentFrame(), nullptr);
   EXPECT_NE(hello->GetCurrentGraph(), nullptr);
@@ -1074,7 +1074,7 @@ TEST_F(ValueHolderUt, BuildGraphWithCtrlOutput) {
   auto data1 = ValueHolder::CreateFeed(1);
   auto foo1 = ValueHolder::CreateSingleDataOutput("Foo", {data0, data1});
   auto bar1 = ValueHolder::CreateSingleDataOutput("Bar", {data0, data1});
-  auto launch = ValueHolder::CreateVoid("Launch", {foo1, bar1});
+  auto launch = ValueHolder::CreateVoid<ValueHolder>("Launch", {foo1, bar1});
   auto frame = ValueHolder::PopGraphFrame({}, {launch});
   ASSERT_NE(frame, nullptr);
   auto graph = frame->GetExeGraph();
@@ -1093,10 +1093,10 @@ TEST_F(ValueHolderUt, BuildGraphWithCtrlOutput) {
   EXPECT_EQ((*netoutput->GetInControlNodes().begin())->GetType(), "Launch");
 }
 TEST_F(ValueHolderUt, AppendOutputOk) {
-  auto foo = ValueHolder::CreateVoid("Foo", {});
+  auto foo = ValueHolder::CreateVoid<ValueHolder>("Foo", {});
   EXPECT_EQ(foo->GetNode()->GetAllOutDataAnchorsSize(), 0);
 
-  auto outputs = foo->AppendOutputs(5);
+  auto outputs = foo->AppendOutputs<ValueHolder>(5);
   EXPECT_EQ(outputs.size(), 5);
   EXPECT_EQ(foo->GetNode()->GetAllOutDataAnchorsSize(), 5);
 
@@ -1114,7 +1114,7 @@ TEST_F(ValueHolderUt, AppendOutputToNodeWithOutputs) {
   auto foo = ValueHolder::CreateDataOutput("Foo", {}, 3)[0];
   EXPECT_EQ(foo->GetNode()->GetAllOutDataAnchorsSize(), 3);
 
-  auto outputs = foo->AppendOutputs(5);
+  auto outputs = foo->AppendOutputs<ValueHolder>(5);
   ASSERT_EQ(outputs.size(), 5);
   EXPECT_EQ(foo->GetNode()->GetAllOutDataAnchorsSize(), 8);
 
@@ -1501,7 +1501,7 @@ TEST_F(ValueHolderUt, CreateConstDataOk) {
   ASSERT_NE(data1, nullptr);
 
   std::vector<ValueHolderPtr> inputs = {data1, const_data1};
-  auto holder = ValueHolder::CreateVoid("TestNode", inputs);
+  auto holder = ValueHolder::CreateVoid<ValueHolder>("TestNode", inputs);
 
   ASSERT_NE(holder, nullptr);
 

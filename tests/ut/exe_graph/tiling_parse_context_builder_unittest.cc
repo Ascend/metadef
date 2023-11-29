@@ -35,9 +35,9 @@ TEST_F(TilingParseContextBuilderUT, CompileInfoNullptr) {
 
   bg::ValueHolder::PopGraphFrame();
   (void)bg::ValueHolder::PushGraphFrame();
-  auto foo = bg::ValueHolder::CreateVoid("Foo", {});
+  auto foo = bg::ValueHolder::CreateVoid<bg::ValueHolder>("Foo", {});
   EXPECT_EQ(foo->GetNode()->GetAllOutDataAnchorsSize(), 0);
-  auto outputs = foo->AppendOutputs(2);
+  auto outputs = foo->AppendOutputs<bg::ValueHolder>(2);
   EXPECT_EQ(outputs.size(), 2);
   EXPECT_EQ(foo->GetNode()->GetAllOutDataAnchorsSize(), 2);
   auto bar = bg::ValueHolder::CreateSingleDataOutput("Bar", outputs);
@@ -59,9 +59,9 @@ TEST_F(TilingParseContextBuilderUT, PlatformInfosNullptr) {
 
   bg::ValueHolder::PopGraphFrame();
   (void)bg::ValueHolder::PushGraphFrame();
-  auto foo = bg::ValueHolder::CreateVoid("Foo", {});
+  auto foo = bg::ValueHolder::CreateVoid<bg::ValueHolder>("Foo", {});
   EXPECT_EQ(foo->GetNode()->GetAllOutDataAnchorsSize(), 0);
-  auto outputs = foo->AppendOutputs(2);
+  auto outputs = foo->AppendOutputs<bg::ValueHolder>(2);
   EXPECT_EQ(outputs.size(), 2);
   EXPECT_EQ(foo->GetNode()->GetAllOutDataAnchorsSize(), 2);
   auto bar = bg::ValueHolder::CreateSingleDataOutput("Bar", outputs);
@@ -84,9 +84,9 @@ TEST_F(TilingParseContextBuilderUT, TilingFuncNullptr) {
   // construct op
   bg::ValueHolder::PopGraphFrame();
   (void)bg::ValueHolder::PushGraphFrame();
-  auto foo = bg::ValueHolder::CreateVoid("Foo", {});
+  auto foo = bg::ValueHolder::CreateVoid<bg::ValueHolder>("Foo", {});
   EXPECT_EQ(foo->GetNode()->GetAllOutDataAnchorsSize(), 0);
-  auto outputs = foo->AppendOutputs(2);
+  auto outputs = foo->AppendOutputs<bg::ValueHolder>(2);
   EXPECT_EQ(outputs.size(), 2);
   EXPECT_EQ(foo->GetNode()->GetAllOutDataAnchorsSize(), 2);
   auto bar = bg::ValueHolder::CreateSingleDataOutput("Bar_0", outputs);
@@ -118,9 +118,9 @@ TEST_F(TilingParseContextBuilderUT, BuildSuccess) {
   // construct op
   bg::ValueHolder::PopGraphFrame();
   (void)bg::ValueHolder::PushGraphFrame();
-  auto foo = bg::ValueHolder::CreateVoid("Foo", {});
+  auto foo = bg::ValueHolder::CreateVoid<bg::ValueHolder>("Foo", {});
   EXPECT_EQ(foo->GetNode()->GetAllOutDataAnchorsSize(), 0);
-  auto outputs = foo->AppendOutputs(2);
+  auto outputs = foo->AppendOutputs<bg::ValueHolder>(2);
   EXPECT_EQ(outputs.size(), 2);
   EXPECT_EQ(foo->GetNode()->GetAllOutDataAnchorsSize(), 2);
   auto bar = bg::ValueHolder::CreateSingleDataOutput("Bar", outputs);
