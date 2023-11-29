@@ -73,20 +73,6 @@ Model::Model(const std::string &name, const std::string &custom_version)
   Init();
 }
 
-Model::Model(const char_t *name, const char_t *custom_version)
-    : AttrHolder() {
-  if (name != nullptr) {
-    name_ = std::string(name);
-  } else {
-    GELOGW("[Check][Param]Input name is nullptr");
-  }
-  if (custom_version != nullptr) {
-    platform_version_ = std::string(custom_version);
-  } else {
-    GELOGW("[Check][Param]Input custom_version is nullptr");
-  }
-  Init();
-}
 std::string Model::GetName() const { return name_; }
 
 void Model::SetName(const std::string &name) { name_ = name; }

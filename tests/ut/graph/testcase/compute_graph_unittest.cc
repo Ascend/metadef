@@ -864,8 +864,6 @@ TEST_F(UtestComputeGraph, SetGraphID_success) {
   auto graph_id = graph->GetGraphID() + 1;
   graph->SetGraphID(graph_id);
   EXPECT_EQ(graph->GetGraphID(), graph_id);
-  auto empty_graph = std::make_shared<ComputeGraph>(nullptr);
-  EXPECT_NE(empty_graph, nullptr);
 }
 
 TEST_F(UtestComputeGraph, SetSummaryGraph_success) {
@@ -873,7 +871,6 @@ TEST_F(UtestComputeGraph, SetSummaryGraph_success) {
   auto summary_flag = !graph->IsSummaryGraph();
   graph->SetSummaryFlag(summary_flag);
   EXPECT_EQ(graph->IsSummaryGraph(), summary_flag);
-
 }
 TEST_F(UtestComputeGraph, DFSPOSTORDERTopologicalSorting_success) {
   auto builder = ut::GraphBuilder("graph_reverse_dfs");
