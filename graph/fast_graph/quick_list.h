@@ -25,6 +25,7 @@
 #define D_INC_GRAPH_QUICK_LIST_H
 #include <algorithm>
 #include <cassert>
+#include <functional>
 #include <iostream>
 #include <list>
 #include <unordered_map>
