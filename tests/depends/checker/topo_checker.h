@@ -317,7 +317,7 @@ class NodeTopoChecker {
     return "success";
   }
 
-  [[nodiscard]] std::string StrictConnectTo(uint32_t out_index, std::vector<SrcNode> out_nodes) const {
+  [[nodiscard]] std::string StrictConnectTo(int32_t out_index, std::vector<SrcNode> out_nodes) const {
     auto dst_nodes_and_indexes = GetOutNodes(out_index);
 
     // 1. 先比较个数是否相等
@@ -399,7 +399,7 @@ class NodeTopoChecker {
       actual_indexes.emplace_back(std::to_string(dst_node_and_index.second));
     }
   }
-  [[nodiscard]] std::vector<std::pair<ge::NodePtr, int32_t>> GetOutNodes(uint32_t out_index) const {
+  [[nodiscard]] std::vector<std::pair<ge::NodePtr, int32_t>> GetOutNodes(int32_t out_index) const {
     std::vector<std::pair<ge::NodePtr, int32_t>> dst_nodes;
 
     if (out_index >= 0) {
