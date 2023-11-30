@@ -52,4 +52,32 @@ TEST_F(ShapeUtilsUT, ShapeToString_UseComman_NullJoinStr) {
   Shape s{1, 2, 3};
   EXPECT_EQ(ShapeToString(s, nullptr), "1,2,3");
 }
+
+TEST_F(ShapeUtilsUT, CalcAlignedSizeByShape_success) {
+  Shape s{1, 2, 3};
+  size_t ret_tensor_size = 0U;
+  CalcAlignedSizeByShape(s, ge::DataType::DT_FLOAT, ret_tensor_size);
+  EXPECT_EQ(ret_tensor_size, 64);
+
+  CalcAlignedSizeByShape(s, ge::DataType::DT_FLOAT16, ret_tensor_size);
+  EXPECT_EQ(ret_tensor_size, 64);
+
+  CalcAlignedSizeByShape(s, ge::DataType::DT_STRING, ret_tensor_size);
+  EXPECT_EQ(ret_tensor_size, 128);
+
+  CalcAlignedSizeByShape(s, ge::DataType::DT_INT4, ret_tensor_size);
+  EXPECT_EQ(ret_tensor_size, 64);
+}
+
+TEST_F(ShapeUtilsUT, CalcTotalSizeByShape_failed) {
+  Shape s{-1, 2, 3};
+  size_t ret_tensor_size = 0U;
+
+  EXPECT_NE(CalcAlignedSizeByShape(s, ge::DataType::DT_STRING, ret_tensor_size), ge::GRAPH_SUCCESS);
+  EXPECT_EQ(ret_tensor_size, 0);
+
+  Shape s1{std::numeric_limits<int64_t>::max(), 2, 3};
+  EXPECT_NE(CalcAlignedSizeByShape(s1, ge::DataType::DT_STRING, ret_tensor_size), ge::GRAPH_SUCCESS);
+  EXPECT_EQ(ret_tensor_size, 0);
+}
 }  // namespace gert
