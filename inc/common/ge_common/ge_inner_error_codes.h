@@ -344,11 +344,18 @@ GE_ERRORNO_GENERATOR(GE_GENERATOR_GRAPH_MANAGER_FINALIZE_FAILED, 4, "Graph manag
 GE_ERRORNO_GENERATOR(GE_GENERATOR_GRAPH_MANAGER_SAVE_MODEL_FAILED, 5, "Graph manager save model failed.");
 
 LLM_ERRORNO_COMMON(LLM_WAIT_PROC_TIMEOUT, 1, "request wait to be processed timeout!");
-LLM_ERRORNO_COMMON(LLM_KV_CACHE_NOT_EXIST, 2, "not receive kv cache!");
+LLM_ERRORNO_COMMON(LLM_KV_CACHE_NOT_EXIST, 2, "kv cache not exit!");
 LLM_ERRORNO_COMMON(LLM_REPEAT_REQUEST, 3, "repeat request!");
 LLM_ERRORNO_COMMON(LLM_REQUEST_ALREADY_COMPLETED, 4, "request already complete!");
-LLM_ERRORNO_COMMON(LLM_PARAM_INVALID, 5, "Parameter's invalid!");
+LLM_ERRORNO_COMMON(LLM_PARAM_INVALID, 5, "parameter is invalid!");
 LLM_ERRORNO_COMMON(LLM_ENGINE_FINALIZED, 6, "llm engine finalized!");
+LLM_ERRORNO_COMMON(LLM_NOT_YET_LINK, 7, "decoder cluster is no link with prompt!");
+LLM_ERRORNO_COMMON(LLM_ALREADY_LINK, 8, "decoder cluster is already linked with prompt cluster!");
+LLM_ERRORNO_COMMON(LLM_LINK_FAILED, 9, "decoder cluster link with prompt cluster failed!");
+LLM_ERRORNO_COMMON(LLM_UNLINK_FAILED, 10, "decoder cluster unlink with prompt cluster failed!");
+LLM_ERRORNO_COMMON(LLM_NOTIFY_PROMPT_UNLINK_FAILED, 11, "decoder cluster notify prompt cluster do unlink failed!");
+LLM_ERRORNO_COMMON(LLM_CLUSTER_NUM_EXCEED_LIMIT, 12, "cluster num exceed limit!");
+LLM_ERRORNO_COMMON(LLM_PROCESSING_LINK, 13, "link is current processing, try again later!");
 }  // namespace ge
 
 #endif  // INC_COMMON_GE_INNER_ERROR_CODES_H_
