@@ -409,7 +409,7 @@ ExecuteGraph *ExecuteGraph::AddSubGraph(std::shared_ptr<ExecuteGraph> &sub_graph
 graphStatus ExecuteGraph::RemoveSubGraph(const std::string &name) {
   auto iter = names_to_subgraph_.find(name);
   if (iter != names_to_subgraph_.end()) {
-    auto quick_graph = reinterpret_cast<QuickGraph *>(iter->second.quick_graph);
+    auto quick_graph = iter->second.quick_graph;
     graph_shared_->RemoveSubGraph(quick_graph);
     names_to_subgraph_.erase(iter);
   }
@@ -425,7 +425,7 @@ ExecuteGraph *ExecuteGraph::GetSubGraph(const std::string &name) const {
       return nullptr;
     }
     // iter->second.quick_graph is not nullptr
-    auto quick_graph = reinterpret_cast<QuickGraph *>(iter->second.quick_graph);
+    auto quick_graph = iter->second.quick_graph;
     return quick_graph->data;
   } else {
     return exec_graph->GetSubGraph(name);

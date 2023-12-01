@@ -26,7 +26,6 @@ else()
     set(CMAKE_INSTALL_PREFIX ${CMAKE_BINARY_DIR}/install)
 endif()
 
-
 if (AIR_PB_PKG)
     set(REQ_URL "${AIR_PB_PKG}/libs/benchmark/v1.5.5.tar.gz")
 elseif (ENABLE_GITEE)
@@ -37,6 +36,8 @@ else ()
     set(MD5 "")
 endif ()
 
+
+set(CMAKE_INSTALL_LIBDIR ${CMAKE_INSTALL_PREFIX}/benchmark)
 set (benchmark_CXXFLAGS "-D_GLIBCXX_USE_CXX11_ABI=0 -D_FORTIFY_SOURCE=2 -O2 -fstack-protector-all -Wl,-z,relro,-z,now,-z,noexecstack")
 ExternalProject_Add(benchmark_build
         URL ${REQ_URL}
@@ -57,8 +58,11 @@ add_library(benchmark SHARED IMPORTED)
 
 target_include_directories(benchmark INTERFACE ${BENCHMARK_PKG_DIR}/include)
 
+cmake_print_variables(CMAKE_INSTALL_PREFIX)
+cmake_print_variables(CMAKE_BINARY_DIR)
+
 set_target_properties(benchmark PROPERTIES
-        IMPORTED_LOCATION ${BENCHMARK_PKG_DIR}/${CMAKE_INSTALL_LIBDIR}/lib/libbenchmark.so
+        IMPORTED_LOCATION ${CMAKE_INSTALL_LIBDIR}/libbenchmark.so
         )
 
 add_library(benchmark_main SHARED IMPORTED)
@@ -66,16 +70,12 @@ add_library(benchmark_main SHARED IMPORTED)
 target_include_directories(benchmark_main INTERFACE ${BENCHMARK_PKG_DIR}/include)
 
 set_target_properties(benchmark_main PROPERTIES
-        IMPORTED_LOCATION ${BENCHMARK_PKG_DIR}/${CMAKE_INSTALL_LIBDIR}/libbenchmark_main.so
+        IMPORTED_LOCATION ${CMAKE_INSTALL_LIBDIR}/libbenchmark_main.so
         )
 
 set(INSTALL_BASE_DIR "")
 set(INSTALL_LIBRARY_DIR lib)
 
-#install(FILES ${BENCHMARK_PKG_DIR}/${CMAKE_INSTALL_LIBDIR}/libbenchmark.so ${BENCHMARK_PKG_DIR}/${CMAKE_INSTALL_LIBDIR}/libbenchmark_main.so OPTIONAL
-#        DESTINATION ${INSTALL_LIBRARY_DIR})
-
 add_dependencies(benchmark benchmark_build)
 
-#set(HAVE_GFLAGS TRUE CACHE BOOL "gflags build add")
 set(HAVE_BENCHMARK TRUE)

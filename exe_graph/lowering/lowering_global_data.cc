@@ -306,7 +306,10 @@ std::vector<bg::ValueHolderPtr> LoweringGlobalData::GetOrCreateUniqueValueHolder
   return iter->second;
 }
 void LoweringGlobalData::SetUniqueValueHolder(const string &name, const bg::ValueHolderPtr &holder) {
-  unique_name_to_value_holders_.emplace(name, std::vector<bg::ValueHolderPtr>{holder});
+  if (!unique_name_to_value_holders_.emplace(name, std::vector<bg::ValueHolderPtr>{holder}).second) {
+    unique_name_to_value_holders_.erase(name);
+    unique_name_to_value_holders_.emplace(name, std::vector<bg::ValueHolderPtr>{holder});
+  }
 }
 bg::ValueHolderPtr LoweringGlobalData::GetUniqueValueHolder(const string &name) const {
   const auto &iter = unique_name_to_value_holders_.find(name);

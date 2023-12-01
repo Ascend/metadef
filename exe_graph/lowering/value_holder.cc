@@ -425,8 +425,7 @@ GraphFrame *ValueHolder::PushGraphFrame() {
   GE_ASSERT_NOTNULL(graph);
   auto frame = new (std::nothrow) GraphFrame(graph);
   GE_ASSERT_NOTNULL(frame);
-  graph_frames.emplace_back(frame);
-  return graph_frames.back().get();
+  return ValueHolder::PushGraphFrame(frame);
 }
 GraphFrame *ValueHolder::PushGraphFrame(const ValueHolderPtr &belongs, const char *graph_name) {
   GE_ASSERT_NOTNULL(belongs);
@@ -453,9 +452,18 @@ GraphFrame *ValueHolder::PushGraphFrame(const ValueHolderPtr &belongs, const cha
   }
 
   GE_ASSERT_SUCCESS(ge::NodeUtils::AddSubgraph(*const_cast<ge::Node *>(belongs->GetNode()), graph_name, graph));
+  return ValueHolder::PushGraphFrame(frame_holder.release());
+}
 
-  auto frame = frame_holder.release();
-  graph_frames.emplace_back(frame);
+GraphFrame *ValueHolder::PushGraphFrame(GraphFrame *graph_frame) {
+  GE_ASSERT_NOTNULL(graph_frame);
+  if (!graph_frames.empty()) {
+    GE_ASSERT_TRUE((graph_frames.back()->GetExeGraph() == graph_frame->GetExeGraph()->GetParentGraph()),
+                   "Last graph frame in stack %s is not parent graph frame of %s.",
+                   graph_frames.back()->GetExeGraph()->GetName().c_str(),
+                   graph_frame->GetExeGraph()->GetName().c_str());
+  }
+  graph_frames.emplace_back(graph_frame);
   return graph_frames.back().get();
 }
 std::unique_ptr<GraphFrame> ValueHolder::PopGraphFrame() {
@@ -491,7 +499,7 @@ void ValueHolder::AddRelevantInputNode(const ge::NodePtr &node) {
     frame->AddRelevantInputNode(node);
   }
 }
-std::unique_ptr<ValueHolder::CurrentComputeNodeGuarder> ValueHolder::SetScopedCurrentComputeNode(  //
+std::unique_ptr<ValueHolder::CurrentComputeNodeGuarder> ValueHolder::SetScopedCurrentComputeNode(
     const ge::NodePtr &node) {
   auto frame = GetCurrentFrame();
   GE_ASSERT_NOTNULL(frame);

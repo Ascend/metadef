@@ -408,6 +408,18 @@ TEST_F(LoweringGlobalDataUT, GetValueHolersSizeTest) {
   EXPECT_EQ(gd.GetValueHoldersSize("test3"), 1);
 }
 
+TEST_F(LoweringGlobalDataUT, SetGetUniqueValueHoler) {
+  LoweringGlobalData gd;
+  gd.SetUniqueValueHolder("test1", nullptr);
+  EXPECT_EQ(gd.GetValueHoldersSize("test1"), 1);
+  EXPECT_EQ(gd.GetValueHoldersSize("test2"), 0);
+  EXPECT_EQ(gd.GetUniqueValueHolder("test1"), nullptr);
+
+  gd.SetUniqueValueHolder("test1", bg::ValueHolder::CreateVoid<bg::ValueHolder>("TEST", {}));
+  EXPECT_EQ(gd.GetValueHoldersSize("test1"), 1);
+  EXPECT_NE(gd.GetUniqueValueHolder("test1"), nullptr);
+}
+
 TEST_F(LoweringGlobalDataUT, StaticModelWsSizeTest) {
   LoweringGlobalData gd;
   int64_t require_ws_size = 1;

@@ -21,6 +21,7 @@
 #include <queue>
 #include <unordered_map>
 #include "graph/fast_node.h"
+#include "graph/list_element.h"
 
 namespace ge {
 template <class T, class G>
@@ -30,8 +31,9 @@ class ExecuteGraph : public AttrHolder {
  public:
   struct SubGraphInfo {
     std::shared_ptr<ExecuteGraph> sub_graph;
-    void *quick_graph;
+    ListElement<ExecuteGraph *> *quick_graph;
   };
+
   explicit ExecuteGraph(const std::string &name);
   ~ExecuteGraph() override{};
 

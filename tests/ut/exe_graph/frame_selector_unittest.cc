@@ -13,13 +13,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#include "exe_graph/lowering/frame_selector.h"
-#include <gtest/gtest.h>
-#include "graph/utils/node_utils.h"
 #include "checker/bg_test.h"
 #include "checker/summary_checker.h"
 #include "checker/topo_checker.h"
+#include "exe_graph/lowering/frame_selector.h"
 #include "exe_graph/runtime/execute_graph_types.h"
+#include "graph/utils/node_utils.h"
+#include <gtest/gtest.h>
+#include <inc/graph/utils/graph_utils.h>
 namespace gert {
 namespace bg {
 class FrameSelectorUT : public BgTest {
@@ -61,7 +62,7 @@ TEST_F(FrameSelectorUT, SelectMainRoot_CreateOnRoot_NoMainGraph) {
   auto data1 = ValueHolder::CreateFeed(1);
 
   auto foo1 = ValueHolder::CreateSingleDataOutput("Foo1", {data0, data1});
-  ValueHolder::PushGraphFrame(foo1, "FooGraph");
+  EXPECT_NE(ValueHolder::PushGraphFrame(foo1, "FooGraph"), nullptr);
 
   // on FooGraph
   auto c1 = ValueHolder::CreateConst("ConstData", 10, true);
@@ -611,6 +612,325 @@ TEST_F(FrameSelectorUT, HolderOnInit_GetInitOutput_WhenInputIsInitNode) {
   ASSERT_EQ(HolderOnInit(node_outputs[1])->GetOutIndex(), graph_outputs[1]->GetOutIndex());
   ASSERT_EQ(HolderOnInit(node_outputs[2])->GetNode(), graph_outputs[2]->GetNode());
   ASSERT_EQ(HolderOnInit(node_outputs[2])->GetOutIndex(), graph_outputs[2]->GetOutIndex());
+}
+
+TEST_F(FrameSelectorUT, OnMainRootLast_GetInitOutput_WhenInputIsInitNode) {
+  InitTestFrames();
+
+  std::vector<ValueHolderPtr> graph_outputs;
+  std::vector<ValueHolderPtr> node_outputs;
+  ValueHolderPtr foo1;
+  auto ret = FrameSelector::OnInitRoot(
+      [&]() -> std::vector<ValueHolderPtr> {
+        auto c1 = ValueHolder::CreateConst("Hello", 5);
+        auto c2 = ValueHolder::CreateConst("Hello", 5);
+        foo1 = ValueHolder::CreateSingleDataOutput("Foo1", {c1});
+        auto foo1_guarder = ValueHolder::CreateVoidGuarder("FreeFoo1", foo1, {});
+        auto foo2 = ValueHolder::CreateDataOutput("Foo2", {c1, c2, foo1}, 3);
+        auto foo2_guarder = ValueHolder::CreateVoidGuarder("FreeFoo2", foo2[1], {});
+        return foo2;
+      },
+      graph_outputs, node_outputs);
+  ASSERT_EQ(ret, ge::GRAPH_SUCCESS);
+
+  ASSERT_NE(foo1, nullptr);
+  ASSERT_EQ(HolderOnInit(foo1), foo1);
+  ASSERT_EQ(HolderOnInit(node_outputs[0])->GetNode(), graph_outputs[0]->GetNode());
+  ASSERT_EQ(HolderOnInit(node_outputs[0])->GetOutIndex(), graph_outputs[0]->GetOutIndex());
+  ASSERT_EQ(HolderOnInit(node_outputs[1])->GetNode(), graph_outputs[1]->GetNode());
+  ASSERT_EQ(HolderOnInit(node_outputs[1])->GetOutIndex(), graph_outputs[1]->GetOutIndex());
+  ASSERT_EQ(HolderOnInit(node_outputs[2])->GetNode(), graph_outputs[2]->GetNode());
+  ASSERT_EQ(HolderOnInit(node_outputs[2])->GetOutIndex(), graph_outputs[2]->GetOutIndex());
+}
+/*
+ *      data0    c0
+ *        \      /
+ *          bar1
+ */
+TEST_F(FrameSelectorUT, OnMainRootLast_SetLastExecNode_NoNetoutput_Fail) {
+  InitTestFrames();
+  // build exe graph on main frame
+  auto data0 = ValueHolder::CreateFeed(0);
+  auto c0 = ValueHolder::CreateConst("ConstData", 10, true);
+  auto bar1 = ValueHolder::CreateSingleDataOutput("Bar1", {c0, data0});
+
+  auto last_node_builder = [&]() -> bg::ValueHolderPtr {
+    return bg::ValueHolder::CreateVoid<ValueHolder>("LastExecNode", {c0});
+  };
+  auto last_holder = bg::FrameSelector::OnMainRootLast(last_node_builder);
+  EXPECT_NE(last_holder, nullptr);
+  auto last_exec_nodes = bg::ValueHolder::GetLastExecNodes();
+  EXPECT_FALSE(last_exec_nodes.empty());
+
+  auto main_frame = ValueHolder::PopGraphFrame();
+  ASSERT_EQ(SummaryChecker(main_frame->GetExeGraph())
+                .StrictDirectNodeTypes({{"Data", 1}, {"Const", 1}, {"Bar1", 1}, {"LastExecNode", 1}}),
+            "success");
+}
+
+/*
+ *      data0    c0                c0
+ *        \      /                  |
+ *          bar1     last_node: LastExecNode
+ *           |
+ *       netoutput
+ *
+ */
+TEST_F(FrameSelectorUT, OnMainRootLast_SetLastExecNode_OneNodeInsideOneLayer_DefaultPriority) {
+  InitTestFrames();
+  // build exe graph on main frame
+  auto data0 = ValueHolder::CreateFeed(0);
+  auto c0 = ValueHolder::CreateConst("ConstData", 10, true);
+  auto bar1 = ValueHolder::CreateSingleDataOutput("Bar1", {c0, data0});
+  auto output = ValueHolder::CreateSingleDataOutput("NetOutput", {bar1});
+
+  auto last_node_builder = [&]() -> bg::ValueHolderPtr {
+    return bg::ValueHolder::CreateVoid<ValueHolder>("LastExecNode", {c0});
+  };
+  auto last_holder = bg::FrameSelector::OnMainRootLast(last_node_builder);
+  EXPECT_NE(last_holder, nullptr);
+  auto last_exec_nodes = bg::ValueHolder::GetLastExecNodes();
+  EXPECT_FALSE(last_exec_nodes.empty());
+
+  auto main_frame = ValueHolder::PopGraphFrame();
+  ASSERT_EQ(SummaryChecker(main_frame->GetExeGraph())
+                .StrictDirectNodeTypes({{"Data", 1}, {"Const", 1}, {"Bar1", 1}, {"LastExecNode", 1}, {"NetOutput", 1}}),
+            "success");
+  ASSERT_EQ(NodeTopoChecker(output).StrictConnectFrom({{"Bar1"}}), "success");
+}
+/*
+ *      data0    c0                       c0                          data0   c0
+ *        \      /                      /     \                         \    /
+ *          bar1     last_node:        L0    L1               ====>       bar1
+ *           |                                                           /    \c
+ *       netoutput                                                      |       noop
+ *                                                                      |        /c \c
+ *                                                                      |      L0    L1
+ *                                                                      |        \c  /c
+ *                                                                      |        noop
+ *                                                                       \       /c
+ *                                                                       netoutput
+ *                                                                       这里L0和L1分别有来自c0的数据输入。示意图中忽略
+ */
+TEST_F(FrameSelectorUT, OnMainRootLast_SetLastExecNode_TwoNodeInsideOneLayer_DefaultPriority) {
+  InitTestFrames();
+  // build exe graph on main frame
+  auto data0 = ValueHolder::CreateFeed(0);
+  auto c0 = ValueHolder::CreateConst("ConstData", 10, true);
+  auto bar1 = ValueHolder::CreateSingleDataOutput("Bar1", {c0, data0});
+  auto output = ValueHolder::CreateSingleDataOutput("NetOutput", {bar1});
+
+  auto last0_node_builder = [&]() -> bg::ValueHolderPtr {
+    return bg::ValueHolder::CreateVoid<ValueHolder>("L0", {c0});
+  };
+  auto last0_holder = bg::FrameSelector::OnMainRootLast(last0_node_builder);
+  EXPECT_NE(last0_holder, nullptr);
+  auto last1_node_builder = [&]() -> bg::ValueHolderPtr {
+    return bg::ValueHolder::CreateVoid<ValueHolder>("L1", {c0});
+  };
+  auto last1_holder = bg::FrameSelector::OnMainRootLast(last1_node_builder);
+  EXPECT_NE(last1_holder, nullptr);
+  auto last_exec_nodes = bg::ValueHolder::GetLastExecNodes();
+  EXPECT_EQ(last_exec_nodes.size(), 2U);
+
+  auto main_frame = ValueHolder::PopGraphFrame();
+  ASSERT_EQ(
+      SummaryChecker(main_frame->GetExeGraph())
+          .StrictDirectNodeTypes({{"Data", 1}, {"Const", 1}, {"Bar1", 1}, {"L0", 1}, {"L1", 1}, {"NetOutput", 1}}),
+      "success");
+}
+/*
+ *      data0    c0                       c0                          c0
+ *        \      /                      /     \                     /   \
+ *          bar1       last_priority0:  L0    L1    last_priority1: L2  L3
+ *           |
+ *       netoutput
+ *
+ *                                   |
+ *                                   V      subgraph of PartitionCall
+ *  +----------------------------------+    +-------------------------+
+ *  |    data0    c0                   |    |        InnerData        |
+ *  |      \      / \                  |    |      /     \  \  \      |
+ *  |        bar1    PartitionedCall   |    |     L0    L1    L2  L3  |
+ *  |         |                        |    |     \     /     /    /  |
+ *  |     netoutput                    |    |       InnerNetoutput    |
+ *  +----------------------------------+    +-------------------------+
+ * 这里L0和L1分别有来自c0的数据输入。示意图中忽略
+ */
+TEST_F(FrameSelectorUT, OnMainRootLast_SetLastExecNode_TwoNodeInsideEachLayer_TwoPriority) {
+  InitTestFrames();
+  // build exe graph on main frame
+  auto data0 = ValueHolder::CreateFeed(0);
+  auto c0 = ValueHolder::CreateConst("ConstData", 10, true);
+  auto bar1 = ValueHolder::CreateSingleDataOutput("Bar1", {c0, data0});
+  auto bar2 = ValueHolder::CreateSingleDataOutput("Bar2", {c0});
+  auto output = ValueHolder::CreateSingleDataOutput("NetOutput", {bar1, bar2});
+
+  for (size_t node_size = 0U; node_size < 2; ++node_size) {
+    auto last_node_builder = [&]() -> bg::ValueHolderPtr { return bg::ValueHolder::CreateVoid<ValueHolder>("LastExec", {c0}); };
+    auto last_holder =
+        bg::FrameSelector::OnMainRootLast(last_node_builder);
+    EXPECT_NE(last_holder, nullptr);
+  }
+  for (size_t node_size = 0U; node_size < 2; ++node_size) {
+    auto last_node_builder = [&]() -> std::vector<bg::ValueHolderPtr> { return {bg::ValueHolder::CreateVoid<ValueHolder>("LastEventExec", {data0})}; };
+    auto last_holders =
+        bg::FrameSelector::OnMainRootLastEventSync(last_node_builder);
+    EXPECT_FALSE(last_holders.empty());
+  }
+
+  auto main_frame = ValueHolder::PopGraphFrame();
+  std::vector<ValueHolderPtr> last_exe_nodes = main_frame->GetLastExecNodes();
+  EXPECT_EQ(last_exe_nodes.size(), 2);
+
+  auto stage_ids_2_pcalls = main_frame->GetExeGraph()->GetExtAttr<std::vector<ValueHolderPtr>>(kStageIdsToLastPartitionedCall);
+  EXPECT_NE(stage_ids_2_pcalls, nullptr);
+  auto last_event_sync_exe_node = stage_ids_2_pcalls->at(static_cast<size_t>(OnMainRootLastExecStage::kLastEventSyncStage));
+  EXPECT_NE(last_event_sync_exe_node, nullptr);
+
+  auto sub_exe_graph = ge::NodeUtils::GetSubgraph(*last_event_sync_exe_node->GetNode(), 0U);
+  EXPECT_NE(sub_exe_graph, nullptr);
+  auto last_exec_node = sub_exe_graph->FindFirstNodeMatchType("LastEventExec");
+  EXPECT_NE(last_exec_node, nullptr);
+  ASSERT_EQ(NodeTopoChecker(last_exec_node).StrictConnectFrom({{"InnerData", 0}}), "success");
+  ASSERT_NE(NodeTopoChecker(last_exec_node).StrictConnectTo(-1, {{"InnerNetoutput", 0}}), "success");
+
+  ASSERT_EQ(SummaryChecker(sub_exe_graph)
+                .StrictDirectNodeTypes({{"LastEventExec", 2}, {"InnerData", 1}, {"InnerNetOutput", 1}}),
+            "success");
+
+  ASSERT_EQ(SummaryChecker(main_frame->GetExeGraph())
+                .StrictDirectNodeTypes({{"Data", 1},
+                                        {"Const", 1},
+                                        {"Bar1", 1},
+                                        {"Bar2", 1},
+                                        {"LastExec", 2},
+                                        {"PartitionedCall", 1},
+                                        {"NetOutput", 1}}),
+            "success");
+  ASSERT_EQ(NodeTopoChecker(output).StrictConnectFrom({{"Bar1"}, {"Bar2"}}), "success");
+}
+
+/*
+ *      data0    c0                c0
+ *        \      /                  |
+ *          bar1     first_node: FirstExecNode
+ *           |
+ *       netoutput
+ *                    |
+ *                    V
+ *
+ *  +----------------------------------+    +-------------------------+
+ *  |    data0    c0                   |    |        InnerData        |
+ *  |      \      / \                  |    |          |              |
+ *  |        bar1    PartitionedCall   |    |     FirstExecNode       |
+ *  |         |                        |    |           |             |
+ *  |     netoutput                    |    |       InnerNetoutput    |
+ *  +----------------------------------+    +-------------------------+
+ */
+TEST_F(FrameSelectorUT, OnMainRootLast_SetFirstExecNode_OneNodeInsideOneLayer_OnePriority) {
+  dlog_setlevel(GE_MODULE_NAME, DLOG_DEBUG, 1);
+  InitTestFrames();
+  // build exe graph on main frame
+  auto data0 = ValueHolder::CreateFeed(0);
+  auto c0 = ValueHolder::CreateConst("ConstData", 10, true);
+  auto bar1 = ValueHolder::CreateSingleDataOutput("Bar1", {c0, data0});
+  auto output = ValueHolder::CreateSingleDataOutput("NetOutput", {bar1});
+
+  auto first_node_builder = [&]() -> std::vector<bg::ValueHolderPtr> {
+    return {bg::ValueHolder::CreateVoid<ValueHolder>("FirstExecNode", {c0})};
+  };
+  auto first_holders = bg::FrameSelector::OnMainRootFirst(first_node_builder);
+  EXPECT_FALSE(first_holders.empty());
+
+  auto main_frame = ValueHolder::PopGraphFrame();
+  auto stage_ids_2_pcalls = main_frame->GetExeGraph()->GetExtAttr<std::vector<ValueHolderPtr>>(kStageIdsToFirstPartitionedCall);
+  EXPECT_NE(stage_ids_2_pcalls, nullptr);
+  auto first_exec_partitioncall = stage_ids_2_pcalls->at(static_cast<size_t>(OnMainRootFirstExecStage::kFirstEventSyncStage));
+  EXPECT_NE(first_exec_partitioncall, nullptr);
+
+  auto sub_exe_graph = ge::NodeUtils::GetSubgraph(*first_exec_partitioncall->GetNode(), 0U);
+  EXPECT_NE(sub_exe_graph, nullptr);
+  auto first_exec_node = sub_exe_graph->FindFirstNodeMatchType("FirstExecNode");
+  EXPECT_NE(first_exec_node, nullptr);
+  ASSERT_EQ(NodeTopoChecker(first_exec_node).StrictConnectFrom({{"InnerData", 0}}), "success");
+  ASSERT_NE(NodeTopoChecker(first_exec_node).StrictConnectTo(-1, {{"InnerNetoutput", 0}}), "success");
+
+  ASSERT_EQ(SummaryChecker(sub_exe_graph)
+                .StrictDirectNodeTypes({{"FirstExecNode", 1}, {"InnerData", 1}, {"InnerNetOutput", 1}}),
+            "success");
+
+  ASSERT_EQ(SummaryChecker(main_frame->GetExeGraph())
+                .StrictDirectNodeTypes(
+                    {{"Data", 1}, {"Const", 1}, {"Bar1", 1}, {"PartitionedCall", 1}, {"NetOutput", 1}}),
+            "success");
+  ASSERT_EQ(NodeTopoChecker(data0).StrictConnectTo(0, {{"Bar1"}}), "success");
+  ASSERT_NE(NodeTopoChecker(data0).StrictConnectTo(-1, {{"NoOp", -1}}), "success");
+}
+
+/*
+ *      data0     c0                       c0
+ *       / \      /                      /     \
+ *    bar1   bar2       first_priority0:  L0    L1
+ *        \   |
+ *       netoutput
+ *
+ *                                   |
+ *                                   V
+ *  +----------------------------------+    +-------------------------+
+ *  |    data0     c0                  |    |        InnerData        |
+ *  |      / \     /\                  |    |          / \            |
+ *  |   bar1   bar2  PartitionedCall   |    |       L0    L1          |
+ *  |      \   |                       |    |         \   /           |
+ *  |     netoutput                    |    |       InnerNetoutput    |
+ *  +----------------------------------+    +-------------------------+
+ */
+TEST_F(FrameSelectorUT, OnMainRootLast_SetFirstExecNode_TwoNodeInsideEachLayer_TwoPriority) {
+  InitTestFrames();
+  // build exe graph on main frame
+  auto data0 = ValueHolder::CreateFeed(0);
+  auto c0 = ValueHolder::CreateConst("ConstData", 10, true);
+  auto bar1 = ValueHolder::CreateSingleDataOutput("Bar1", {data0});
+  auto bar2 = ValueHolder::CreateSingleDataOutput("Bar2", {data0, c0});
+  auto output = ValueHolder::CreateSingleDataOutput("NetOutput", {bar1, bar2});
+
+  for (size_t node_size=0U; node_size < 2; ++node_size) {
+    auto first_node_builder = [&]() -> std::vector<bg::ValueHolderPtr> {
+      return {bg::ValueHolder::CreateVoid<ValueHolder>("FirstExec", {c0})};
+    };
+    auto first_holders = bg::FrameSelector::OnMainRootFirst(first_node_builder);
+    EXPECT_FALSE(first_holders.empty());
+  }
+
+  auto main_frame = ValueHolder::PopGraphFrame();
+
+  auto stage_ids_2_pcalls = main_frame->GetExeGraph()->GetExtAttr<std::vector<ValueHolderPtr>>(kStageIdsToFirstPartitionedCall);
+  EXPECT_NE(stage_ids_2_pcalls, nullptr);
+  auto first_exec_partitioncall = stage_ids_2_pcalls->at(static_cast<size_t>(OnMainRootFirstExecStage::kFirstEventSyncStage));
+  EXPECT_NE(first_exec_partitioncall, nullptr);
+
+  auto sub_exe_graph = ge::NodeUtils::GetSubgraph(*first_exec_partitioncall->GetNode(), 0U);
+  EXPECT_NE(sub_exe_graph, nullptr);
+  ASSERT_EQ(SummaryChecker(sub_exe_graph)
+                .StrictDirectNodeTypes({{"InnerData", 1},
+                                        {"FirstExec", 2},
+                                        {"InnerNetOutput", 1}}),
+            "success");
+  auto first_exec_node = sub_exe_graph->FindFirstNodeMatchType("FirstExec");
+  EXPECT_NE(first_exec_node, nullptr);
+  ASSERT_EQ(NodeTopoChecker(first_exec_node).StrictConnectFrom({{"InnerData", 0}}), "success");
+  ASSERT_NE(NodeTopoChecker(first_exec_node).StrictConnectTo(-1, {{"InnerNetoutput", 0}}), "success");
+
+
+  ASSERT_EQ(SummaryChecker(main_frame->GetExeGraph())
+                .StrictDirectNodeTypes({{"Data", 1},
+                                        {"Const", 1},
+                                        {"Bar1", 1},
+                                        {"Bar2", 1},
+                                        {"PartitionedCall", 1},
+                                        {"NetOutput", 1}}),
+            "success");
+  ASSERT_EQ(NodeTopoChecker(output).StrictConnectFrom({{"Bar1"}, {"Bar2"}}), "success");
 }
 }  // namespace bg
 }  // namespace gert

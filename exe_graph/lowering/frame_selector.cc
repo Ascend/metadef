@@ -29,6 +29,7 @@
 namespace gert {
 namespace bg {
 namespace {
+const int64_t kControlAnchorIdx = -1;
 ge::OutDataAnchorPtr CreateInnerData(const ge::ComputeGraphPtr &graph, const GraphFrame &graph_frame,
                                      const size_t index) {
   auto op_desc = ge::ComGraphMakeShared<ge::OpDesc>(ValueHolder::GenerateNodeName(kInnerData, graph_frame), kInnerData);
@@ -72,13 +73,17 @@ ge::graphStatus MoveGuardersToDeInit(const ge::NodePtr &init_node, const GraphFr
   return ge::GRAPH_SUCCESS;
 }
 ge::graphStatus GetNewOutIndexes(const std::vector<ValueHolderPtr> &init_graph_outputs, const size_t start_index,
-                                 size_t &new_out_num, std::map<ValueHolderPtr, size_t> &graph_outputs_to_out_index) {
+                                 size_t &new_out_num, std::map<ValueHolderPtr, int64_t> &graph_outputs_to_out_index) {
   new_out_num = 0U;
   for (const auto &output : init_graph_outputs) {
     GE_ASSERT_NOTNULL(output, "Failed to construct on init graph, the graph builder return nullptr");
     const auto node = output->GetNode();
     GE_ASSERT_NOTNULL(node);
     const auto index = output->GetOutIndex();
+    if (index < 0) {
+      graph_outputs_to_out_index[output] = kControlAnchorIdx;
+      continue;
+    }
     int32_t out_index = -1;
     for (const auto &anchor_and_node : ge::NodeUtils::GetOutDataNodesWithAnchorByIndex(*node, index)) {
       if (IsTypeInnerNetOutput(anchor_and_node.second->GetType().c_str())) {
@@ -94,29 +99,30 @@ ge::graphStatus GetNewOutIndexes(const std::vector<ValueHolderPtr> &init_graph_o
   }
   return ge::GRAPH_SUCCESS;
 }
-ge::graphStatus ConnectOut(const ge::NodePtr &init_node,
-                           GraphFrame &root_frame,
-                           GraphFrame &init_frame,
-                           const std::vector<ValueHolderPtr> &init_graph_outputs,
-                           std::vector<ValueHolderPtr> &init_node_outputs) {
-  const auto netoutput = GetOrCreateInnerNetOutput(init_frame);
+ge::graphStatus ConnectSubGraphOut(const ge::NodePtr &parent_node, GraphFrame &sub_frame,
+                                   const std::vector<ValueHolderPtr> &sub_graph_outputs,
+                                   std::vector<std::pair<ValueHolderPtr, size_t>> &guarders_and_out_index,
+                                   std::vector<ValueHolderPtr> &parent_node_outputs) {
+  const auto netoutput = GetOrCreateInnerNetOutput(sub_frame);
   GE_ASSERT_NOTNULL(netoutput);
   const auto index = netoutput->GetAllInDataAnchorsSize();
 
   size_t new_out_num;
-  std::map<ValueHolderPtr, size_t> graph_outputs_to_out_index;
-  GE_ASSERT_SUCCESS(GetNewOutIndexes(init_graph_outputs, index, new_out_num, graph_outputs_to_out_index));
+  std::map<ValueHolderPtr, int64_t> graph_outputs_to_out_index;
+  GE_ASSERT_SUCCESS(GetNewOutIndexes(sub_graph_outputs, index, new_out_num, graph_outputs_to_out_index));
 
   GE_ASSERT_SUCCESS(ge::NodeUtils::AppendInputAnchor(netoutput, index + new_out_num));
-  std::vector<std::pair<ValueHolderPtr, size_t>> guarders_and_out_index;
-  guarders_and_out_index.reserve(init_graph_outputs.size());
-  init_node_outputs.reserve(init_graph_outputs.size());
-  for (const auto &holder : init_graph_outputs) {
+  guarders_and_out_index.reserve(sub_graph_outputs.size());
+  parent_node_outputs.reserve(sub_graph_outputs.size());
+  for (const auto &holder : sub_graph_outputs) {
     const auto &out_index = graph_outputs_to_out_index.at(holder);
     if (out_index >= index) {
       GE_ASSERT_NOTNULL(holder);
       GE_ASSERT_SUCCESS(ge::GraphUtils::AddEdge(holder->GetNode()->GetOutDataAnchor(holder->GetOutIndex()),
                                                 netoutput->GetInDataAnchor(out_index)));
+    } else if (out_index == kControlAnchorIdx) {
+      GE_ASSERT_SUCCESS(
+          ge::GraphUtils::AddEdge(holder->GetNode()->GetOutControlAnchor(), netoutput->GetInControlAnchor()));
     }
 
     auto guarder = holder->GetGuarder();
@@ -124,17 +130,116 @@ ge::graphStatus ConnectOut(const ge::NodePtr &init_node,
       guarders_and_out_index.emplace_back(guarder, out_index);
     }
 
-    init_node_outputs.emplace_back(holder->CreateMateFromNode(init_node, static_cast<int32_t>(out_index),
-                                                              ValueHolder::ValueHolderType::kOutput));
+    parent_node_outputs.emplace_back(holder->CreateMateFromNode(parent_node, static_cast<int32_t>(out_index),
+                                                                     ValueHolder::ValueHolderType::kOutput));
   }
 
-  GE_ASSERT_SUCCESS(ge::NodeUtils::AppendOutputAnchor(init_node, index + new_out_num));
-  GE_ASSERT_SUCCESS(MoveGuardersToDeInit(init_node, root_frame, guarders_and_out_index));
+  GE_ASSERT_SUCCESS(ge::NodeUtils::AppendOutputAnchor(parent_node, index + new_out_num));
 
-  for (size_t i = 0U; i < init_graph_outputs.size(); ++i) {
-    init_node_outputs[i]->SetPlacement(init_graph_outputs[i]->GetPlacement());
+  for (size_t i = 0U; i < sub_graph_outputs.size(); ++i) {
+    parent_node_outputs[i]->SetPlacement(sub_graph_outputs[i]->GetPlacement());
   }
   return ge::GRAPH_SUCCESS;
+}
+ge::graphStatus ConnectOut(const ge::NodePtr &init_node,
+                           GraphFrame &root_frame,
+                           GraphFrame &init_frame,
+                           const std::vector<ValueHolderPtr> &init_graph_outputs,
+                           std::vector<ValueHolderPtr> &init_node_outputs) {
+  std::vector<std::pair<ValueHolderPtr, size_t>> guarders_and_out_index;
+  GE_ASSERT_SUCCESS(
+      ConnectSubGraphOut(init_node, init_frame, init_graph_outputs, guarders_and_out_index, init_node_outputs));
+  GE_ASSERT_SUCCESS(MoveGuardersToDeInit(init_node, root_frame, guarders_and_out_index));
+  return ge::GRAPH_SUCCESS;
+}
+
+ge::graphStatus LoweringToSubgraph(const std::function<std::vector<ValueHolderPtr>()> &builder,
+                                   ValueHolderPtr partition_call_holder, GraphFrame *sub_graph_frame,
+                                   std::vector<ValueHolderPtr> &parent_node_outputs) {
+  const ScopedCurrentFrame frame_guarder(sub_graph_frame);
+  auto outputs = builder();
+  partition_call_holder->AppendOutputs<ValueHolder>(outputs.size());
+
+  std::vector<std::pair<ValueHolderPtr, size_t>> guarders_and_out_index;
+  auto partitioned_call = sub_graph_frame->GetExeGraph()->GetParentNode();
+  GE_ASSERT_GRAPH_SUCCESS(
+      ConnectSubGraphOut(partitioned_call, *sub_graph_frame, outputs, guarders_and_out_index, parent_node_outputs));
+  return ge::GRAPH_SUCCESS;
+}
+
+bool InitStageIdsToPartitionedCalls(const char *attr_name, std::vector<ValueHolderPtr> &stage_ids_to_pcall) {
+  if (attr_name == kStageIdsToFirstPartitionedCall) {
+    stage_ids_to_pcall.resize(static_cast<size_t>(OnMainRootFirstExecStage::kStageSize));
+  } else if (attr_name == kStageIdsToLastPartitionedCall) {
+    stage_ids_to_pcall.resize(static_cast<size_t>(OnMainRootLastExecStage::kStageSize));
+  } else {
+    return false;
+  }
+  return true;
+}
+
+std::vector<ValueHolderPtr> GetOrCreateAllPartitionedCalls(const ge::ComputeGraphPtr &exe_graph,
+                                                           const char *stage_attr_name) {
+  std::vector<ValueHolderPtr> tmp_stage_ids_to_pcall;
+  auto stage_ids_to_partitioned_calls =
+      exe_graph->GetExtAttr<std::vector<ValueHolderPtr>>(stage_attr_name);
+  if (stage_ids_to_partitioned_calls == nullptr) {
+    GE_ASSERT_TRUE(InitStageIdsToPartitionedCalls(stage_attr_name, tmp_stage_ids_to_pcall));
+    return tmp_stage_ids_to_pcall;
+  } else {
+    return *stage_ids_to_partitioned_calls;
+  }
+}
+
+ValueHolderPtr GetOrCreatePartitionedCallHolder(std::vector<ValueHolderPtr> &stage_ids_to_pcalls, size_t stage_id) {
+  GE_ASSERT_TRUE(stage_ids_to_pcalls.size() > stage_id);
+  auto partition_call_holder = stage_ids_to_pcalls[stage_id];
+  if (partition_call_holder != nullptr) {
+    return partition_call_holder;
+  }
+  return ValueHolder::CreateVoid<ValueHolder>("PartitionedCall", {});
+}
+
+GraphFrame *PushPartitionedCallSubFrame(bg::ValueHolderPtr &partition_call_holder) {
+  GE_ASSERT_NOTNULL(partition_call_holder->GetNode());
+  auto sub_graph = ge::NodeUtils::GetSubgraph(*partition_call_holder->GetNode(), 0U);
+  if (sub_graph == nullptr) {
+    return ValueHolder::PushGraphFrame(partition_call_holder, "exec_sub_graph");
+  }
+
+  std::unique_ptr<GraphFrame> sub_graph_frame_holder =
+      ge::ComGraphMakeUnique<GraphFrame>(sub_graph, *ValueHolder::GetCurrentFrame());
+  GE_ASSERT_NOTNULL(sub_graph_frame_holder);
+  sub_graph_frame_holder->SetCurrentComputeNode(ValueHolder::GetCurrentFrame()->GetCurrentComputeNode());
+  return ValueHolder::PushGraphFrame(sub_graph_frame_holder.release());
+}
+
+std::vector<ValueHolderPtr> OnMainRootPartitionedCall(
+    const std::function<std::vector<bg::ValueHolderPtr>()> &partition_call_builder, const char *attr_name,
+    size_t stage_id) {
+  GE_ASSERT_NOTNULL(partition_call_builder);
+  GE_ASSERT_TRUE(GetGraphFrames().size() > 1U);
+  GraphFrame *current_frame = (GetGraphFrames().begin() + 1)->get();
+  GE_ASSERT_EQ(current_frame->GetExeGraph()->GetParentNode()->GetType(), "Main");
+  const ScopedCurrentFrame main_frame_guarder(current_frame);
+
+  std::vector<ValueHolderPtr> stage_ids_to_pcall =
+      GetOrCreateAllPartitionedCalls(current_frame->GetExeGraph(), attr_name);
+  GE_ASSERT_TRUE(stage_ids_to_pcall.size() > stage_id, "Stage_ids_2_partitioncall size %zu, stage_id is %zu",
+                 stage_ids_to_pcall.size(), stage_id);
+  ValueHolderPtr partition_call_holder = GetOrCreatePartitionedCallHolder(stage_ids_to_pcall, stage_id);
+  GE_ASSERT_NOTNULL(partition_call_holder);
+  GraphFrame *sub_graph_frame = PushPartitionedCallSubFrame(partition_call_holder);
+  GE_ASSERT_NOTNULL(sub_graph_frame);
+
+  std::vector<ValueHolderPtr> parent_node_outputs;
+  GE_ASSERT_GRAPH_SUCCESS(
+      LoweringToSubgraph(partition_call_builder, partition_call_holder, sub_graph_frame, parent_node_outputs));
+
+  stage_ids_to_pcall[stage_id] = partition_call_holder;
+  current_frame->GetExeGraph()->SetExtAttr<std::vector<ValueHolderPtr>>(attr_name, stage_ids_to_pcall);
+  ValueHolder::PopGraphFrame();
+  return parent_node_outputs;
 }
 }  // namespace
 std::vector<ValueHolderPtr> FrameSelector::OnMainRoot(const std::function<std::vector<ValueHolderPtr>()> &builder) {
@@ -173,20 +278,10 @@ ge::graphStatus FrameSelector::OnMainRoot(const std::function<std::vector<ValueH
   return ge::GRAPH_SUCCESS;
 }
 
-ValueHolderPtr FrameSelector::OnMainRootLast(const std::function<bg::ValueHolderPtr()> &builder) {
-  if (builder == nullptr || GetGraphFrames().empty()) {
-    return nullptr;
-  }
-  GraphFrame *current_frame;
-  if (GetGraphFrames().size() > 1U) {
-    current_frame = (GetGraphFrames().begin() + 1)->get();
-  } else {
-    current_frame = GetGraphFrames().begin()->get();
-  }
-  const ScopedCurrentFrame frame_guarder(current_frame);
-  auto output = builder();
-  GetCurrentFrame()->SetLastExecNode(output);
-  return output;
+std::vector<ValueHolderPtr> FrameSelector::OnMainRootFirst(
+    const std::function<std::vector<bg::ValueHolderPtr>()> &builder) {
+  return OnMainRootPartitionedCall(builder, kStageIdsToFirstPartitionedCall,
+                                   static_cast<size_t>(OnMainRootFirstExecStage::kFirstEventSyncStage));
 }
 
 std::vector<ValueHolderPtr> FrameSelector::OnInitRoot(const std::function<std::vector<ValueHolderPtr>()> &builder) {
@@ -224,6 +319,30 @@ ge::graphStatus FrameSelector::OnInitRoot(const std::function<std::vector<ValueH
   }
   return ge::GRAPH_SUCCESS;
 }
+
+ValueHolderPtr FrameSelector::OnMainRootLast(const std::function<bg::ValueHolderPtr()> &builder) {
+  if (builder == nullptr || GetGraphFrames().empty()) {
+    return nullptr;
+  }
+  GraphFrame *current_frame = nullptr;
+  if (GetGraphFrames().size() > 1U) {
+    current_frame = (GetGraphFrames().begin() + 1)->get();
+  } else {
+    current_frame = GetGraphFrames().begin()->get();
+  }
+  GE_ASSERT_NOTNULL(current_frame);
+  const ScopedCurrentFrame frame_guarder(current_frame);
+  auto output = builder();
+  GetCurrentFrame()->SetLastExecNode(output);
+  return output;
+}
+
+std::vector<ValueHolderPtr> FrameSelector::OnMainRootLastEventSync(
+    const std::function<std::vector<bg::ValueHolderPtr>()> &builder) {
+  return OnMainRootPartitionedCall(builder, kStageIdsToLastPartitionedCall,
+                                   static_cast<size_t>(OnMainRootLastExecStage::kLastEventSyncStage));
+}
+
 ValueHolderPtr HolderOnInit(const ValueHolderPtr &holder) {
   GE_ASSERT_NOTNULL(holder);
   const auto index = holder->GetOutIndex();

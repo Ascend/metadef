@@ -129,6 +129,12 @@ class ValueHolder {
    * @return 创建且挂接成功后，返回创建好的GraphFrame指针，失败时返回空指针
    */
   static GraphFrame *PushGraphFrame(const ValueHolderPtr &belongs, const ge::char_t *graph_name);
+  /**
+   * 压栈一个GraphFrame, 若该graph frame非root frame，需要保证栈顶frame为其父frame
+   * @return 成功后，返回该GraphFrame指针，失败时返回空指针
+   */
+  static GraphFrame *PushGraphFrame(GraphFrame *graph_frame);
+
   static std::unique_ptr<GraphFrame> PopGraphFrame();
   static std::unique_ptr<GraphFrame> PopGraphFrame(const std::vector<ValueHolderPtr> &outputs,
                                                    const std::vector<ValueHolderPtr> &targets);
