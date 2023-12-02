@@ -19,13 +19,10 @@
 #include "graph/debug/ge_log.h"
 namespace ge {
 Status HcomTopoInfo::SetGroupTopoInfo(const char_t *group, const HcomTopoInfo::TopoInfo &info) {
-  if (!(rank_info_.emplace(group, info).second)) {
-    REPORT_INNER_ERROR("E18888", "Group key [%s] has already been added.", group);
-    GELOGE(GRAPH_FAILED, "[Check][Param] group key [%s] has already been added.", group);
-    return GRAPH_FAILED;
-  }
+  rank_info_[group] = info;
   return GRAPH_SUCCESS;
 }
+
 Status HcomTopoInfo::GetGroupRankSize(const char_t *group, int64_t &rank_size) {
   const auto &iter_info = rank_info_.find(group);
   if (iter_info == rank_info_.end()) {
@@ -34,6 +31,17 @@ Status HcomTopoInfo::GetGroupRankSize(const char_t *group, int64_t &rank_size) {
     return GRAPH_FAILED;
   }
   rank_size = iter_info->second.rank_size;
+  return GRAPH_SUCCESS;
+}
+
+Status HcomTopoInfo::GetGroupNotifyHandle(const char_t *group, void *&notify_handle) {
+  const auto &iter_info = rank_info_.find(group);
+  if (iter_info == rank_info_.end()) {
+    REPORT_INNER_ERROR("E18888", "Group key [%s] has not been added, get failed.", group);
+    GELOGE(GRAPH_FAILED, "[Check][Param] group key [%s] has not been added, get failed.", group);
+    return GRAPH_FAILED;
+  }
+  notify_handle = iter_info->second.notify_handle;
   return GRAPH_SUCCESS;
 }
 }
