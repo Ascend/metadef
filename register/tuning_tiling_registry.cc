@@ -33,14 +33,14 @@ void TuningTilingClassFactory::RegisterTilingData(const ge::AscendString &optype
   }
   auto &instance = TuningTilingClassFactory::RegisterInfo();
   instance[optype] = constructor;
-  GELOGI("RegisterTuningTilingData: optype: %s, registered count: %zu", optype.GetString(), instance.size());
+  GELOGI("optype: %s, registered count: %zu", optype.GetString(), instance.size());
 }
 
 std::shared_ptr<TuningTilingDef> TuningTilingClassFactory::CreateTilingDataInstance(const ge::AscendString &optype) {
   const auto &instance = TuningTilingClassFactory::RegisterInfo();
   const auto it = instance.find(optype);
   if (it == instance.cend()) {
-    GELOGW("CreateTilingDataInstance: can not find optype: %s", optype.GetString());
+    GELOGW("can not find optype: %s", optype.GetString());
     return nullptr;
   }
 

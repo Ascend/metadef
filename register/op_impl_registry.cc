@@ -174,28 +174,33 @@ std::map<OpImplRegistry::OpType, OpImplRegistry::OpImplFunctions> &OpImplRegistr
   return types_to_impl_;
 }
 OpImplRegisterV2::OpImplRegisterV2(const ge::char_t *op_type) : impl_(new(std::nothrow) OpImplRegisterV2Impl) {
-  if (impl_ != nullptr) {
-    impl_->op_type = op_type;
-    impl_->functions.infer_shape = nullptr;
-    impl_->functions.infer_shape_range = nullptr;
-    impl_->functions.infer_datatype = nullptr;
-    impl_->functions.inputs_dependency = 0U;
-    impl_->functions.op_execute_func = nullptr;
-    impl_->functions.host_inputs = 0U;
-    impl_->functions.tiling_dependency = 0U;
-    // two fields controlled by tiling func
-    impl_->functions.tiling = nullptr;
-    impl_->functions.max_tiling_data_size = std::numeric_limits<size_t>::max();
-
-    // 3 fields controlled by tiling_parse func
-    impl_->functions.tiling_parse = nullptr;
-    impl_->functions.compile_info_creator = nullptr;
-    impl_->functions.compile_info_deleter = nullptr;
-
-    // private attr controlled by is_private_attr_registered
-    (void)OpImplRegistry::GetInstance().CreateOrGetOpImpl(op_type);
+  if (impl_ == nullptr) {
+    return;
   }
+
+  GELOGD("op type: %s", op_type);
+  impl_->op_type = op_type;
+  impl_->functions.infer_shape = nullptr;
+  impl_->functions.infer_shape_range = nullptr;
+  impl_->functions.infer_datatype = nullptr;
+  impl_->functions.inputs_dependency = 0U;
+  impl_->functions.op_execute_func = nullptr;
+  impl_->functions.host_inputs = 0U;
+  impl_->functions.tiling_dependency = 0U;
+
+  // two fields controlled by tiling func
+  impl_->functions.tiling = nullptr;
+  impl_->functions.max_tiling_data_size = std::numeric_limits<size_t>::max();
+
+  // 3 fields controlled by tiling_parse func
+  impl_->functions.tiling_parse = nullptr;
+  impl_->functions.compile_info_creator = nullptr;
+  impl_->functions.compile_info_deleter = nullptr;
+
+  // private attr controlled by is_private_attr_registered
+  (void)OpImplRegistry::GetInstance().CreateOrGetOpImpl(op_type);
 }
+
 OpImplRegisterV2::~OpImplRegisterV2() = default;
 OpImplRegisterV2::OpImplRegisterV2(const OpImplRegisterV2 &register_data) {
   RegisterOpImplToRegistry(register_data.impl_.get());
