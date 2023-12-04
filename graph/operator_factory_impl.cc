@@ -205,14 +205,14 @@ graphStatus OperatorFactoryImpl::RegisterOperatorCreator(const std::string &oper
   auto it = operator_creators_v2_->find(operator_type);
   if (it != operator_creators_v2_->cend()) {
     if (is_register_overridable.load()) {
-      GELOGD("Override operator creator v2 for %s.", operator_type.c_str());
+      GELOGD("Override creator v2 for %s.", operator_type.c_str());
       it->second = op_creator;
       return GRAPH_SUCCESS;
     }
     return GRAPH_FAILED;
   }
   (void)operator_creators_v2_->emplace(operator_type, op_creator);
-  GELOGD("Register operator creator v2 for %s.", operator_type.c_str());
+  GELOGD("Register creator v2 for %s.", operator_type.c_str());
   return GRAPH_SUCCESS;
 }
 

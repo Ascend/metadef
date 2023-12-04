@@ -76,7 +76,7 @@ void TilingDef::CheckAlignAndGenPlaceHolder(const char *name, size_t typeSize) {
 }
 
 void TilingDef::InitData() {
-    GELOGI("TilingDef::InitData, op %s, init data size %d.", class_name_, data_size_);
+    GELOGI("TilingDef::InitData, op %s, data size %d.", class_name_, data_size_);
     data_ptr_ = new (std::nothrow)uint8_t[data_size_]();
     if (data_ptr_ == nullptr) {
           GELOGE(ge::GRAPH_FAILED, "TilingDef::InitData failed: op %s, init data size %d.", class_name_, data_size_);
@@ -98,18 +98,17 @@ CTilingDataClassFactory &CTilingDataClassFactory::GetInstance()
 void CTilingDataClassFactory::RegisterTilingData(const char *op_type,
                                                  const TilingDataConstructor constructor) {
   instance_.emplace(op_type, constructor);
-  GELOGI("RegisterTilingData: op_type:%s, constructor:%p, registered count:%zu", op_type, constructor,
-         instance_.size());
+  GELOGI("op_type:%s, constructor:%p, registered count:%zu", op_type, constructor, instance_.size());
 }
 
 std::shared_ptr<TilingDef> CTilingDataClassFactory::CreateTilingDataInstance(const char *op_type) {
   const auto it = instance_.find(op_type);
   if (it == instance_.end()) {
-    GELOGW("CreateTilingDataInstance: cannot find op_type:%s.", op_type);
+    GELOGW("cannot find op_type:%s.", op_type);
     return nullptr;
   }
-  const TilingDataConstructor constructor = it->second;
 
+  const TilingDataConstructor constructor = it->second;
   if (constructor == nullptr) {
     GELOGW("CreateTilingDataInstance: constructor is nullptr.");
     return nullptr;
