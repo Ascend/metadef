@@ -38,6 +38,7 @@ struct ReplayFuncParam {
 };
 
 using REPLAY_FUNC = int32_t (*)(ReplayFuncParam &param, const int32_t core_type);
+using GEN_SIMPLIFIEDKEY_FUNC = bool (*)(const ge::Operator &op, ge::AscendString &result);
 
 class OpCheckFuncRegistry {
 public:
@@ -45,6 +46,10 @@ public:
                                    OP_CHECK_FUNC func);
 
   static OP_CHECK_FUNC GetOpCapability(const ge::AscendString &check_type, const ge::AscendString &op_type);
+
+  static void RegisterGenSimplifiedKeyFunc(const ge::AscendString &op_type, GEN_SIMPLIFIEDKEY_FUNC func);
+
+  static GEN_SIMPLIFIEDKEY_FUNC GetGenSimplifiedKeyFun(const ge::AscendString &op_type);
 
   static PARAM_GENERALIZE_FUNC GetParamGeneralize(const ge::AscendString &op_type);
 
@@ -55,6 +60,7 @@ public:
 
 private:
   static std::map<ge::AscendString, std::map<ge::AscendString, OP_CHECK_FUNC>> check_op_capability_instance_;
+  static std::map<ge::AscendString, GEN_SIMPLIFIEDKEY_FUNC> gen_simplifiedkey_instance_;
   static std::map<ge::AscendString, PARAM_GENERALIZE_FUNC> param_generalize_instance_;
   static std::map<ge::AscendString, std::map<ge::AscendString, REPLAY_FUNC>> replay_instance_;
 };
