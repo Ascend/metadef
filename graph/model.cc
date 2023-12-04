@@ -73,6 +73,10 @@ Model::Model(const std::string &name, const std::string &custom_version)
   Init();
 }
 
+Model::Model(const char_t *name, const char_t *custom_version)
+    : Model(std::string(name == nullptr ? "" : name),
+            std::string(custom_version == nullptr ? "" : custom_version)) {}
+
 std::string Model::GetName() const { return name_; }
 
 void Model::SetName(const std::string &name) { name_ = name; }
