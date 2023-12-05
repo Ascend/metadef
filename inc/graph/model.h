@@ -32,10 +32,7 @@ class GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY Model : public AttrHolder {
 
   Model(const std::string &name, const std::string &custom_version);
 
-  Model(const char_t *name, const char_t *custom_version);
-
   std::string GetName() const;
-
   void SetName(const std::string &name);
 
   uint32_t GetVersion() const;

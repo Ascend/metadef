@@ -111,6 +111,7 @@ static Graph BuildGraph() {
 }
 
 class ModelUt : public testing::Test {};
+
 TEST_F(ModelUt, SetGet) {
   auto md = SubModel();
   auto md2 = SubModel("md2", "test");
@@ -211,7 +212,7 @@ TEST_F(ModelUt, SaveLargeModelWithRealPath) {
   auto md = BuildModelWithLargeConst();
   std::string file_name = "/tmp/test/model.air";
   EXPECT_EQ(md.SaveToFile(file_name), GRAPH_SUCCESS);
-  Model model_back(nullptr, nullptr);
+  Model model_back;
   EXPECT_EQ(model_back.LoadFromFile("/tmp/test/model.air"), GRAPH_SUCCESS);
   ComputeGraphPtr com_graph1 = std::make_shared<ComputeGraph>("TestGraph1");
   com_graph1 = model_back.GetGraph();
