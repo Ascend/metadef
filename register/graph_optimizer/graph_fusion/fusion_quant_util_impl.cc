@@ -26,16 +26,18 @@ const std::string BIAS_OPTIMIZATION_DEQUANT_SCALE = "dequant_scale";
 const std::string BIAS_OPTIMIZATION_OUTPUT = "cube_quant_roll_back_output";
 const size_t BIAS_OPT_OP_OFFSET_IDX = 3;
 const size_t BIAS_OPT_OP_SCALE_IDX = 4;
-const uint32_t IDX_2 = 2;
+const size_t IDX_2 = 2;
 constexpr char const *kAttrSingleOp = "_is_single_op";
 const bool ATTRTRUE = true;
 constexpr const char *kSocVersionAscend035 = "Ascend035";
 const std::string SOC_VERSION = "ge.socVersion";
 const std::unordered_set<std::string> kNanoSocVersionSet = {kSocVersionAscend035};
 // maps aic version to ISA arch VERSION
-const std::map<std::string, std::string> kAicIsaArchVersionMap{
-    {"100", "v100"}, {"200", "v200"}, {"202", "v200"}, {"210", "v200"},
-    {"220", "v220"}, {"300", "v300"}, {"310", "v300"}, {"350", "v350"}};
+const std::map<std::string, std::string> kAicIsaArchVersionMap{{"100", "v100"}, {"200", "v200"}, {"202", "v200"},
+                                                               {"210", "v200"}, {"220", "v220"}, {"300", "v300"},
+                                                               {"310", "v300"}, {"350", "v350"}};
+
+const std::set<std::string> kNeedAddBiasWithWeightNd = {"FFN"};
 
 const std::map<ge::Format, std::map<std::string, int32_t>> AXIS_INDEX_OF_FORMAT = {
     {ge::Format::FORMAT_NCHW, {{"N", NCHW_DIM_N}, {"C", NCHW_DIM_C}, {"H", NCHW_DIM_H}, {"W", NCHW_DIM_W}}},
@@ -56,6 +58,11 @@ const std::set<std::string> kRootGraphData = {"Data", "RefData"};
 uint64_t GetHostCpuAtomicId() {
   static std::atomic<uint64_t> global_trans_atomic_id(0);
   return global_trans_atomic_id.fetch_add(1, std::memory_order_relaxed);
+}
+
+uint64_t GetBiasNodeAtomicId() {
+  static std::atomic<uint64_t> global_bias_node_atomic_id(0);
+  return global_bias_node_atomic_id.fetch_add(1, std::memory_order_relaxed);
 }
 
 void GetIsaArchVersionStr(std::string &isa_version) {
@@ -175,11 +182,24 @@ inline Status CheckInt64MulOverflow(int64_t m, int64_t n) {
   return SUCCESS;
 }
 
-Status QuantUtilImpl::GetCoValueByWeight(ge::NodePtr &cube_node, const size_t &idx, int64_t &co) {
+Status QuantUtilImpl::GetCoValueByWeight(ge::NodePtr &cube_node, const size_t &idx, std::vector<int64_t> &bias_shape) {
   std::vector<int64_t> filter_dims4_d;
   ge::Format filter_format =
       static_cast<ge::Format>(ge::GetPrimaryFormat(cube_node->GetOpDesc()->MutableInputDesc(idx)->GetFormat()));
   auto filter_shape = cube_node->GetOpDesc()->MutableInputDesc(idx)->MutableShape();
+
+  if (filter_format == ge::FORMAT_ND && kNeedAddBiasWithWeightNd.count(cube_node->GetType()) != 0) {
+    auto filter_dims = filter_shape.GetDims();
+    if (filter_dims.size() == 2) {  // current only support 2D weight
+      bias_shape.emplace_back(filter_dims[1]);
+    }
+
+    if (filter_dims.size() == kAicVersionSize) {
+      bias_shape.emplace_back(filter_dims[0]);
+      bias_shape.emplace_back(filter_dims[IDX_2]);
+    }
+    return SUCCESS;
+  }
   if (filter_format != ge::FORMAT_ND) {
     int64_t groups = 1;
     (void) ge::AttrUtils::GetInt(cube_node->GetOpDesc(), "groups", groups);
@@ -204,27 +224,31 @@ Status QuantUtilImpl::GetCoValueByWeight(ge::NodePtr &cube_node, const size_t &i
     if (CheckInt64MulOverflow(filter_dims4_d[index_co], groups)) {
       return FAILED;
     }
-    co = filter_dims4_d[index_co] * groups;
+    bias_shape.emplace_back(filter_dims4_d[index_co] * groups);
   }
   return SUCCESS;
 }
 
-TensorPtr QuantUtilImpl::CreateBiasTensor(const int64_t co) {
-  std::unique_ptr<int32_t[]> bias_data_temp(new (std::nothrow) int32_t[co]());
-  for (int64_t i = 0; i < co; i++) {
+TensorPtr QuantUtilImpl::CreateBiasTensor(const std::vector<int64_t> &shape) {
+  int64_t size = 1;
+  for (auto dim : shape) {
+    size *= dim;
+  }
+  std::unique_ptr<int32_t[]> bias_data_temp(new (std::nothrow) int32_t[size]());
+  for (int64_t i = 0; i < size; i++) {
     bias_data_temp[i] = 0;
   }
 
   ge::GeTensorDesc tmp_desc;
   ge::GeTensorPtr bias_ptr = nullptr;
   GE_MAKE_SHARED(bias_ptr = std::make_shared<ge::GeTensor>(tmp_desc, reinterpret_cast<uint8_t *>(bias_data_temp.get()),
-                                                           co * sizeof(int32_t)),
+                                                           size * sizeof(int32_t)),
                  return nullptr);
 
-  ge::GeShape bias_shape({co});
+  ge::GeShape bias_shape(shape);
   bias_ptr->MutableTensorDesc().SetShape(bias_shape);
   bias_ptr->MutableTensorDesc().SetDataType(ge::DT_INT32);
-  Status ret = bias_ptr->SetData(reinterpret_cast<uint8_t *>(bias_data_temp.get()), co * sizeof(int32_t));
+  Status ret = bias_ptr->SetData(reinterpret_cast<uint8_t *>(bias_data_temp.get()), size * sizeof(int32_t));
   if (ret != SUCCESS) {
     GELOGW("set bias data failed!");
     return nullptr;
@@ -239,8 +263,10 @@ ge::NodePtr QuantUtilImpl::CreateBiasNode(std::shared_ptr<ge::ComputeGraph> &gra
     GELOGE(ge::FAILED, "const_opdesc nullptr");
     return nullptr;
   }
-  string constOpName = cube_node_name + "_quant_bias";
-  const_opdesc->SetName(constOpName);
+  std::ostringstream oss;
+  oss << cube_node_name << "_quant_bias" << GetBiasNodeAtomicId();
+  oss.flush();
+  const_opdesc->SetName(oss.str());
   ge::NodePtr const_node = graph->AddNode(const_opdesc);
   return const_node;
 }
@@ -279,11 +305,11 @@ Status QuantUtilImpl::UpdateCubeInputDesc(const ge::NodePtr &cube_node, const ge
 }
 
 Status QuantUtilImpl::CreateBiasInput(std::shared_ptr<ge::ComputeGraph> &graph, ge::NodePtr &cube_node,
-                                      const int64_t &co, const size_t &bias_idx) {
+                                      const std::vector<int64_t> &shape, const size_t &bias_idx) {
   GELOGD("Node[name: %s, type: %s] has no bias, create bias and set data", cube_node->GetName().c_str(),
          cube_node->GetType().c_str());
 
-  ge::GeTensorPtr bias_ptr = CreateBiasTensor(co);
+  ge::GeTensorPtr bias_ptr = CreateBiasTensor(shape);
   if (bias_ptr == nullptr) {
     return FAILED;
   }
@@ -299,18 +325,19 @@ Status QuantUtilImpl::CreateBiasInput(std::shared_ptr<ge::ComputeGraph> &graph, 
     return FAILED;
   }
 
-  ge::GeShape bias_shape({co});
-  ge::GeTensorDesc input_desc0 = cube_node->GetOpDesc()->GetInputDesc(0);
-  ge::Format input_desc0_origin_format = input_desc0.GetOriginFormat();
-  if (UpdateBiasOutputDesc(cube_node, bias_shape, input_desc0_origin_format, IDX_2) != SUCCESS) {
+  ge::GeShape bias_shape(shape);
+  auto bias_input_desc = cube_node->GetOpDesc()->GetInputDesc(bias_idx);
+  ge::Format input_desc0_origin_format = bias_input_desc.GetOriginFormat();
+  if (UpdateBiasOutputDesc(cube_node, bias_shape, input_desc0_origin_format, bias_idx) != SUCCESS) {
     return FAILED;
   }
+  if (UpdateCubeInputDesc(cube_node, bias_shape, input_desc0_origin_format, bias_idx) != SUCCESS) {
 
-  if (UpdateCubeInputDesc(cube_node, bias_shape, input_desc0_origin_format, 1) != SUCCESS) {
     return FAILED;
   }
   return SUCCESS;
 }
+
 // 基于weight input anchor 获取weight的input node
 Status QuantUtilImpl::GetWeightConstNode(const ge::InDataAnchorPtr &weight, ge::NodePtr &weight_const_node,
                                          ge::NodePtr &ascend_weight_quant_node) {
@@ -430,20 +457,20 @@ Status QuantUtilImpl::LinkBiasOptimizeHostOp(const ge::NodePtr &quant_node, cons
     return FAILED;
   }
 
+  // weight
+  auto weight_out_anchor = weight_const_node->GetOutDataAnchor(0);
+  if (ge::GraphUtils::AddEdge(weight_out_anchor, host_op_node->GetInDataAnchor(1)) != SUCCESS) {
+    GELOGE(ge::FAILED, "add edge between weight peer out anchor and host op failed");
+    return FAILED;
+  }
+
   // dequant_scale
   auto deq_scale_peer_out_anchor = param.deq_scale->GetPeerOutAnchor();
   if (deq_scale_peer_out_anchor == nullptr) {
     return FAILED;
   }
-  if (ge::GraphUtils::AddEdge(deq_scale_peer_out_anchor, host_op_node->GetInDataAnchor(1)) != SUCCESS) {
+  if (ge::GraphUtils::AddEdge(deq_scale_peer_out_anchor, host_op_node->GetInDataAnchor(IDX_2)) != SUCCESS) {
     GELOGE(ge::FAILED, "add edge between dequant_scale peer out anchor and host op failed");
-    return FAILED;
-  }
-
-  // weight
-  auto weight_out_anchor = weight_const_node->GetOutDataAnchor(0);
-  if (ge::GraphUtils::AddEdge(weight_out_anchor, host_op_node->GetInDataAnchor(IDX_2)) != SUCCESS) {
-    GELOGE(ge::FAILED, "add edge between weight peer out anchor and host op failed");
     return FAILED;
   }
 
@@ -509,10 +536,10 @@ Status QuantUtilImpl::CreateBiasOptimizeHostCpuOp(std::shared_ptr<ge::ComputeGra
   if (GetInputDescByAnchor(param.deq_scale, deq_scale_tensor_desc) != SUCCESS) {
     return FAILED;
   }
-  bias_optimizer_op_desc->AddInputDesc(BIAS_OPTIMIZATION_DEQUANT_SCALE, deq_scale_tensor_desc);
   // get weight tensor desc
   ge::GeTensorDesc weight_tensor_desc = weight_const_node->GetOpDesc()->GetOutputDesc(0);
   bias_optimizer_op_desc->AddInputDesc(BIAS_OPTIMIZATION_FILTER, weight_tensor_desc);
+  bias_optimizer_op_desc->AddInputDesc(BIAS_OPTIMIZATION_DEQUANT_SCALE, deq_scale_tensor_desc);
 
   // get offset and scale form quant attr or input
   if (SetQuantScaleAndOffset(quant_node, param, bias_optimizer_op_desc) != SUCCESS) {
@@ -532,11 +559,11 @@ Status QuantUtilImpl::CreateBiasOptimizeHostCpuOp(std::shared_ptr<ge::ComputeGra
     tensor_desc_ptr->SetOriginShape(tensor_desc_ptr->GetShape());
   }
   // add output desc
-  bias_optimizer_op_desc->AddOutputDesc(BIAS_OPTIMIZATION_OUTPUT, weight_tensor_desc);
+  bias_optimizer_op_desc->AddOutputDesc(BIAS_OPTIMIZATION_OUTPUT, bias_tensor_desc);
   bias_optimizer_op_desc->MutableOutputDesc(0)->SetOriginFormat(
-      static_cast<ge::Format>(ge::GetPrimaryFormat(weight_tensor_desc.GetFormat())));
-  bias_optimizer_op_desc->MutableOutputDesc(0)->SetOriginDataType(weight_tensor_desc.GetDataType());
-  bias_optimizer_op_desc->MutableOutputDesc(0)->SetOriginShape(weight_tensor_desc.GetShape());
+      static_cast<ge::Format>(ge::GetPrimaryFormat(bias_tensor_desc.GetFormat())));
+  bias_optimizer_op_desc->MutableOutputDesc(0)->SetOriginDataType(bias_tensor_desc.GetDataType());
+  bias_optimizer_op_desc->MutableOutputDesc(0)->SetOriginShape(bias_tensor_desc.GetShape());
 
   SetAttrsForBiasOptimizerOp(bias_optimizer_op_desc, param.deq_scale->GetOwnerNode(), weight_const_node);
   // create host op node
@@ -556,21 +583,23 @@ Status QuantUtilImpl::CreateBiasOptimizeHostCpuOp(std::shared_ptr<ge::ComputeGra
 Status QuantUtilImpl::BiasOptimizeByEdgeCommon(ge::NodePtr &quant_node, BiasOptimizeEdges &param,
                                                std::vector<ge::NodePtr> &fusion_nodes) {
   if (!param.isValid()) {
+    GELOGE(ge::FAILED, "param check failed, input param is invalid");
     return FAILED;
   }
   auto cube_node = param.cube_weight->GetOwnerNode();
   auto graph = cube_node->GetOwnerComputeGraph();
   if (NeedBiasInput(param.cube_bias)) {
-    int64_t co = 1;
-    if (GetCoValueByWeight(cube_node, param.cube_weight->GetIdx(), co) != SUCCESS) {
+    GELOGD("start create bias node for node %s", cube_node->GetNamePtr());
+    std::vector<int64_t> bias_shape;
+    if (GetCoValueByWeight(cube_node, param.cube_weight->GetIdx(), bias_shape) != SUCCESS) {
       GELOGE(ge::FAILED, "[GraphOpt][AvgPolQntPcsFus][BiasOpti] Get node[%s] co value.", cube_node->GetName().c_str());
       return FAILED;
     }
-    if (CreateBiasInput(graph, cube_node, co, param.cube_bias->GetIdx()) != SUCCESS) {
+    GELOGD("start create bias input for node %s", cube_node->GetNamePtr());
+    if (CreateBiasInput(graph, cube_node, bias_shape, param.cube_bias->GetIdx()) != SUCCESS) {
       GELOGE(ge::FAILED, "[GraphOpt][CreateBiasInput][BiasOpti] Get node[%s] co value.", cube_node->GetName().c_str());
       return FAILED;
     }
-    return FAILED;
   }
   ge::NodePtr weight_const_node = nullptr;
   ge::NodePtr ascend_weight_quant_node = nullptr;

@@ -106,19 +106,19 @@ class QuantUtilImpl {
   static Status BiasOptimizeByEdgeCommon(ge::NodePtr &quant_node, BiasOptimizeEdges &param,
                                          std::vector<ge::NodePtr> &fusion_nodes);
   static bool NeedBiasInput(const ge::InDataAnchorPtr &bias);
-  static Status GetCoValueByWeight(ge::NodePtr &cube_node, const size_t &idx, int64_t &co);
+  static Status GetCoValueByWeight(ge::NodePtr &cube_node, const size_t &idx, std::vector<int64_t> &bias_shape);
   static Status PadShapeTo4Dim(const ge::Format &filter_format, const std::vector<int64_t> &filter_dims,
                                std::vector<int64_t> &filter_dims4_d);
   static int32_t GetAxisIndexByFormat(const ge::Format &format, const string &axis);
-  static TensorPtr CreateBiasTensor(const int64_t co);
+  static TensorPtr CreateBiasTensor(const std::vector<int64_t> &shape);
   static ge::NodePtr CreateBiasNode(std::shared_ptr<ge::ComputeGraph> &graph, const ge::GeTensorPtr &bias_ptr,
                                     const std::string &cube_node_name);
   static Status UpdateBiasOutputDesc(const ge::NodePtr &cube_node, const ge::GeShape &shape, const ge::Format &format,
                                      const uint32_t index);
   static Status UpdateCubeInputDesc(const ge::NodePtr &cube_node, const ge::GeShape &shape, const ge::Format &format,
                                     const uint32_t index);
-  static Status CreateBiasInput(std::shared_ptr<ge::ComputeGraph> &graph, ge::NodePtr &cube_node, const int64_t &co,
-                                const size_t &bias_idx);
+  static Status CreateBiasInput(std::shared_ptr<ge::ComputeGraph> &graph, ge::NodePtr &cube_node,
+                                const std::vector<int64_t> &shape, const size_t &bias_idx);
   static Status GetWeightConstNode(const ge::InDataAnchorPtr &weight, ge::NodePtr &weight_const_node,
                                    ge::NodePtr &ascend_weight_quant_node);
   static Status GetInputDescByAnchor(const ge::InDataAnchorPtr &in_data_anchor, ge::GeTensorDesc &tensor_desc);

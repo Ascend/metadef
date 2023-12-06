@@ -20,6 +20,7 @@
 namespace optiling {
 std::map<ge::AscendString, std::map<ge::AscendString, OP_CHECK_FUNC>>
     OpCheckFuncRegistry::check_op_capability_instance_;
+std::map<ge::AscendString, GEN_SIMPLIFIEDKEY_FUNC> OpCheckFuncRegistry::gen_simplifiedkey_instance_;
 std::map<ge::AscendString, PARAM_GENERALIZE_FUNC> OpCheckFuncRegistry::param_generalize_instance_;
 std::map<ge::AscendString, std::map<ge::AscendString, REPLAY_FUNC>> OpCheckFuncRegistry::replay_instance_;
 
@@ -42,6 +43,21 @@ OP_CHECK_FUNC OpCheckFuncRegistry::GetOpCapability(const ge::AscendString &check
   if (func_it == check_map_it->second.end()) {
     GELOGW("GetOpCapability: check_type:%s, op_type:%s, cannot find op_type.", check_type.GetString(),
            op_type.GetString());
+    return nullptr;
+  }
+  return func_it->second;
+}
+
+void OpCheckFuncRegistry::RegisterGenSimplifiedKeyFunc(const ge::AscendString &op_type, GEN_SIMPLIFIEDKEY_FUNC func) {
+  gen_simplifiedkey_instance_[op_type] = func;
+  GELOGI("RegisterGenSimplifiedKeyFunc: op_type:%s, registered count:%zu", op_type.GetString(),
+         gen_simplifiedkey_instance_.size());
+}
+
+GEN_SIMPLIFIEDKEY_FUNC OpCheckFuncRegistry::GetGenSimplifiedKeyFun(const ge::AscendString &op_type) {
+  const auto &func_it = gen_simplifiedkey_instance_.find(op_type);
+  if (func_it == gen_simplifiedkey_instance_.end()) {
+    GELOGW("GetGenSimplifiedKeyFun: op_type:%s, cannot find func by op_type.", op_type.GetString());
     return nullptr;
   }
   return func_it->second;

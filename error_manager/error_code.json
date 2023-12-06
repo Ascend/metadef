@@ -1739,6 +1739,17 @@
       }
     },
     {
+      "errClass": "Autotune Errors",
+      "errTitle": "User Permission Denied",
+      "ErrCode": "EC0011",
+      "ErrMessage": "The permissions for current user in the custom strategy path[%s] are insufficient.",
+      "Arglist": "custom_file_dir",
+      "suggestion": {
+        "Possible Cause": "N/A",
+        "Solution": "Check that the current user has the \"rwx\" permissions in custom strategy file path or Check that the current user is the root user."
+      }
+    },
+    {
       "errClass": "RLTune Errors",
       "errTitle": "Device Check Failure",
       "ErrCode": "ED0000",
@@ -3995,6 +4006,17 @@
       "suggestion": {
         "Possible Cause": "The IR is invalid.",
         "Solution": "N/A"
+      }
+    },
+    {
+      "errClass": "TBE Pass Compiler Errors",
+      "errTitle": "Common Compilation Python Error",
+      "ErrCode": "EB9999",
+      "ErrMessage": "Compiler Error check failed. Reason: %s",
+      "Arglist": "reason",
+      "suggestion": {
+        "Possible Cause": "Please analyze reason according to the ErrMessage.",
+        "Solution": "Please modify the configuration according to the ErrMessage."
       }
     },
     {
