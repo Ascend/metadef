@@ -4009,6 +4009,17 @@
       }
     },
     {
+      "errClass": "TBE Pass Compiler Errors",
+      "errTitle": "Common Compilation Python Error",
+      "ErrCode": "EB9999",
+      "ErrMessage": "Compiler Error check failed. Reason: %s",
+      "Arglist": "reason",
+      "suggestion": {
+        "Possible Cause": "Please analyze reason according to the ErrMessage.",
+        "Solution": "Please modify the configuration according to the ErrMessage."
+      }
+    },
+    {
       "errClass": "Vector Errors",
       "errTitle": "Invalid Config Value",
       "ErrCode": "E80001",
