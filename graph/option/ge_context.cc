@@ -34,7 +34,10 @@ const char_t *kEnabled = "1";
 template<class T>
 ge::Status GetOptionValue(const std::string &option_name, T &var) {
   std::string option;
-  (void) ge::GetContext().GetOption(option_name, option);
+  if (ge::GetContext().GetOption(option_name, option) != GRAPH_SUCCESS) {
+    return ge::FAILED;
+  }
+
   int64_t value = 0;
   try {
     value = static_cast<int64_t>(std::stoi(option.c_str()));
@@ -56,6 +59,7 @@ ge::Status GetOptionValue(const std::string &option_name, T &var) {
   return ge::SUCCESS;
 }
 }  // namespace
+
 GEContext &GetContext() {
   static GEContext ge_context {};
   return ge_context;
@@ -81,7 +85,6 @@ const std::string &GEContext::GetReadableName(const std::string &key) {
 bool GEContext::IsOverflowDetectionOpen() const {
   std::string enable_overflow_detection;
   if (GetThreadLocalContext().GetOption("ge.exec.overflow", enable_overflow_detection) != GRAPH_SUCCESS) {
-    GELOGD("can not get option ge.exec.overflow.");
     return false;
   }
   GELOGD("Option ge.exec.overflow is %s.", enable_overflow_detection.c_str());
@@ -91,7 +94,6 @@ bool GEContext::IsOverflowDetectionOpen() const {
 bool GEContext::IsGraphLevelSat() const {
   std::string graph_level_sat;
   if (GetThreadLocalContext().GetOption("ge.graphLevelSat", graph_level_sat) != GRAPH_SUCCESS) {
-    GELOGD("can not get option ge.graphLevelSat.");
     return false;
   }
   GELOGD("Option ge.graphLevelSat is %s.", graph_level_sat.c_str());
@@ -101,7 +103,6 @@ bool GEContext::IsGraphLevelSat() const {
 bool GEContext::GetHostExecFlag() const {
   std::string exec_placement;
   if (GetThreadLocalContext().GetOption("ge.exec.placement", exec_placement) != GRAPH_SUCCESS) {
-    GELOGD("get option ge.exec.placement failed.");
     return false;
   }
   GELOGD("Option ge.exec.placement is %s.", exec_placement.c_str());
