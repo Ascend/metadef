@@ -25,6 +25,9 @@ class UtestHcomTopoInfo : public testing::Test {
 TEST_F(UtestHcomTopoInfo, SetGroupTopoInfo) {
   HcomTopoInfo::TopoInfo topo_info;
   topo_info.rank_size = 8;
+  // add invalid
+  EXPECT_EQ(HcomTopoInfo::Instance().SetGroupTopoInfo(nullptr, topo_info), GRAPH_FAILED);
+
   EXPECT_EQ(HcomTopoInfo::Instance().SetGroupTopoInfo("group0", topo_info), GRAPH_SUCCESS);
   // add repeated, over write
   const std::string group = "group0";
