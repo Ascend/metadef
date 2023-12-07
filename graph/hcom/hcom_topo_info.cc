@@ -19,7 +19,13 @@
 #include "graph/debug/ge_log.h"
 namespace ge {
 Status HcomTopoInfo::SetGroupTopoInfo(const char_t *group, const HcomTopoInfo::TopoInfo &info) {
+  if (group == nullptr) {
+    REPORT_INNER_ERROR("E18888", "Group key is nullptr,set failed.");
+    GELOGE(GRAPH_FAILED, "[Check][Param] Group key is nullptr,set failed.");
+    return GRAPH_FAILED;
+  }
   rank_info_[group] = info;
+  GELOGI("Add group %s successfully.", group);
   return GRAPH_SUCCESS;
 }
 
@@ -43,5 +49,10 @@ Status HcomTopoInfo::GetGroupNotifyHandle(const char_t *group, void *&notify_han
   }
   notify_handle = iter_info->second.notify_handle;
   return GRAPH_SUCCESS;
+}
+
+HcomTopoInfo &HcomTopoInfo::Instance() {
+  static HcomTopoInfo hcom_topo_info;
+  return hcom_topo_info;
 }
 }
