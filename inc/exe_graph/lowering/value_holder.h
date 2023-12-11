@@ -115,6 +115,8 @@ class ValueHolder {
   }
   static ValueHolderPtr CreateVoidGuarder(const ge::char_t *node_type, const ValueHolderPtr &resource,
                                           const std::vector<ValueHolderPtr> &args);
+  static ValueHolderPtr CreateSingleDataOutputGuarder(const ge::char_t *node_type, const ValueHolderPtr &resource,
+                                                      const std::vector<ValueHolderPtr> &inputs);
   static HyperStatus AddDependency(const ValueHolderPtr &src, const ValueHolderPtr &dst);
 
   /**
