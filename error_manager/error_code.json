@@ -4011,7 +4011,7 @@
     {
       "errClass": "TBE Pass Compiler Errors",
       "errTitle": "Common Compilation Python Error",
-      "ErrCode": "EB9999",
+      "ErrCode": "EB0500",
       "ErrMessage": "Compiler Error check failed. Reason: %s",
       "Arglist": "reason",
       "suggestion": {
