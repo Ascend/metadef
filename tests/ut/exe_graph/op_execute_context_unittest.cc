@@ -24,23 +24,20 @@
 namespace gert {
 class OpExecuteContextUT : public testing::Test {};
 TEST_F(OpExecuteContextUT, MallocFreeWorkSpaceOk) {
-  std::vector<ge::MemBlock *> mem_block;
-  ge::Allocator *allocator = new AllocatorFaker();
-  memory::GertMemAllocator gert_allocator;
-  gert_allocator.allocator = allocator;
-  gert_allocator.placement = kOnDeviceHbm;
+  std::vector<GertMemBlock *> mem_block;
+  AllocatorFaker *gert_allocator = new AllocatorFaker();
   auto context_holder = KernelRunContextFaker()
                             .IrInputNum(2)
                             .IrInstanceNum({1, 1})
                             .KernelIONum(7, 1)
                             .NodeIoNum(2, 1)
-                            .Inputs({nullptr, nullptr, nullptr, &gert_allocator, nullptr, nullptr, nullptr})
+                            .Inputs({nullptr, nullptr, nullptr, gert_allocator, nullptr, nullptr, nullptr})
                             .Outputs({&mem_block})
                             .Build();
   auto context = context_holder.GetContext<OpExecuteContext>();
   ASSERT_NE(context, nullptr);
   ASSERT_NE(context->MallocWorkspace(1024), nullptr);
   context->FreeWorkspace();
-  delete allocator;
+  delete gert_allocator;
 }
 }

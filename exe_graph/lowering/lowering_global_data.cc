@@ -260,13 +260,15 @@ bg::ValueHolderPtr LoweringGlobalData::GetOrCreateAllocator(const AllocatorDesc 
             {placement_holder, memory_type_holder,
              external_allocators_.holders[static_cast<size_t>(ExecuteGraphType::kInit)],
              created_allocator, GetStream()});
+        // here init_selected_allocator to init_node_out just for deconstruct sequence.
+        // To make sure memblock alloced from init graph, which deconstruction relies on allocator alive.
+        return {created_allocator, placement_holder, memory_type_holder, init_selected_allocator};
       } else {
         init_selected_allocator = created_allocator;
+        return {created_allocator, placement_holder, memory_type_holder};
       }
-
-      return {created_allocator, placement_holder, memory_type_holder};
     });
-    GE_ASSERT_EQ(init_out.size(), 3U);
+    GE_ASSERT_TRUE(init_out.size() >= 3U);
 
     auto allocator = bg::FrameSelector::OnMainRoot([&init_out, this]() -> std::vector<bg::ValueHolderPtr> {
       auto main_selected_allocator = init_out[0];

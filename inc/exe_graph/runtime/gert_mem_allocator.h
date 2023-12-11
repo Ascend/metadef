@@ -37,11 +37,18 @@ class GertAllocator {
 
   virtual ~GertAllocator() = default;
   virtual GertMemBlock *Malloc(size_t size) = 0;
-  virtual void Free(GertMemBlock *block) = 0;
   virtual GertTensorData MallocTensorData(size_t size) = 0;
-  virtual GertTensorData MoveInFromTensorData(TensorData &&tensor_data) = 0;
-  virtual TensorData MoveOutToTensorData(GertTensorData &&gert_tensor_data) = 0;
+  virtual TensorData MallocTensorDataFromL1(size_t size) = 0;
+
+  virtual void Free(GertMemBlock *block) = 0;
+  virtual ge::graphStatus FreeAt(int64_t stream_id, GertMemBlock *block) = 0;
+
+  virtual ge::graphStatus ShareFromTensorData(const TensorData &td, GertTensorData &gtd) = 0;
+
+  virtual int64_t GetStreamNum() = 0;
+
   virtual ge::graphStatus SetL1Allocator(ge::Allocator *allocator) = 0;
+
   TensorPlacement GetPlacement() const {
     return placement_;
   }

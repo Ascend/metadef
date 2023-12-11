@@ -25,4 +25,4 @@ class GertMemBlock {
   virtual void *GetAddr() = 0;
 };
 }  // namespace gert
-#endif // METADEF_CXX_GERT_MEM_BLOCK_H
+#endif  // METADEF_CXX_GERT_MEM_BLOCK_H

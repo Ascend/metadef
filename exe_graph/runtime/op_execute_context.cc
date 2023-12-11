@@ -20,20 +20,19 @@
 namespace gert {
   void *OpExecuteContext::MallocWorkspace(const size_t size) {
     auto memory_vec =
-        GetOutputPointer<std::vector<ge::MemBlock *>>(
+        GetOutputPointer<std::vector<GertMemBlock *>>(
             static_cast<size_t>(OpExecuteOutputIndex::kBlockMemory));
     if (memory_vec == nullptr) {
       return nullptr;
     }
     const size_t input_num = GetComputeNodeInputNum();
     const size_t output_num = GetComputeNodeOutputNum();
-    auto allocator_info =
-        GetInputValue<memory::GertMemAllocator *>(input_num + output_num +
-        static_cast<size_t>(OpExecuteInputExtendIndex::kAllocate));
-    if ((allocator_info == nullptr) || (allocator_info->allocator == nullptr)) {
+    auto gert_allocator = GetInputValue<GertAllocator *>(
+        input_num + output_num + static_cast<size_t>(OpExecuteInputExtendIndex::kAllocate));
+    if (gert_allocator == nullptr) {
       return nullptr;
     }
-    auto mem_block = allocator_info->allocator->Malloc(size);
+    auto mem_block = gert_allocator->Malloc(size);
     if (mem_block == nullptr) {
       return nullptr;
     }
@@ -43,14 +42,18 @@ namespace gert {
 
   void OpExecuteContext::FreeWorkspace() {
     auto memory_vec =
-        GetOutputPointer<std::vector<ge::MemBlock *>>(
+        GetOutputPointer<std::vector<GertMemBlock *>>(
             static_cast<size_t>(OpExecuteOutputIndex::kBlockMemory));
+    auto gert_allocator = GetInputValue<GertAllocator *>(
+        GetComputeNodeInputNum() + GetComputeNodeOutputNum() +
+            static_cast<size_t>(OpExecuteInputExtendIndex::kAllocate));
+    auto stream_id = gert_allocator->GetStreamId();
     if (memory_vec == nullptr) {
       return;
     }
     for (size_t i = 0UL; i < memory_vec->size(); i++) {
       if (memory_vec->at(i) != nullptr) {
-        memory_vec->at(i)->Free();
+        memory_vec->at(i)->Free(stream_id);
       }
     }
     memory_vec->clear();
