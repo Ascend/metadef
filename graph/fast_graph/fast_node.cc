@@ -605,11 +605,11 @@ Edge<FastNode> *FastNode::GetInDataEdgesByIndex(int32_t idx) const {
   return in_data_edges_[idx];
 }
 
-std::vector<Edge<FastNode> *> FastNode::GetInControlEdgesByIndex() const {
+std::vector<Edge<FastNode> *> FastNode::GetInControlEdges() const {
   return in_control_edges_;
 }
 
-const std::vector<Edge<FastNode> *> &FastNode::GetInControlEdgesRefByIndex() const {
+const std::vector<Edge<FastNode> *> &FastNode::GetInControlEdgesRef() const {
   return in_control_edges_;
 }
 

@@ -107,11 +107,11 @@ class FastGraphUtils {
   }
 
   static inline QuickNode *GetListElementAddr(FastNode *fast_node) {
-    return reinterpret_cast<QuickNode *>(reinterpret_cast<size_t>(fast_node) - offsetof(QuickNode, data));
+    return reinterpret_cast<QuickNode *>(reinterpret_cast<uintptr_t>(fast_node) - offsetof(QuickNode, data));
   }
 
   static inline QuickEdge *GetListElementAddr(Edge<FastNode> *edge) {
-    return reinterpret_cast<QuickEdge *>(reinterpret_cast<size_t>(edge) - offsetof(QuickEdge, data));
+    return reinterpret_cast<QuickEdge *>(reinterpret_cast<uintptr_t>(edge) - offsetof(QuickEdge, data));
   }
 };
 

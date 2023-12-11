@@ -122,10 +122,10 @@ TEST_F(UtestFastNode, NodeIoOper) {
   auto ret = node->GetOutEdgesByIndex(invalid_num);
   ASSERT_EQ(ret.size(), 0);
 
-  ret = node->GetInControlEdgesRefByIndex();
+  ret = node->GetInControlEdgesRef();
   ASSERT_EQ(ret.size(), 0);
 
-  ret = node->GetInControlEdgesByIndex();
+  ret = node->GetInControlEdges();
   ASSERT_EQ(ret.size(), 0);
 
   ret = node->GetOutEdgesRefByIndex(invalid_num);

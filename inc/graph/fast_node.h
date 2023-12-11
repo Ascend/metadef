@@ -312,8 +312,8 @@ class FastNode {
    * please check the item, the item from vector may be nullptr.
    * if the item is nullptr, it just continue to get next, no error handing is required.
    */
-  std::vector<Edge<FastNode> *> GetInControlEdgesByIndex() const;
-  const std::vector<Edge<FastNode> *> &GetInControlEdgesRefByIndex() const;
+  std::vector<Edge<FastNode> *> GetInControlEdges() const;
+  const std::vector<Edge<FastNode> *> &GetInControlEdgesRef() const;
 
   /**
    * collecting all output edge with output index.
