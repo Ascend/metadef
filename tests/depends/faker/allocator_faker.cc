@@ -16,13 +16,12 @@
 
 #include "allocator_faker.h"
 namespace gert {
-    ge::MemBlock *AllocatorFaker::Malloc(size_t size) {
-      void *addr = malloc(size);
-      ge::MemBlock *block = new ge::MemBlock(*this, addr, size);
-      return block;
-    }
-    void AllocatorFaker::Free(ge::MemBlock *block) {
-      free(block->GetAddr());
-      delete block;
-    }
+  GertMemBlock *AllocatorFaker::Malloc(size_t size) {
+    GertMemBlock *block = reinterpret_cast<GertMemBlock *>(new GertMemBlockFaker(malloc(size)));
+    return block;
+  }
+  void AllocatorFaker::Free(GertMemBlock *block) {
+    free(block->GetAddr());
+    delete block;
+  }
 }
