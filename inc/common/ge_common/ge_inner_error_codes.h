@@ -356,6 +356,7 @@ LLM_ERRORNO_COMMON(LLM_UNLINK_FAILED, 10, "decoder cluster unlink with prompt cl
 LLM_ERRORNO_COMMON(LLM_NOTIFY_PROMPT_UNLINK_FAILED, 11, "decoder cluster notify prompt cluster do unlink failed!");
 LLM_ERRORNO_COMMON(LLM_CLUSTER_NUM_EXCEED_LIMIT, 12, "cluster num exceed limit!");
 LLM_ERRORNO_COMMON(LLM_PROCESSING_LINK, 13, "link is current processing, try again later!");
+LLM_ERRORNO_COMMON(LLM_DEVICE_OUT_OF_MEMORY, 14, "device out of memory!");
 }  // namespace ge
 
 #endif  // INC_COMMON_GE_INNER_ERROR_CODES_H_
