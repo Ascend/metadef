@@ -357,6 +357,8 @@ LLM_ERRORNO_COMMON(LLM_NOTIFY_PROMPT_UNLINK_FAILED, 11, "decoder cluster notify 
 LLM_ERRORNO_COMMON(LLM_CLUSTER_NUM_EXCEED_LIMIT, 12, "cluster num exceed limit!");
 LLM_ERRORNO_COMMON(LLM_PROCESSING_LINK, 13, "link is current processing, try again later!");
 LLM_ERRORNO_COMMON(LLM_DEVICE_OUT_OF_MEMORY, 14, "device out of memory!");
+LLM_ERRORNO_COMMON(LLM_PREFIX_ALREADY_EXIST, 15, "Prefix has already existed.");
+LLM_ERRORNO_COMMON(LLM_PREFIX_NOT_EXIST, 16, "Prefix does not exist.");
 }  // namespace ge
 
 #endif  // INC_COMMON_GE_INNER_ERROR_CODES_H_
