@@ -545,6 +545,19 @@ ValueHolderPtr ValueHolder::CreateVoidGuarder(const char *node_type, const Value
   resource->guarder_ = ret;
   return ret;
 }
+ValueHolderPtr ValueHolder::CreateSingleDataOutputGuarder(const ge::char_t *node_type, const ValueHolderPtr &resource,
+                                                          const std::vector<ValueHolderPtr> &inputs) {
+  std::vector<ValueHolderPtr> kernel_inputs;
+  kernel_inputs.reserve(inputs.size() + 1);
+  kernel_inputs.emplace_back(resource);
+  kernel_inputs.insert(kernel_inputs.cend(), inputs.cbegin(), inputs.cend());
+  auto ret = CreateSingleDataOutput(node_type, kernel_inputs);
+  GE_ASSERT_NOTNULL(ret);
+  GE_ASSERT_NOTNULL(ret->GetNode());
+  GE_ASSERT_TRUE(ge::AttrUtils::SetInt(ret->GetNode()->GetOpDesc(), kReleaseResourceIndex, 0));
+  resource->guarder_ = ret;
+  return ret;
+}
 const int32_t &ValueHolder::GetPlacement() const {
   return placement_;
 }
