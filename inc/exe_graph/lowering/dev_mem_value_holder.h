@@ -42,6 +42,9 @@ class DevMemValueHolder : public ValueHolder {
   static DevMemValueHolderPtr CreateSingleDataOutput(const ge::char_t *node_type,
                                                      const std::vector<ValueHolderPtr> &inputs,
                                                      int64_t logic_stream_id);
+  static DevMemValueHolderPtr CreateSingleDataOutputWithGuarder(const ge::char_t *node_type, int64_t logic_stream_id,
+                                                                const ValueHolderPtr &resource,
+                                                                const std::vector<ValueHolderPtr> &inputs);
   static std::vector<DevMemValueHolderPtr> CreateDataOutput(const char *node_type,
                                                             const std::vector<ValueHolderPtr> &inputs,
                                                             size_t out_count, int64_t logic_stream_id);

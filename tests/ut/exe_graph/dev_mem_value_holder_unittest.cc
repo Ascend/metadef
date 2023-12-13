@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 #include "exe_graph/lowering/dev_mem_value_holder.h"
-
+#include "checker/topo_checker.h"
 #include "checker/bg_test.h"
 
 namespace gert {
@@ -73,6 +73,107 @@ TEST_F(DevMemValueHolderUt, DevMemCreateMateFromNodeOk) {
   auto mem_holder = std::dynamic_pointer_cast<DevMemValueHolder>(value_holder);
   ASSERT_NE(mem_holder, nullptr);
   EXPECT_EQ(mem_holder->GetLogicStream(), 2);
+}
+TEST_F(DevMemValueHolderUt, NormalGuard_AddFlagToNode) {
+  auto data0 = ValueHolder::CreateFeed(0);
+  auto allocator0 = ValueHolder::CreateSingleDataOutput("CreateAllocator", {data0});
+  auto allocator_destroyer =
+      DevMemValueHolder::CreateSingleDataOutputWithGuarder("DestroyAllocator", 0, allocator0, {});
+  ASSERT_NE(allocator_destroyer, nullptr);
+  auto graph = ValueHolder::PopGraphFrame()->GetExeGraph();
+
+  auto node = graph->FindFirstNodeMatchType("DestroyAllocator");
+  ASSERT_NE(node, nullptr);
+  int64_t index;
+  EXPECT_TRUE(ge::AttrUtils::GetInt(node->GetOpDesc(), kReleaseResourceIndex, index));
+  EXPECT_EQ(index, 0);
+}
+TEST_F(DevMemValueHolderUt, NormalGuarder_AddDependencyAutomately_ConnectDataEdgeToResource) {
+  auto data0 = ValueHolder::CreateFeed(0);
+  auto allocator0 = ValueHolder::CreateSingleDataOutput("CreateAllocator", {data0});
+  auto allocator_destroyer =
+      DevMemValueHolder::CreateSingleDataOutputWithGuarder("DestroyAllocator", 0, allocator0, {});
+  ASSERT_NE(allocator_destroyer, nullptr);
+
+  size_t alloc_size = 1024;
+  auto size = ValueHolder::CreateConst(&alloc_size, sizeof(alloc_size));
+  auto alloc_mem0 = ValueHolder::CreateSingleDataOutput("AllocMemory", {allocator0, size});
+  auto alloc_mem1 = ValueHolder::CreateSingleDataOutput("AllocMemory", {allocator0, size});
+  auto graph = ValueHolder::PopGraphFrame()->GetExeGraph();
+
+  CheckGraphGenerally(*graph);
+
+  ASSERT_NE(alloc_mem0, nullptr);
+  ASSERT_NE(alloc_mem1, nullptr);
+  HasControlEdge(*graph, *alloc_mem0->GetNode(), *allocator_destroyer->GetNode());
+  HasControlEdge(*graph, *alloc_mem1->GetNode(), *allocator_destroyer->GetNode());
+}
+/*
+*     NetOutput
+*        |
+*      Bar -c-> foo0_guarder
+*      / \    /
+* data1   foo0
+*          |
+*        data0
+*/
+TEST_F(DevMemValueHolderUt, NormalGuarder_AddDependencyFromTheSameLevelNode_ConnectFromSrcToSubgraphNodes) {
+  auto data0 = ValueHolder::CreateFeed(0);
+  auto foo0 = ValueHolder::CreateSingleDataOutput("Foo", {data0});
+  auto guarder = DevMemValueHolder::CreateSingleDataOutputWithGuarder("FooGuarder", 0, foo0, {});
+  ASSERT_NE(guarder, nullptr);
+  auto data1 = ValueHolder::CreateFeed(1);
+  auto bar1 = ValueHolder::CreateSingleDataOutput("Bar", {data1});
+
+  ValueHolder::PushGraphFrame(bar1, "BarGraph");
+  auto foo1 = ValueHolder::CreateSingleDataOutput("Foo", {foo0, data1});
+  auto bar_frame = ValueHolder::PopGraphFrame({foo1}, {});
+
+  auto frame = ValueHolder::PopGraphFrame({bar1}, {});
+  ASSERT_NE(frame, nullptr);
+  ASSERT_NE(frame->GetExeGraph(), nullptr);
+
+  EXPECT_EQ(frame->GetExeGraph()->TopologicalSorting(), ge::GRAPH_SUCCESS);
+  EXPECT_TRUE(NodeTopoChecker(bar1).OutChecker().CtrlToByType("FooGuarder").IsOk());
+  EXPECT_EQ(NodeTopoChecker(bar1).StrictConnectFrom({{"Data"}, {"Foo"}}), "success");
+}
+TEST_F(DevMemValueHolderUt, NormalGuarder_DoNotAddDependency_ConnectDataEdgeToNetOutput) {
+  auto data0 = ValueHolder::CreateFeed(0);
+  auto foo0 = ValueHolder::CreateSingleDataOutput("Foo", {data0});
+  auto guarder = DevMemValueHolder::CreateSingleDataOutputWithGuarder("FooGuarder", 0, foo0, {});
+  ASSERT_NE(guarder, nullptr);
+
+  auto bar0 = ValueHolder::CreateSingleDataOutput("Bar", {foo0});
+
+  auto frame = ValueHolder::PopGraphFrame({foo0}, {});
+  ASSERT_NE(frame, nullptr);
+  auto graph = frame->GetExeGraph();
+  ASSERT_NE(graph, nullptr);
+
+  EXPECT_EQ(NodeTopoChecker(foo0).StrictConnectTo(0, {{"NetOutput"}, {"FooGuarder"}, {"Bar"}}), "success");
+  HasControlEdge(*graph, *bar0->GetNode(), *guarder->GetNode());
+  ASSERT_EQ(guarder->GetNode()->GetInControlNodes().size(), 1);
+}
+TEST_F(DevMemValueHolderUt, NormalAddDependencyForGuard_RleaseBy) {
+  auto data0 = ValueHolder::CreateFeed(0);
+  auto allocator0 = ValueHolder::CreateSingleDataOutput("CreateAllocator", {data0});
+  auto allocator_destroyer =
+      DevMemValueHolder::CreateSingleDataOutputWithGuarder("DestroyAllocator", 0, allocator0, {});
+  ASSERT_NE(allocator_destroyer, nullptr);
+
+  size_t alloc_size = 1024;
+  auto size = ValueHolder::CreateConst(&alloc_size, sizeof(alloc_size));
+  auto alloc_mem0 = ValueHolder::CreateSingleDataOutput("AllocMemory", {allocator0, size});
+  auto free_mem0 = DevMemValueHolder::CreateSingleDataOutputWithGuarder("FreeMemory", 0, {alloc_mem0}, {});
+  auto graph = ValueHolder::PopGraphFrame()->GetExeGraph();
+  CheckGraphGenerally(*graph);
+
+  ASSERT_NE(free_mem0, nullptr);
+  ASSERT_NE(alloc_mem0, nullptr);
+  HasControlEdge(*graph, *alloc_mem0->GetNode(), *allocator_destroyer->GetNode());
+
+  allocator0->ReleaseAfter(free_mem0);
+  HasControlEdge(*graph, *free_mem0->GetNode(), *allocator_destroyer->GetNode());
 }
 }  // namespace bg
 }  // namespace gert
