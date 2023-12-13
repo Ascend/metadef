@@ -251,7 +251,8 @@ graphStatus SaveBinToFile(const char * const data, size_t length, const std::str
   std::string dir_path;
   std::string file_name;
   SplitFilePath(file_path, dir_path, file_name);
-  if (!dir_path.empty()) {
+  const bool meta_file_exist = (mmAccess(dir_path.c_str()) == EN_OK);
+  if ((!dir_path.empty()) && (!meta_file_exist)) {
     GE_ASSERT_TRUE((CreateDir(dir_path) == kFileSuccess),
                    "Create direct failed, path: %s.", file_path.c_str());
   }

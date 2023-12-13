@@ -1439,6 +1439,7 @@ const std::string ATTR_NAME_RECOMPUTE_MODE = "_recompute_mode";
 const std::string ATTR_NAME_MODEL_EVENTS = "_model_events";
 const std::string ATTR_NAME_HCOM_GROUPS = "_hcom_groups";
 const std::string ATTR_NAME_SHARD_GRAPH_EXT_ATTRS = "_shard_graph_ext_attrs";
+const std::string ATTR_NAME_IS_SHARD_GRAPH_FOR_LOAD = "_is_shard_graph_for_load";
 
 // for tensor parallelism
 const std::string ATTR_NAME_TP_RESHARD_ATTR = "_reshard_attr";

@@ -106,6 +106,11 @@ graphStatus Model::Save(Buffer &buffer, const std::string &path, const bool is_d
   return (buffer.GetSize() > 0U) ? GRAPH_SUCCESS : GRAPH_FAILED;
 }
 
+graphStatus Model::SaveSeparateModel(Buffer &buffer, const std::string &path, const bool is_dump) const {
+  buffer = SERIALIZE.SerializeSeparateModel(*this, path, is_dump);
+  return (buffer.GetSize() > 0U) ? GRAPH_SUCCESS : GRAPH_FAILED;
+}
+
 graphStatus Model::Save(proto::ModelDef &model_def, const bool is_dump) const {
   return SERIALIZE.SerializeModel(*this, is_dump, model_def);
 }
@@ -124,7 +129,7 @@ graphStatus Model::Load(ge::proto::ModelDef &model_def) {
   return SERIALIZE.UnserializeModel(model_def, *this) ? GRAPH_SUCCESS : GRAPH_FAILED;
 }
 
-graphStatus Model::SaveToFile(const std::string &file_name) const {
+graphStatus Model::SaveToFile(const std::string &file_name, const bool force_separate) const {
   Buffer buffer;
   std::string dir_path;
   std::string file;
@@ -142,9 +147,10 @@ graphStatus Model::SaveToFile(const std::string &file_name) const {
   GE_ASSERT_TRUE(!real_path.empty(), "Path: %s is empty", file_name.c_str());
   real_path = real_path + "/" + file;
 
-  if ((*this).Save(buffer, real_path) != GRAPH_SUCCESS) {
-    GE_LOGE("[Save][Data] to file:%s fail.", file_name.c_str());
-    return GRAPH_FAILED;
+  if (!force_separate) {
+    GE_ASSERT_SUCCESS((*this).Save(buffer, real_path), "[Save][Data] to file:%s fail.", file_name.c_str());
+  } else {
+    GE_ASSERT_SUCCESS((*this).SaveSeparateModel(buffer, real_path), "[Save][Data] to file:%s fail.", file_name.c_str());
   }
   // Write file
   if (buffer.GetData() != nullptr) {
