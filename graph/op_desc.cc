@@ -900,6 +900,21 @@ std::map<std::string, uint32_t>& OpDescImpl::MutableAllInputName() { return inpu
 std::map<std::string, uint32_t>& OpDescImpl::MutableAllOutputName() { return output_name_idx_; }
 
 bool OpDescImpl::UpdateInputName(std::map<std::string, uint32_t> input_name_idx) {
+  const auto &ir_inputs = GetIRMeta().GetIrInputs();
+  size_t last_dyn = ir_inputs.size();
+  for (size_t i = 0UL; i < ir_inputs.size(); ++i) {
+    if (ir_inputs[i].second == kIrInputDynamic) {
+      last_dyn = i;
+    }
+  }
+
+  if (last_dyn + 1UL < ir_inputs.size()) {
+    GELOGW(
+        "[Update][InputName] Dynamic input in middle is unsupported to update from factory, last_dyn=%zu ir_size=%zu.",
+        last_dyn, ir_inputs.size());
+    return false;
+  }
+
   // Use inputDesc_.size() to contain the InValid OptionInput.GetInputsSize() will remove default OptionInput name.
   const auto input_map_size = inputs_desc_.size();
   const auto factory_map_size = input_name_idx.size();

@@ -472,6 +472,35 @@ TEST_F(UtestOpDesc, UpdateInputName_success) {
   EXPECT_EQ(op_desc->UpdateInputName(input_name_idx), true);
 }
 
+TEST_F(UtestOpDesc, UpdateInputOutName_with_dynamic_failed) {
+  auto op_desc = std::make_shared<OpDesc>();
+  op_desc->AppendIrInput("query", IrInputType::kIrInputRequired);
+  op_desc->AppendIrInput("k", IrInputType::kIrInputDynamic);
+  op_desc->AppendIrInput("value", IrInputType::kIrInputDynamic);
+  op_desc->AppendIrInput("padding_mask", IrInputType::kIrInputOptional);
+  op_desc->AppendIrInput("attention_mask", IrInputType::kIrInputOptional);
+  op_desc->AppendIrInput("seq_lens", IrInputType::kIrInputOptional);
+  op_desc->AppendIrOutput("attention_out", IrOutputType::kIrOutputDynamic);
+  op_desc->AppendIrOutput("fake_out", IrOutputType::kIrOutputRequired);
+
+  auto tensor_desc = std::make_shared<GeTensorDesc>();
+  tensor_desc->SetShape(GeShape({1}));
+  tensor_desc->SetFormat(FORMAT_NCHW);
+  tensor_desc->SetDataType(DT_FLOAT);
+
+  op_desc->AddInputDesc("query", tensor_desc->Clone());
+  op_desc->AddDynamicInputDescByIndex("k", 1, 1);
+  op_desc->UpdateInputDesc(1, tensor_desc->Clone());
+  op_desc->AddDynamicInputDescByIndex("value", 1, 2);
+  op_desc->UpdateInputDesc(2, tensor_desc->Clone());
+
+  std::map<std::string, uint32_t> input_name_idx{{"query", 0},
+                                                 {"padding_mask", 1},
+                                                 {"attention_mask", 2},
+                                                 {"seq_lens", 3}};
+  EXPECT_EQ(op_desc->UpdateInputName(input_name_idx), false);
+}
+
 TEST_F(UtestOpDesc, UpdateOutputName_success) {
   auto tensor_desc = std::make_shared<GeTensorDesc>();
   tensor_desc->SetShape(GeShape({1}));
