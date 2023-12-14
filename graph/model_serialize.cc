@@ -41,6 +41,42 @@ const std::string kTmpWeight = "air_weight/";
 const std::string kSrcOutPeerIndex = "_src_out_peer_index_for_ge_txt_load";  // only exist in dump file
 constexpr int64_t kInvalidIndex = -1;
 constexpr int32_t kDecimal = 10;
+
+ge::Status CreateExternalWeightPath(const std::string &model_path, const std::string &model_name,
+                                    const std::string &op_tag, std::string &weight_real_path,
+                                    std::string &weight_relative_path) {
+  // regulate file path
+  std::string dir_path;
+  std::string file_name;
+  ge::SplitFilePath(model_path, dir_path, file_name);
+  if (!dir_path.empty()) {
+    dir_path += "/";
+  }
+  std::string regulated_model_name = ge::GetRegulatedName(model_name);
+  if (!regulated_model_name.empty()) {
+    regulated_model_name += "/";
+  }
+  // get weight path
+  weight_relative_path = kTmpWeight + regulated_model_name + op_tag + "_file";
+  weight_real_path = dir_path + weight_relative_path;
+  ge::SplitFilePath(weight_real_path, dir_path, file_name);
+  // create weight dir
+  if (!dir_path.empty()) {
+    GE_ASSERT_TRUE((ge::CreateDir(dir_path) == EOK), "Create direct failed, path: %s.", dir_path.c_str());
+  }
+  return ge::SUCCESS;
+}
+
+ge::Buffer AllocBufferByModelDef(const ge::proto::ModelDef &model_def) {
+#if !defined(__ANDROID__) && !defined(ANDROID)
+  ge::Buffer buffer(model_def.ByteSizeLong());
+#else
+  Buffer buffer(model_def.ByteSize());
+#endif
+  GE_ASSERT_TRUE(buffer.GetSize() != 0UL, "get size failed");
+  GE_ASSERT_TRUE((buffer.GetData() != nullptr), "get size failed");
+  return buffer;
+}
 }
 
 namespace ge {
@@ -483,7 +519,7 @@ bool ModelSerializeImp::UnserializeOpDesc(OpDescPtr &op_desc, proto::OpDef &op_d
 
   ExtractMetaDataAttrIn(op_def_proto, opt_input, key_in, value_in);
   ExtractMetaDataAttr(op_def_proto, key_out, value_out);
-  if (op_def_proto.type() == CONSTANT || op_def_proto.type() == CONSTANTOP) {
+  if ((op_def_proto.type() == CONSTANT) || (op_def_proto.type() == CONSTANTOP)) {
     if (!SetWeightForModel(op_def_proto)) {
       GELOGE(GRAPH_FAILED, "[Unserialize][Model] Set const weight failed");
       return false;
@@ -807,7 +843,6 @@ bool ModelSerializeImp::UnserializeGraphWithoutEdge(ComputeGraphPtr &graph, prot
     GELOGE(GRAPH_FAILED, "ComputeGraph [%s] deserialize attr failed.", graph->GetName().c_str());
     return false;
   }
-
   for (auto &op_def_proto : *graph_proto.mutable_op()) {
     if (!UnserializeNode(graph, op_def_proto)) {
       GELOGE(GRAPH_FAILED, "[Unserialize][Node] failed");
@@ -907,69 +942,44 @@ GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY bool ModelSerializeImp::Deseriali
   return true;
 }
 
-bool ModelSerializeImp::SeparateModelDef(Buffer &buffer, const std::string &path,
-                                         proto::ModelDef &model_def, const bool is_need_separate) const {
-  if (SerializeToBuffer(model_def, buffer)) {
-    return true;
-  }
-  if (!is_need_separate) {
-    GELOGE(GRAPH_FAILED, "[Serialize][Model] Model is larger than 2G, "
-           "but can not separate in this scenario, you can use external_weight instead");
-    return false;
-  }
-  GELOGW("[Serialize][Model] Model is larger than 2G, need separate");
-  uint64_t constant_op_id = 0UL;
+bool ModelSerializeImp::SeparateModelDef(Buffer &buffer, const std::string &path, proto::ModelDef &model_def) const {
   for (auto &graph_def : *model_def.mutable_graph()) {
     for (auto &op_def : *graph_def.mutable_op()) {
-      if (op_def.type() != CONSTANT && op_def.type() != CONSTANTOP) {
+      if ((op_def.type() != CONSTANT) && (op_def.type() != CONSTANTOP)) {
         continue;
       }
       auto attr_map = op_def.mutable_attr();
       auto iter = attr_map->find(ATTR_NAME_WEIGHTS);
       if (iter == attr_map->end()) {
-        GELOGE(GRAPH_FAILED, "Find attr [%s] of op[%s] failed.", ATTR_NAME_WEIGHTS.c_str(), op_def.name().c_str());
-        return false;
+        GELOGW("Find attr [%s] of op[%s] failed.", ATTR_NAME_WEIGHTS.c_str(), op_def.name().c_str());
+        continue;
       }
       auto tensor_def = iter->second.mutable_t();
       if (tensor_def->data().empty()) {
         GELOGW("Weight attr of node: %s is empty", op_def.name().c_str());
         continue;
       }
-      std::string dir_path;
-      std::string file_name;
-      SplitFilePath(path, dir_path, file_name);
-      std::string model_name = GetRegulatedName(model_def.name());
-      if (!dir_path.empty()) {
-        dir_path += "/";
-      }
-      if (!model_name.empty()) {
-        model_name += "/";
-      }
-      std::string file_path = kTmpWeight + model_name +
-                              op_def.type() + "_" + std::to_string(constant_op_id) + "_file";
-      std::string real_file_path = dir_path + file_path;
-      constant_op_id++;
-      if (SaveBinToFile(tensor_def->data().c_str(), tensor_def->data().length(), real_file_path) != GRAPH_SUCCESS) {
-        GELOGE(GRAPH_FAILED, "Write data of attr [%s] of op[%s] to file failed.",
-               ATTR_NAME_WEIGHTS.c_str(), op_def.name().c_str());
-        return false;
-      }
-      int64_t length = static_cast<int64_t>(tensor_def->data().length());
+      std::string relative_path;
+      std::string weight_real_path;
+      GE_ASSERT_SUCCESS(CreateExternalWeightPath(
+          path, model_def.name(), op_def.type() + "_" + std::to_string(op_def.id()), weight_real_path, relative_path));
+      const char *const data = tensor_def->data().c_str();
+      const auto op_name = op_def.name();
+      const int64_t length = static_cast<int64_t>(tensor_def->data().length());
+      GE_ASSERT_GRAPH_SUCCESS(SaveBinToFile(data, length, weight_real_path),
+                              "Write data of attr [%s] of op[%s] to path[%s] failed.", ATTR_NAME_WEIGHTS.c_str(),
+                              op_name.c_str(), weight_real_path.c_str());
+      tensor_def->set_data("");
+      // set file attr and length attr
       proto::AttrDef file_attr;
-      file_attr.set_s(file_path);
+      file_attr.set_s(relative_path);
       attr_map->insert({ATTR_NAME_LOCATION, file_attr});
       proto::AttrDef length_attr;
       length_attr.set_i(length);
       attr_map->insert({ATTR_NAME_LENGTH, length_attr});
-      tensor_def->set_data("");
     }
   }
-#if !defined(__ANDROID__) && !defined(ANDROID)
-  Buffer temp_buffer(model_def.ByteSizeLong());
-#else
-  Buffer temp_buffer(model_def.ByteSize());
-#endif
-  buffer = temp_buffer;
+  buffer = AllocBufferByModelDef(model_def);
   return SerializeToBuffer(model_def, buffer);
 }
 
@@ -985,6 +995,20 @@ Buffer ModelSerialize::SerializeModel(const Model &model, const bool not_dump_al
   return SerializeModel(model, path, true, not_dump_all);
 }
 
+Buffer ModelSerialize::SerializeSeparateModel(const Model &model, const std::string &path,
+                                              const bool not_dump_all) const {
+  proto::ModelDef model_def;
+  ModelSerializeImp model_imp;
+  if (!model_imp.SerializeModel(model, &model_def, not_dump_all)) {
+    return Buffer();
+  }
+  auto buffer = AllocBufferByModelDef(model_def);
+  if (!model_imp.SeparateModelDef(buffer, path, model_def)) {
+    return Buffer();
+  }
+  return buffer;
+}
+
 Buffer ModelSerialize::SerializeModel(const Model &model, const std::string &path,
                                       const bool is_need_separate, const bool not_dump_all) const {
   proto::ModelDef model_def;
@@ -992,14 +1016,19 @@ Buffer ModelSerialize::SerializeModel(const Model &model, const std::string &pat
   if (!model_imp.SerializeModel(model, &model_def, not_dump_all)) {
     return Buffer();
   }
-#if !defined(__ANDROID__) && !defined(ANDROID)
-  Buffer buffer(model_def.ByteSizeLong());
-#else
-  Buffer buffer(model_def.ByteSize());
-#endif
-  GE_CHK_BOOL_ONLY_LOG(buffer.GetSize() != 0UL, "get size failed");
-  GE_CHK_BOOL_ONLY_LOG((buffer.GetData() != nullptr), "get size failed");
-  if (!model_imp.SeparateModelDef(buffer, path, model_def, is_need_separate)) {
+  auto buffer = AllocBufferByModelDef(model_def);
+  // try serialize to buffer
+  if (model_imp.SerializeToBuffer(model_def, buffer)) {
+    return buffer;
+  }
+  // if is_need_separate is not enable, return failed
+  if (!is_need_separate) {
+    GELOGE(GRAPH_FAILED, "[Serialize][Model] Model is larger than 2G, "
+                         "but can not separate in this scenario, you can use external_weight instead");
+    return Buffer();
+  }
+  GELOGW("[Serialize][Model] Model could larger than 2G, need separate");
+  if (!model_imp.SeparateModelDef(buffer, path, model_def)) {
     GELOGW("[Serialize][Model] Serialize to binary failed");
     return Buffer();
   }
@@ -1062,11 +1091,15 @@ bool ModelSerializeImp::SetWeightForModel(proto::OpDef &op_def) const {
     return false;
   }
   iter = attr_map->find(ATTR_NAME_WEIGHTS);
+  // ATTR_NAME_WEIGHTS could be deleted
   if (iter == attr_map->end()) {
-    GELOGE(GRAPH_FAILED, "find attr [%s] of op[%s] failed.", ATTR_NAME_WEIGHTS.c_str(), op_def.name().c_str());
-    return false;
+    proto::AttrDef attr_def;
+    attr_def.mutable_t()->set_data(weight);
+    attr_map->insert({ATTR_NAME_WEIGHTS, attr_def});
+    GELOGW("find attr [%s] of op[%s] failed, set weight.", ATTR_NAME_WEIGHTS.c_str(), op_def.name().c_str());
+  } else {
+    iter->second.mutable_t()->set_data(weight);
   }
-  iter->second.mutable_t()->set_data(weight);
   attr_map->erase(ATTR_NAME_LOCATION);
   attr_map->erase(ATTR_NAME_LENGTH);
   return true;

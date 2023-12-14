@@ -52,6 +52,10 @@ struct ErrorResult {
   operator std::string() const {
     return "";
   }
+  template<typename T>
+  operator T() const {
+    return T();
+  }
 };
 
 inline std::vector<char> CreateErrorMsg(const char *format, ...) {

@@ -75,6 +75,7 @@ class ValueHolder {
   const NodeHolder *GetNode() const noexcept;
   const GraphHolder *GetGraph() const noexcept;
   ValueHolderPtr GetGuarder() const noexcept;
+  void SetGuarder(const bg::ValueHolderPtr &guarder) noexcept;
 
   int32_t GetOutIndex() const noexcept;
   // ref-from other的含义是，本value指向了other（本value没有独立的内存）

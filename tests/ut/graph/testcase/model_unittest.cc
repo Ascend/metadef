@@ -32,6 +32,8 @@
 
 namespace ge {
 namespace {
+constexpr size_t kSmallBufferSize = 32UL;
+constexpr size_t kLargeBufferSize = 536870912U;
 class SubModel : public Model
 {
 public:
@@ -50,9 +52,10 @@ SubModel::~SubModel() = default;
 
 }
 
-static Model BuildModelWithLargeConst() {
+static Model BuildModelWithConst(bool large_weight) {
   Model model("model_name/main_model", "custom version3.0");
   auto compute_graph = std::make_shared<ComputeGraph>("graph_name/main_graph");
+  size_t buffer_size = large_weight ? (kLargeBufferSize) : kSmallBufferSize;
   // input
   for (int i = 0; i < 4; i++) {
     std::string inpu_node_name = "test/const" + std::to_string(i);
@@ -60,12 +63,12 @@ static Model BuildModelWithLargeConst() {
     input_op->AddInputDesc(GeTensorDesc(GeShape({12, 32, 64, 64}), FORMAT_NCHW, DT_FLOAT));
     auto input = compute_graph->AddNode(input_op);
     GeTensor ge_tensor;
-    auto aligned_ptr = std::make_shared<AlignedPtr>(536870912U);  // 500m
+    auto aligned_ptr = std::make_shared<AlignedPtr>(buffer_size);  // 500m
     auto ptr = aligned_ptr->MutableGet();
     *ptr = 7;
     *(ptr + 10) = 8;
-    *(ptr + 536870910) = 9;
-    ge_tensor.SetData(aligned_ptr, 536870912);
+    *(ptr + buffer_size - 2) = 9;
+    ge_tensor.SetData(aligned_ptr, buffer_size);
     AttrUtils::SetTensor(input_op, ATTR_NAME_WEIGHTS, ge_tensor);
   }
   model.SetGraph(compute_graph);
@@ -83,12 +86,12 @@ static Model BuildModelWithLargeConst() {
     sub_input_op->AddInputDesc(GeTensorDesc(GeShape({12, 32, 64, 64}), FORMAT_NCHW, DT_FLOAT));
     auto sub_input = sub_compute_graph->AddNode(sub_input_op);
     GeTensor ge_tensor;
-    auto aligned_ptr = std::make_shared<AlignedPtr>(536870912U);  // 500m
+    auto aligned_ptr = std::make_shared<AlignedPtr>(buffer_size);  // 500m
     auto ptr = aligned_ptr->MutableGet();
     *ptr = 7;
     *(ptr + 10) = 8;
-    *(ptr + 536870910) = 9;
-    ge_tensor.SetData(aligned_ptr, 536870912);
+    *(ptr + buffer_size - 2) = 9;
+    ge_tensor.SetData(aligned_ptr, buffer_size);
     AttrUtils::SetTensor(sub_input_op, ATTR_NAME_WEIGHTS, ge_tensor);
   }
   std::string sub_graph = "sub_graph";
@@ -98,6 +101,10 @@ static Model BuildModelWithLargeConst() {
   sub_compute_graph->SetParentGraph(compute_graph);
   compute_graph->AddSubgraph(sub_compute_graph);
   return model;
+}
+
+static Model BuildModelWithLargeConst() {
+  return BuildModelWithConst(true);
 }
 
 static Graph BuildGraph() {
@@ -229,7 +236,7 @@ TEST_F(ModelUt, SaveLargeModelWithRealPath) {
       ASSERT_EQ((buff == nullptr), false);
       ASSERT_EQ(buff[0], 7);
       ASSERT_EQ(buff[10], 8);
-      ASSERT_EQ(buff[536870910], 9); // value is ok for def serialize
+      ASSERT_EQ(buff[kLargeBufferSize - 2], 9); // value is ok for def serialize
     }
   }
   auto sub_graph = com_graph1->GetSubgraph("sub_graph");
@@ -261,7 +268,50 @@ TEST_F(ModelUt, SaveLargeModelWithRelatedPath) {
       ASSERT_EQ((buff == nullptr), false);
       ASSERT_EQ(buff[0], 7);
       ASSERT_EQ(buff[10], 8);
-      ASSERT_EQ(buff[536870910], 9); // value is ok for def serialize
+      ASSERT_EQ(buff[kLargeBufferSize - 2], 9); // value is ok for def serialize
+    }
+  }
+  auto sub_graph = com_graph1->GetSubgraph("sub_graph");
+  ASSERT_EQ((sub_graph == nullptr), false);
+  ASSERT_EQ(sub_graph->GetAllNodesSize(), 5);
+  system("rm -rf ./temp/air_weight");
+  system("rm -rf ./temp/model.air");
+}
+
+TEST_F(ModelUt, SaveLargeModelSeparateWithRelatedPath) {
+  auto md = BuildModelWithConst(false);
+  auto graph = md.GetGraph();
+  // const node0 reuse const node1 weight
+  auto const_node0 = graph->FindNode("test/const0");
+  ASSERT_NE(const_node0, nullptr);
+  auto const_node1 = graph->FindNode("test/const1");
+  ASSERT_NE(const_node1, nullptr);
+  ASSERT_EQ(const_node0->GetOpDesc()->DelAttr(ATTR_NAME_WEIGHTS), GRAPH_SUCCESS);
+  std::string reuse_offset_path = "air_weight/model_name_main_model/" + const_node1->GetType() + "_" +
+      std::to_string(const_node1->GetOpDesc()->GetId()) + "_file";
+  ASSERT_EQ(AttrUtils::SetInt(const_node0->GetOpDesc(), ge::ATTR_NAME_LENGTH, kSmallBufferSize), true);
+  ASSERT_EQ(AttrUtils::SetStr(const_node0->GetOpDesc(), ge::ATTR_NAME_LOCATION, reuse_offset_path), true);
+  std::string file_name = "./temp/model.air";
+  EXPECT_EQ(md.SaveToFile(file_name, true), GRAPH_SUCCESS);
+  Model model_back;
+  EXPECT_EQ(model_back.LoadFromFile("./temp/model.air"), GRAPH_SUCCESS);
+  ComputeGraphPtr com_graph1 = std::make_shared<ComputeGraph>("TestGraph1");
+  com_graph1 = model_back.GetGraph();
+  ASSERT_EQ(com_graph1->GetAllNodesSize(), 10);
+  for (auto &node_ptr : com_graph1->GetAllNodes()) {
+    ASSERT_EQ((node_ptr == nullptr), false);
+    if (node_ptr->GetType() == "Const") {
+      auto op_desc = node_ptr->GetOpDesc();
+      ASSERT_EQ((op_desc == nullptr), false);
+      ConstGeTensorPtr ge_tensor_ptr;
+      ASSERT_EQ(AttrUtils::GetTensor(op_desc, ATTR_NAME_WEIGHTS, ge_tensor_ptr), true);
+      ASSERT_EQ((ge_tensor_ptr == nullptr), false);
+      const TensorData tensor_data = ge_tensor_ptr->GetData();
+      const uint8_t *buff = tensor_data.GetData();
+      ASSERT_EQ((buff == nullptr), false);
+      ASSERT_EQ(buff[0], 7);
+      ASSERT_EQ(buff[10], 8);
+      ASSERT_EQ(buff[kSmallBufferSize - 2], 9); // value is ok for def serialize
     }
   }
   auto sub_graph = com_graph1->GetSubgraph("sub_graph");
@@ -293,7 +343,7 @@ TEST_F(ModelUt, SaveLargeModelWithRelatedPath2) {
       ASSERT_EQ((buff == nullptr), false);
       ASSERT_EQ(buff[0], 7);
       ASSERT_EQ(buff[10], 8);
-      ASSERT_EQ(buff[536870910], 9); // value is ok for def serialize
+      ASSERT_EQ(buff[kLargeBufferSize - 2], 9); // value is ok for def serialize
     }
   }
   auto sub_graph = com_graph1->GetSubgraph("sub_graph");
@@ -325,7 +375,7 @@ TEST_F(ModelUt, SaveLargeModelWithRelatedPath3) {
       ASSERT_EQ((buff == nullptr), false);
       ASSERT_EQ(buff[0], 7);
       ASSERT_EQ(buff[10], 8);
-      ASSERT_EQ(buff[536870910], 9); // value is ok for def serialize
+      ASSERT_EQ(buff[kLargeBufferSize - 2], 9); // value is ok for def serialize
     }
   }
   auto sub_graph = com_graph1->GetSubgraph("sub_graph");

@@ -58,6 +58,22 @@ DevMemValueHolderPtr DevMemValueHolder::CreateSingleDataOutput(const char *node_
   return ValueHolder::CreateFromNode<DevMemValueHolder>(node, 0, ValueHolderType::kOutput, logic_stream_id);
 }
 
+DevMemValueHolderPtr DevMemValueHolder::CreateSingleDataOutputWithGuarder(const ge::char_t *node_type,
+                                                                          int64_t logic_stream_id,
+                                                                          const ValueHolderPtr &resource,
+                                                                          const std::vector<ValueHolderPtr> &inputs) {
+  std::vector<ValueHolderPtr> kernel_inputs;
+  kernel_inputs.reserve(inputs.size() + 1);
+  kernel_inputs.emplace_back(resource);
+  kernel_inputs.insert(kernel_inputs.cend(), inputs.cbegin(), inputs.cend());
+  auto ret = CreateSingleDataOutput(node_type, kernel_inputs, logic_stream_id);
+  GE_ASSERT_NOTNULL(ret);
+  GE_ASSERT_NOTNULL(ret->GetNode());
+  GE_ASSERT_TRUE(ge::AttrUtils::SetInt(ret->GetNode()->GetOpDesc(), kReleaseResourceIndex, 0));
+  resource->SetGuarder(ret);
+  return ret;
+}
+
 /**
  * @param data const数据
  * @param size const数据的长度
