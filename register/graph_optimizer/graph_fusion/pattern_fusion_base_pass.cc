@@ -191,13 +191,12 @@ Status PatternFusionBasePass::RunOnePattern(ge::ComputeGraph &graph, const Fusio
   (void)GraphPassUtil::GetOpTypeMapToGraph(node_map_info, graph);
   // do fusion for each mapping
   for (Mapping &mapping : mappings) {
-    std::vector<ge::NodePtr> fus_nodes;
     GraphPassUtil::OriginOpAttrsVec origin_op_attrs;
     std::vector<ge::NodePtr> original_nodes;
     StoreOriginNodes(mapping, origin_op_attrs, original_nodes);
     bool backward = false;
     GraphPassUtil::GetBackWardAttr(original_nodes, backward, BackWardInheritMode::kFusedNode);
-
+    std::vector<ge::NodePtr> fus_nodes;
     const Status status = Fusion(graph, mapping, fus_nodes);
 
     const bool isGraphCycle = enable_network_analysis_ && CheckGraphCycle(graph);
@@ -227,7 +226,7 @@ Status PatternFusionBasePass::RunOnePattern(ge::ComputeGraph &graph, const Fusio
 
     if (status == SUCCESS) {
       effect_times++;
-      (void)SetDataDumpAttr(original_nodes, fus_nodes);
+      SetDataDumpAttr(original_nodes, fus_nodes);
       for (ge::NodePtr &node : fus_nodes) {
         const ge::OpDescPtr fusion_op = node->GetOpDesc();
         GraphPassUtil::RecordOriginalOpAttrs(original_nodes, fusion_op, GetName(), origin_op_attrs);
@@ -252,6 +251,7 @@ Status PatternFusionBasePass::RunOnePattern(ge::ComputeGraph &graph, const Fusio
   return SUCCESS;
 }
 
+#ifdef ONLY_COMPILE_OPEN_SRC
 Status PatternFusionBasePass::SetDataDumpAttr(std::vector<ge::NodePtr> &original_nodes,
                                               std::vector<ge::NodePtr> &fus_nodes) {
   for (auto &ori_node : original_nodes) {
@@ -304,6 +304,79 @@ Status PatternFusionBasePass::SetDataDumpAttr(std::vector<ge::NodePtr> &original
   }
 
   return SUCCESS;
+}
+#else
+void PatternFusionBasePass::SetDataDumpAttr(const std::vector<ge::NodePtr> &fused_nodes,
+                                            const std::vector<ge::NodePtr> &fusion_nodes) {
+  // if pass do not specify fused nodes, all matched nodes will be handled as the fused nodes
+  const std::vector<ge::NodePtr> &actual_fused_nodes = pattern_fusion_base_pass_impl_ptr_->GetActualFusedNodes();
+  if (actual_fused_nodes.empty()) {
+    SetOriginalOpDumpAttr(fused_nodes, fusion_nodes);
+  } else {
+    SetOriginalOpDumpAttr(actual_fused_nodes, fusion_nodes);
+  }
+
+  if (fusion_nodes.size() > 1) {
+    const bool is_multi_op = true;
+    for (const ge::NodePtr &node : fusion_nodes) {
+      (void)ge::AttrUtils::SetBool(node->GetOpDesc(), ge::ATTR_NAME_DATA_DUMP_IS_MULTIOP, is_multi_op);
+    }
+  }
+
+  SetOriginalOutputDumpAttr(fused_nodes, fusion_nodes);
+}
+
+void PatternFusionBasePass::SetOriginalOutputDumpAttr(const std::vector<ge::NodePtr> &fused_nodes,
+                                                      const std::vector<ge::NodePtr> &fusion_nodes) {
+  for (const ge::NodePtr &ori_node : fused_nodes) {
+    const auto iter = origin_op_anchors_map_.find(ori_node);
+    if (iter != origin_op_anchors_map_.end()) {
+      for (const auto &anchor_iter : iter->second) {
+        const auto next_node_in_anchor = anchor_iter.first;
+        const auto fusion_node_out_data_anchor = next_node_in_anchor->GetPeerOutAnchor();
+        if (fusion_node_out_data_anchor == nullptr) {
+          GELOGW("[Set][Attr] peer_out_anchor is null");
+          return;
+        }
+
+        // owner_node of anchor should not be null
+        auto fusion_node = fusion_node_out_data_anchor->GetOwnerNode();
+        if (fusion_node == nullptr) {
+          GELOGW("[Set][Attr] fusion_node is null");
+          return;
+        }
+        if (pattern_fusion_base_pass_impl_ptr_->IsNodesExist(fusion_node, fusion_nodes)) {
+          const auto origin_node_out_anchor = anchor_iter.second;
+          if (origin_node_out_anchor == nullptr) {
+            GELOGW("[Set][Attr] ori_out_anchor of node %s is null", ori_node->GetName().c_str());
+            return;
+          }
+
+          // owner_node of anchor should not be null
+          auto origin_node = origin_node_out_anchor->GetOwnerNode();
+          if (origin_node == nullptr) {
+            GELOGW("[Set][Attr] origin_node is null");
+            return;
+          }
+          const uint32_t origin_index = static_cast<uint32_t>(origin_node_out_anchor->GetIdx());
+          const uint32_t fusion_index = static_cast<uint32_t>(fusion_node_out_data_anchor->GetIdx());
+          GraphPassUtil::SetOutputDescAttr(origin_index, fusion_index, origin_node, fusion_node);
+        }
+      }
+    }
+  }
+}
+
+void PatternFusionBasePass::SetOriginalOpDumpAttr(const std::vector<ge::NodePtr> &fused_nodes,
+                                                  const std::vector<ge::NodePtr> &fusion_nodes) {
+  for (const ge::NodePtr &node : fusion_nodes) {
+    GraphPassUtil::RecordOriginalNames(fused_nodes, node);
+  }
+}
+#endif
+
+void PatternFusionBasePass::SetActualFusedNodes(const std::vector<ge::NodePtr> &fused_nodes) {
+  pattern_fusion_base_pass_impl_ptr_->SetActualFusedNodes(fused_nodes);
 }
 
 bool PatternFusionBasePass::CheckOpSupported(const ge::OpDescPtr &op_desc_ptr) const {

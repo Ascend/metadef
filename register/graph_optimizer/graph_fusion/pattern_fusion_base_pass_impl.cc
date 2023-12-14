@@ -77,7 +77,7 @@ bool PatternFusionBasePassImpl::CheckAccuracySupported(const ge::NodePtr &node) 
   return ret;
 }
 
-bool PatternFusionBasePassImpl::IsNodesExist(const ge::NodePtr current_node, std::vector<ge::NodePtr> &nodes) {
+bool PatternFusionBasePassImpl::IsNodesExist(const ge::NodePtr &current_node, const std::vector<ge::NodePtr> &nodes) {
   return find(nodes.begin(), nodes.end(), current_node) != nodes.end();
 }
 
@@ -402,5 +402,13 @@ bool PatternFusionBasePassImpl::GetMatchOutputNodes(const ge::ComputeGraph &grap
     return false;
   }
   return true;
+}
+
+const std::vector<ge::NodePtr>& PatternFusionBasePassImpl::GetActualFusedNodes() const {
+  return actual_fused_nodes_;
+}
+
+void PatternFusionBasePassImpl::SetActualFusedNodes(const std::vector<ge::NodePtr> &fused_nodes) {
+  actual_fused_nodes_ = fused_nodes;
 }
 }

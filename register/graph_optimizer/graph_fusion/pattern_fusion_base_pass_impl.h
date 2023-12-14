@@ -66,7 +66,7 @@ class PatternFusionBasePassImpl {
 
   bool CheckAccuracySupported(const ge::NodePtr &node) const;
 
-  static bool IsNodesExist(const ge::NodePtr current_node, std::vector<ge::NodePtr> &nodes);
+  static bool IsNodesExist(const ge::NodePtr &current_node, const std::vector<ge::NodePtr> &nodes);
 
   static bool IsMatched(const std::shared_ptr<OpDesc> op_desc, const ge::NodePtr node, const Mapping &mapping);
 
@@ -80,10 +80,16 @@ class PatternFusionBasePassImpl {
   bool GetMatchOutputNodes(const ge::ComputeGraph &graph, const FusionPattern &pattern,
                            std::vector<ge::NodePtr> &matched_output_nodes) const;
 
+  const std::vector<ge::NodePtr>& GetActualFusedNodes() const;
+
+  void SetActualFusedNodes(const std::vector<ge::NodePtr> &fused_nodes);
+
  private:
   std::vector<FusionPattern *> patterns_;
 
   OpsKernelInfoStorePtr ops_kernel_info_store_ptr_;
+
+  std::vector<ge::NodePtr> actual_fused_nodes_;
 
   bool GetSortedInAnchors(const ge::NodePtr &node, const std::string &op_id,
                           std::vector<ge::InDataAnchorPtr> &in_anchors) const;
