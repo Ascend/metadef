@@ -27,6 +27,8 @@ class HcomTopoInfo {
     void *notify_handle;
   };
   static HcomTopoInfo &Instance();
+  bool TopoInfoHasBeenSet(const char_t *group);
+  bool TryGetGroupTopoInfo(const char_t *group, TopoInfo &info);
   Status SetGroupTopoInfo(const char_t *group, const TopoInfo &info);
   Status GetGroupRankSize(const char_t *group, int64_t &rank_size);
   Status GetGroupNotifyHandle(const char_t *group, void *&notify_handle);

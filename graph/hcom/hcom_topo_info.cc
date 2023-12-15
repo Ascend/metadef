@@ -55,4 +55,18 @@ HcomTopoInfo &HcomTopoInfo::Instance() {
   static HcomTopoInfo hcom_topo_info;
   return hcom_topo_info;
 }
+
+bool HcomTopoInfo::TryGetGroupTopoInfo(const char_t *group, HcomTopoInfo::TopoInfo &info) {
+  const auto &iter_info = rank_info_.find(group);
+  if (iter_info == rank_info_.end()) {
+    return false;
+  }
+  info = iter_info->second;
+  GELOGI("Get existed info of group %s successfully.", group);
+  return true;
+}
+
+bool HcomTopoInfo::TopoInfoHasBeenSet(const char_t *group) {
+  return rank_info_.find(group) != rank_info_.end();
+}
 }

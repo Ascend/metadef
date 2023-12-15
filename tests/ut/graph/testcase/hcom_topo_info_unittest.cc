@@ -25,17 +25,23 @@ class UtestHcomTopoInfo : public testing::Test {
 TEST_F(UtestHcomTopoInfo, SetGroupTopoInfo) {
   HcomTopoInfo::TopoInfo topo_info;
   topo_info.rank_size = 8;
+  const std::string group = "group0";
+
   // add invalid
   EXPECT_EQ(HcomTopoInfo::Instance().SetGroupTopoInfo(nullptr, topo_info), GRAPH_FAILED);
 
-  EXPECT_EQ(HcomTopoInfo::Instance().SetGroupTopoInfo("group0", topo_info), GRAPH_SUCCESS);
+  EXPECT_EQ(HcomTopoInfo::Instance().SetGroupTopoInfo(group.c_str(), topo_info), GRAPH_SUCCESS);
   // add repeated, over write
-  const std::string group = "group0";
   topo_info.notify_handle = reinterpret_cast<void *>(0x8000);
   EXPECT_EQ(HcomTopoInfo::Instance().SetGroupTopoInfo(group.c_str(), topo_info), GRAPH_SUCCESS);
   void *handle = nullptr;
   EXPECT_EQ(HcomTopoInfo::Instance().GetGroupNotifyHandle(group.c_str(), handle), GRAPH_SUCCESS);
   EXPECT_EQ(handle, reinterpret_cast<void *>(0x8000));
+  HcomTopoInfo::TopoInfo topo_info_existed;
+  EXPECT_TRUE(HcomTopoInfo::Instance().TryGetGroupTopoInfo(group.c_str(), topo_info_existed));
+  EXPECT_TRUE(HcomTopoInfo::Instance().TopoInfoHasBeenSet(group.c_str()));
+  EXPECT_EQ(topo_info_existed.notify_handle, reinterpret_cast<void *>(0x8000));
+  EXPECT_EQ(topo_info_existed.rank_size, 8);
 }
 
 TEST_F(UtestHcomTopoInfo, GetAndUnsetGroupTopoInfo) {
