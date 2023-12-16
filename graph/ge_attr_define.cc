@@ -159,6 +159,7 @@ const std::string ATTR_NAME_INFERRED_FORMAT = "inferred_format";
 const std::string ATTR_NAME_PRED_PERMUTE_DELETED = "pred_permute_deleted";
 const std::string ATTR_NAME_IGNORE_PRED_FORMAT = "ignore_pred_format";
 const std::string ATTR_NAME_WEIGHTS = "value";
+const std::string ATTR_NAME_IS_REUSE_EXTERNAL_WEIGHT = "_is_reuse_external_weight";
 const std::string ATTR_NAME_WEIGHTS_DATA = "weights_data";
 const std::string ATTR_NAME_BROACAST_REAL_DIM_CNT = "broacast_real_dim_cnt";
 const std::string ATTR_NAME_DIM_ALIGN = "dim_align";
@@ -1440,6 +1441,7 @@ const std::string ATTR_NAME_MODEL_EVENTS = "_model_events";
 const std::string ATTR_NAME_HCOM_GROUPS = "_hcom_groups";
 const std::string ATTR_NAME_SHARD_GRAPH_EXT_ATTRS = "_shard_graph_ext_attrs";
 const std::string ATTR_NAME_IS_SHARD_GRAPH_FOR_LOAD = "_is_shard_graph_for_load";
+const std::string ATTR_NAME_GRAPH_MODEL_DEPLOY_MODE = "_graphModelDeployMode";
 
 // for tensor parallelism
 const std::string ATTR_NAME_TP_RESHARD_ATTR = "_reshard_attr";

@@ -147,10 +147,16 @@ graphStatus Model::SaveToFile(const std::string &file_name, const bool force_sep
   GE_ASSERT_TRUE(!real_path.empty(), "Path: %s is empty", file_name.c_str());
   real_path = real_path + "/" + file;
 
+  graphStatus ret = GRAPH_SUCCESS;
   if (!force_separate) {
-    GE_ASSERT_SUCCESS((*this).Save(buffer, real_path), "[Save][Data] to file:%s fail.", file_name.c_str());
+    ret = (*this).Save(buffer, real_path);
   } else {
-    GE_ASSERT_SUCCESS((*this).SaveSeparateModel(buffer, real_path), "[Save][Data] to file:%s fail.", file_name.c_str());
+    ret = (*this).SaveSeparateModel(buffer, real_path);
+  }
+  if (ret != GRAPH_SUCCESS) {
+    REPORT_INNER_ERROR("E18888", "[Save][Data] to file:%s fail.", file_name.c_str());
+    GELOGE(ret, "[Save][Data] to file:%s fail.", file_name.c_str());
+    return ret;
   }
   // Write file
   if (buffer.GetData() != nullptr) {

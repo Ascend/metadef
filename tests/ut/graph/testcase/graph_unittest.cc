@@ -686,4 +686,12 @@ TEST_F(UtestGraph, FindOpByType) {
   EXPECT_EQ(ret, GRAPH_SUCCESS);
 }
 
+TEST_F(UtestGraph, SaveInvalidPath) {
+  std::vector<Operator> inputs{};
+  std::vector<Operator> outputs{};
+  Graph graph("empty_graph");
+  graph.SetInputs(inputs).SetOutputs(outputs);
+  std::string file_name = "....1263713612～";
+  EXPECT_EQ(graph.SaveToFile(file_name), GRAPH_FAILED);
+}
 

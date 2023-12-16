@@ -100,6 +100,7 @@ static Model BuildModelWithConst(bool large_weight) {
   sub_compute_graph->SetParentNode(parent_input);
   sub_compute_graph->SetParentGraph(compute_graph);
   compute_graph->AddSubgraph(sub_compute_graph);
+  compute_graph->TopologicalSorting();
   return model;
 }
 
@@ -286,7 +287,7 @@ TEST_F(ModelUt, SaveLargeModelSeparateWithRelatedPath) {
   ASSERT_NE(const_node0, nullptr);
   auto const_node1 = graph->FindNode("test/const1");
   ASSERT_NE(const_node1, nullptr);
-  ASSERT_EQ(const_node0->GetOpDesc()->DelAttr(ATTR_NAME_WEIGHTS), GRAPH_SUCCESS);
+  ASSERT_TRUE(AttrUtils::SetBool(const_node0->GetOpDesc(), ATTR_NAME_IS_REUSE_EXTERNAL_WEIGHT, true));
   std::string reuse_offset_path = "air_weight/model_name_main_model/" + const_node1->GetType() + "_" +
       std::to_string(const_node1->GetOpDesc()->GetId()) + "_file";
   ASSERT_EQ(AttrUtils::SetInt(const_node0->GetOpDesc(), ge::ATTR_NAME_LENGTH, kSmallBufferSize), true);

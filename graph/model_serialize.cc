@@ -949,11 +949,15 @@ bool ModelSerializeImp::SeparateModelDef(Buffer &buffer, const std::string &path
         continue;
       }
       auto attr_map = op_def.mutable_attr();
-      auto iter = attr_map->find(ATTR_NAME_WEIGHTS);
-      if (iter == attr_map->end()) {
-        GELOGW("Find attr [%s] of op[%s] failed.", ATTR_NAME_WEIGHTS.c_str(), op_def.name().c_str());
+      auto iter = attr_map->find(ATTR_NAME_IS_REUSE_EXTERNAL_WEIGHT);
+      if ((iter != attr_map->end()) && (iter->second.b())) {
+        GELOGD("op:%s of model:%s need reuse external weight, do not need dump weight.", op_def.name().c_str(),
+               model_def.name().c_str());
         continue;
       }
+      iter = attr_map->find(ATTR_NAME_WEIGHTS);
+      GE_ASSERT_TRUE(iter != attr_map->end(), "Find attr [%s] of op[%s] failed.", ATTR_NAME_WEIGHTS.c_str(),
+                     op_def.name().c_str());
       auto tensor_def = iter->second.mutable_t();
       if (tensor_def->data().empty()) {
         GELOGW("Weight attr of node: %s is empty", op_def.name().c_str());
@@ -1091,17 +1095,11 @@ bool ModelSerializeImp::SetWeightForModel(proto::OpDef &op_def) const {
     return false;
   }
   iter = attr_map->find(ATTR_NAME_WEIGHTS);
-  // ATTR_NAME_WEIGHTS could be deleted
-  if (iter == attr_map->end()) {
-    proto::AttrDef attr_def;
-    attr_def.mutable_t()->set_data(weight);
-    attr_map->insert({ATTR_NAME_WEIGHTS, attr_def});
-    GELOGW("find attr [%s] of op[%s] failed, set weight.", ATTR_NAME_WEIGHTS.c_str(), op_def.name().c_str());
-  } else {
-    iter->second.mutable_t()->set_data(weight);
-  }
+  GE_ASSERT_TRUE(iter != attr_map->end(), "find attr [%s] of op[%s] failed.", ATTR_NAME_WEIGHTS.c_str(),
+                 op_def.name().c_str());
   attr_map->erase(ATTR_NAME_LOCATION);
   attr_map->erase(ATTR_NAME_LENGTH);
+  iter->second.mutable_t()->set_data(weight);
   return true;
 }
 
